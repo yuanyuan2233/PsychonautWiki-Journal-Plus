@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_import_empty_backup">备份文件为空，无可导入数据</string>
+    <string name="settings_import_permission_denied">没有读取该文件的权限</string>
+    <string name="settings_import_read_failed">读取文件失败</string>
+    <string name="settings_import_failed">导入失败</string>
+    <string name="settings_delete_everything_failed">清空数据失败</string>
+    <string name="settings_no_app_to_open_link">未找到可打开此链接的应用</string>
+    <string name="settings_no_app_to_share">未找到可用于分享的应用</string>
+    <string name="settings_no_file_picker">未找到可用的文件选择器应用</string>
+    <string name="drugs_substance_not_found">未找到物质</string>
+    <string name="drugs_substance_error_navigate_back">无法加载该物质信息，请返回。</string>
+</resources>

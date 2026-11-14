@@ -18,8 +18,8 @@
 
 package com.isaakhanimann.journal.ui.tabs.settings
 
-import android.content.Context
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.ViewModel
@@ -27,24 +27,35 @@ import androidx.lifecycle.viewModelScope
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
+import com.isaakhanimann.journal.ui.tabs.stats.tolerance.SubstanceToleranceCustomization
+import com.isaakhanimann.journal.ui.tabs.stats.tolerance.ToleranceCustomizationStore
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.FileNotFoundException
+import java.io.IOException
 import javax.inject.Inject
 
+data class SettingsSnackbarEvent(
+    @StringRes val messageRes: Int,
+    val duration: SnackbarDuration = SnackbarDuration.Short
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val experienceRepository: ExperienceRepository,
     private val fileSystemConnection: FileSystemConnection,
     private val userPreferences: UserPreferences,
-    @ApplicationContext private val context: Context,
+    private val toleranceCustomizationStore: ToleranceCustomizationStore,
 ) : ViewModel() {
 
     fun saveDosageDotsAreHidden(value: Boolean) = viewModelScope.launch {
@@ -89,42 +100,85 @@ class SettingsViewModel @Inject constructor(
 
     val snackbarHostState = SnackbarHostState()
 
+    private val _snackbarEvents = Channel<SettingsSnackbarEvent>(Channel.BUFFERED)
+    val snackbarEvents = _snackbarEvents.receiveAsFlow()
+
+    private val dataOperationMutex = Mutex()
+
+    private suspend fun emitSnackbar(
+        @StringRes messageRes: Int,
+        duration: SnackbarDuration = SnackbarDuration.Short
+    ) {
+        _snackbarEvents.send(SettingsSnackbarEvent(messageRes = messageRes, duration = duration))
+    }
+
     fun importFile(uri: Uri) {
         viewModelScope.launch {
-            val text = withContext(Dispatchers.IO) {
-                fileSystemConnection.getTextFromUri(uri)
-            }
-            if (text == null) {
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.settings_file_not_found),
-                    duration = SnackbarDuration.Short
-                )
-            } else {
-                try {
-                    val journalExport = withContext(Dispatchers.IO) {
-                        val json = Json { ignoreUnknownKeys = true }
+            dataOperationMutex.withLock {
+                val rawText = try {
+                    withContext(Dispatchers.IO) {
+                        fileSystemConnection.getTextFromUri(uri)
+                    }
+                } catch (_: SecurityException) {
+                    emitSnackbar(R.string.settings_import_permission_denied)
+                    return@withLock
+                } catch (_: FileNotFoundException) {
+                    emitSnackbar(R.string.settings_file_not_found)
+                    return@withLock
+                } catch (_: IOException) {
+                    emitSnackbar(R.string.settings_import_read_failed)
+                    return@withLock
+                } catch (_: Exception) {
+                    emitSnackbar(R.string.settings_import_read_failed)
+                    return@withLock
+                }
+
+                val text = rawText.removePrefix("\uFEFF")
+                if (text.isBlank()) {
+                    emitSnackbar(R.string.settings_import_empty_backup)
+                    return@withLock
+                }
+
+                val journalExport = try {
+                    withContext(Dispatchers.Default) {
+                        val json = Json {
+                            ignoreUnknownKeys = true
+                            coerceInputValues = true
+                        }
                         json.decodeFromString<JournalExport>(text)
                     }
-                    if (journalExport.isEmpty()) {
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.settings_decoding_file_failed),
-                            duration = SnackbarDuration.Short
-                        )
-                        return@launch
-                    }
-                    withContext(Dispatchers.IO) {
-                        experienceRepository.replaceEverything(journalExport)
-                    }
-                    snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.settings_import_successful),
-                        duration = SnackbarDuration.Short
-                    )
                 } catch (e: Exception) {
                     println("Error when decoding: ${e.message}")
-                    snackbarHostState.showSnackbar(
-                        message = context.getString(R.string.settings_decoding_file_failed),
-                        duration = SnackbarDuration.Short
-                    )
+                    emitSnackbar(R.string.settings_decoding_file_failed)
+                    return@withLock
+                }
+
+                if (journalExport.isEmpty()) {
+                    emitSnackbar(R.string.settings_import_empty_backup)
+                    return@withLock
+                }
+
+                try {
+                    withContext(Dispatchers.IO) {
+                        experienceRepository.replaceEverything(journalExport)
+                        val customizations = journalExport.toleranceCustomizations
+                            .filter { it.substanceName.isNotBlank() }
+                            .map { exportItem ->
+                                SubstanceToleranceCustomization(
+                                    substanceName = exportItem.substanceName,
+                                    customFullDays = exportItem.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                    customZeroDays = exportItem.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                    manualResetInstant = exportItem.manualResetInstant
+                                )
+                            }
+                        if (!toleranceCustomizationStore.replaceAllCustomizations(customizations)) {
+                            throw IOException("Failed to restore tolerance customizations")
+                        }
+                    }
+                    emitSnackbar(R.string.settings_import_successful)
+                } catch (e: Exception) {
+                    println("Error when importing: ${e.message}")
+                    emitSnackbar(R.string.settings_import_failed)
                 }
             }
         }
@@ -132,106 +186,127 @@ class SettingsViewModel @Inject constructor(
 
     fun exportFile(uri: Uri) {
         viewModelScope.launch {
-            val experiencesWithIngestionsAndRatings =
-                experienceRepository.getAllExperiencesWithIngestionsTimedNotesAndRatingsSorted()
-            val experiencesSerializable = experiencesWithIngestionsAndRatings.map {
-                val location = it.experience.location
-                return@map ExperienceSerializable(
-                    title = it.experience.title,
-                    text = it.experience.text,
-                    creationDate = it.experience.creationDate,
-                    sortDate = it.experience.sortDate,
-                    isFavorite = it.experience.isFavorite,
-                    ingestions = it.ingestions.map { ingestion ->
-                        IngestionSerializable(
-                            substanceName = ingestion.substanceName,
-                            time = ingestion.time,
-                            endTime = ingestion.endTime,
-                            creationDate = ingestion.creationDate,
-                            administrationRoute = ingestion.administrationRoute,
-                            dose = ingestion.dose,
-                            estimatedDoseStandardDeviation = ingestion.estimatedDoseStandardDeviation,
-                            isDoseAnEstimate = ingestion.isDoseAnEstimate,
-                            units = ingestion.units,
-                            notes = ingestion.notes,
-                            stomachFullness = ingestion.stomachFullness,
-                            consumerName = ingestion.consumerName,
-                            customUnitId = ingestion.customUnitId
-                        )
-                    },
-                    location = if (location != null) {
-                        LocationSerializable(
-                            name = location.name,
-                            latitude = location.latitude,
-                            longitude = location.longitude
-                        )
-                    } else {
-                        null
-                    },
-                    ratings = it.ratings.map { rating ->
-                        RatingSerializable(
-                            option = rating.option,
-                            time = rating.time,
-                            creationDate = rating.creationDate
-                        )
-                    },
-                    timedNotes = it.timedNotes.map { timedNote ->
-                        TimedNoteSerializable(
-                            creationDate = timedNote.creationDate,
-                            time = timedNote.time,
-                            note = timedNote.note,
-                            color = timedNote.color,
-                            isPartOfTimeline = timedNote.isPartOfTimeline
+            dataOperationMutex.withLock {
+                try {
+                    val journalExport = withContext(Dispatchers.IO) {
+                        val experiencesWithIngestionsAndRatings =
+                            experienceRepository.getAllExperiencesWithIngestionsTimedNotesAndRatingsSorted()
+                        val experiencesSerializable = experiencesWithIngestionsAndRatings.map {
+                            val location = it.experience.location
+                            ExperienceSerializable(
+                                title = it.experience.title,
+                                text = it.experience.text,
+                                creationDate = it.experience.creationDate,
+                                sortDate = it.experience.sortDate,
+                                isFavorite = it.experience.isFavorite,
+                                ingestions = it.ingestions.map { ingestion ->
+                                    IngestionSerializable(
+                                        substanceName = ingestion.substanceName,
+                                        time = ingestion.time,
+                                        endTime = ingestion.endTime,
+                                        creationDate = ingestion.creationDate,
+                                        administrationRoute = ingestion.administrationRoute,
+                                        dose = ingestion.dose,
+                                        estimatedDoseStandardDeviation = ingestion.estimatedDoseStandardDeviation,
+                                        isDoseAnEstimate = ingestion.isDoseAnEstimate,
+                                        units = ingestion.units,
+                                        notes = ingestion.notes,
+                                        stomachFullness = ingestion.stomachFullness,
+                                        consumerName = ingestion.consumerName,
+                                        customUnitId = ingestion.customUnitId
+                                    )
+                                },
+                                location = if (location != null) {
+                                    LocationSerializable(
+                                        name = location.name,
+                                        latitude = location.latitude,
+                                        longitude = location.longitude
+                                    )
+                                } else {
+                                    null
+                                },
+                                ratings = it.ratings.map { rating ->
+                                    RatingSerializable(
+                                        option = rating.option,
+                                        time = rating.time,
+                                        creationDate = rating.creationDate
+                                    )
+                                },
+                                timedNotes = it.timedNotes.map { timedNote ->
+                                    TimedNoteSerializable(
+                                        creationDate = timedNote.creationDate,
+                                        time = timedNote.time,
+                                        note = timedNote.note,
+                                        color = timedNote.color,
+                                        isPartOfTimeline = timedNote.isPartOfTimeline
+                                    )
+                                }
+                            )
+                        }
+                        val customUnitsSerializable = experienceRepository.getAllCustomUnitsSorted().map {
+                            CustomUnitSerializable(
+                                id = it.id,
+                                substanceName = it.substanceName,
+                                name = it.name,
+                                creationDate = it.creationDate,
+                                administrationRoute = it.administrationRoute,
+                                dose = it.dose,
+                                estimatedDoseStandardDeviation = it.estimatedDoseStandardDeviation,
+                                isEstimate = it.isEstimate,
+                                isArchived = it.isArchived,
+                                unit = it.unit,
+                                unitPlural = it.unitPlural,
+                                originalUnit = it.originalUnit,
+                                note = it.note
+                            )
+                        }
+                        val toleranceCustomizationsSerializable = toleranceCustomizationStore
+                            .getAllCustomizationsForExport()
+                            .map { customization ->
+                                ToleranceCustomizationExport(
+                                    substanceName = customization.substanceName,
+                                    customFullDays = customization.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                    customZeroDays = customization.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                    manualResetInstant = customization.manualResetInstant
+                                )
+                            }
+                        JournalExport(
+                            experiences = experiencesSerializable,
+                            substanceCompanions = experienceRepository.getAllSubstanceCompanions(),
+                            customSubstances = experienceRepository.getAllCustomSubstances(),
+                            customUnits = customUnitsSerializable,
+                            toleranceCustomizations = toleranceCustomizationsSerializable
                         )
                     }
-                )
-            }
-            val customUnitsSerializable = experienceRepository.getAllCustomUnitsSorted().map {
-                CustomUnitSerializable(
-                    id = it.id,
-                    substanceName = it.substanceName,
-                    name = it.name,
-                    creationDate = it.creationDate,
-                    administrationRoute = it.administrationRoute,
-                    dose = it.dose,
-                    estimatedDoseStandardDeviation = it.estimatedDoseStandardDeviation,
-                    isEstimate = it.isEstimate,
-                    isArchived = it.isArchived,
-                    unit = it.unit,
-                    unitPlural = it.unitPlural,
-                    originalUnit = it.originalUnit,
-                    note = it.note
-                )
-            }
-            val journalExport = JournalExport(
-                experiences = experiencesSerializable,
-                substanceCompanions = experienceRepository.getAllSubstanceCompanions(),
-                customSubstances = experienceRepository.getAllCustomSubstances(),
-                customUnits = customUnitsSerializable
-            )
-            try {
-                val jsonList = withContext(Dispatchers.Default) {
-                    Json.encodeToString(journalExport)
+                    val jsonText = withContext(Dispatchers.Default) {
+                        Json.encodeToString(journalExport)
+                    }
+                    withContext(Dispatchers.IO) {
+                        fileSystemConnection.saveTextInUri(uri, text = jsonText)
+                    }
+                    emitSnackbar(R.string.settings_export_successful)
+                } catch (_: Exception) {
+                    emitSnackbar(R.string.settings_export_failed)
                 }
-                withContext(Dispatchers.IO) {
-                    fileSystemConnection.saveTextInUri(uri, text = jsonList)
-                }
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.settings_export_successful),
-                    duration = SnackbarDuration.Short
-                )
-            } catch (_: Exception) {
-                snackbarHostState.showSnackbar(
-                    message = context.getString(R.string.settings_export_failed),
-                    duration = SnackbarDuration.Short
-                )
             }
         }
     }
 
     fun deleteEverything() {
         viewModelScope.launch {
-            experienceRepository.deleteEverything()
+            dataOperationMutex.withLock {
+                try {
+                    withContext(Dispatchers.IO) {
+                        experienceRepository.deleteEverything()
+                        if (!toleranceCustomizationStore.clearAllCustomizations()) {
+                            throw IOException("Failed to clear tolerance customizations")
+                        }
+                    }
+                    emitSnackbar(R.string.settings_deleted_everything_snackbar)
+                } catch (_: Exception) {
+                    emitSnackbar(R.string.settings_delete_everything_failed)
+                }
+            }
         }
     }
 }

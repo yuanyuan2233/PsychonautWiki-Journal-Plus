@@ -21,6 +21,8 @@ package com.isaakhanimann.journal.ui.tabs.settings
 import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.FileNotFoundException
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,27 +31,20 @@ import javax.inject.Singleton
 class FileSystemConnection @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    fun getTextFromUri(uri: Uri): String? {
-        try {
-            val input = context.contentResolver.openInputStream(uri) ?: return null
-            val inputAsString = input.bufferedReader().use { it.readText() }
-            input.close()
-            return inputAsString
-        } catch (e: Exception) {
-            return null
-        }
+    @Throws(IOException::class, SecurityException::class)
+    fun getTextFromUri(uri: Uri): String {
+        val input = context.contentResolver.openInputStream(uri)
+            ?: throw FileNotFoundException("Unable to open input stream for URI: $uri")
+        return input.bufferedReader().use { it.readText() }
     }
 
+    @Throws(IOException::class, SecurityException::class)
     fun saveTextInUri(uri: Uri, text: String) {
-        try {
-            val output = context.contentResolver.openOutputStream(uri) ?: return
-            output.bufferedWriter().use { it.write(text) }
-            output.close()
-        } catch (_: Exception) {
-            throw Exception("Failed To Save")
+        val output = context.contentResolver.openOutputStream(uri)
+            ?: throw IOException("Unable to open output stream for URI: $uri")
+        output.bufferedWriter().use { writer ->
+            writer.write(text)
+            writer.flush()
         }
-
     }
-
-
 }

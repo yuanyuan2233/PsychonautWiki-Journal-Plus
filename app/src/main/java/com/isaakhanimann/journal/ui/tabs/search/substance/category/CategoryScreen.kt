@@ -18,6 +18,8 @@
 
 package com.isaakhanimann.journal.ui.tabs.search.substance.category
 
+import android.content.ActivityNotFoundException
+import android.net.Uri
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -25,12 +27,18 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -42,6 +50,7 @@ import com.isaakhanimann.journal.data.substances.classes.Category
 import com.isaakhanimann.journal.ui.tabs.search.getCategoryDisplayName
 import com.isaakhanimann.journal.ui.tabs.stats.EmptyScreenDisclaimer
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
+import kotlinx.coroutines.launch
 
 @Composable
 fun CategoryScreen(
@@ -96,6 +105,9 @@ fun CategoryScreen(category: Category?, navigateBack: (() -> Unit)? = null) {
         }
     } else {
         val uriHandler = LocalUriHandler.current
+        val context = LocalContext.current
+        val snackbarHostState = remember { SnackbarHostState() }
+        val scope = rememberCoroutineScope()
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -111,9 +123,35 @@ fun CategoryScreen(category: Category?, navigateBack: (() -> Unit)? = null) {
                         }
                     },
                     actions = {
-                        if (category.url != null) {
+                        val categoryUrl = category.url
+                        if (categoryUrl != null) {
                             TextButton(
-                                onClick = { uriHandler.openUri(category.url) },
+                                onClick = {
+                                    val opened = if (
+                                        categoryUrl.isNotBlank() &&
+                                        !Uri.parse(categoryUrl).scheme.isNullOrBlank()
+                                    ) {
+                                        try {
+                                            uriHandler.openUri(categoryUrl)
+                                            true
+                                        } catch (_: ActivityNotFoundException) {
+                                            false
+                                        } catch (_: IllegalArgumentException) {
+                                            false
+                                        }
+                                    } else {
+                                        false
+                                    }
+                                    if (!opened) {
+                                        scope.launch {
+                                            snackbarHostState.currentSnackbarData?.dismiss()
+                                            snackbarHostState.showSnackbar(
+                                                message = context.getString(R.string.settings_no_app_to_open_link),
+                                                duration = SnackbarDuration.Short
+                                            )
+                                        }
+                                    }
+                                },
                             ) {
                                 Text(stringResource(R.string.drugs_article))
                             }
@@ -121,6 +159,7 @@ fun CategoryScreen(category: Category?, navigateBack: (() -> Unit)? = null) {
                     }
                 )
             },
+            snackbarHost = { SnackbarHost(snackbarHostState) },
         ) { padding ->
             Text(
                 text = category.description,

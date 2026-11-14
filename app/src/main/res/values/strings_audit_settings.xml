@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_import_empty_backup">Backup file contains no data to import</string>
+    <string name="settings_import_permission_denied">Permission denied when reading file</string>
+    <string name="settings_import_read_failed">Failed to read file</string>
+    <string name="settings_import_failed">Import failed</string>
+    <string name="settings_delete_everything_failed">Failed to delete all data</string>
+    <string name="settings_no_app_to_open_link">No app available to open this link</string>
+    <string name="settings_no_app_to_share">No app available to share</string>
+    <string name="settings_no_file_picker">No file picker app available</string>
+    <string name="drugs_substance_not_found">Substance not found</string>
+    <string name="drugs_substance_error_navigate_back">This substance could not be loaded, please navigate back.</string>
+</resources>
