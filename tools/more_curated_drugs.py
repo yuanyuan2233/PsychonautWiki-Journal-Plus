@@ -716,7 +716,7 @@ ADDITIONAL_CURATED_DRUGS = [
         ],
         "interactions": {
             "dangerous": ["阿片类药物 (致命呼吸骤停)", "酮康唑", "伊曲康唑"],
-            "unsafe": ["酒精 / 乙醇 (协同严重 CNS 抑制致昏迷)", "西柚汁 (葡萄柚汁)", "西咪替丁"],
+            "unsafe": ["Alcohol (协同严重 CNS 抑制致昏迷)", "西柚汁 (葡萄柚汁)", "西咪替丁"],
             "uncertain": ["氟伏沙明"]
         }
     },
@@ -752,7 +752,7 @@ ADDITIONAL_CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["阿片类药物", "酒精 / 乙醇 (协同强效中枢呼吸抑制)"],
+            "dangerous": ["阿片类药物", "Alcohol (协同强效中枢呼吸抑制)"],
             "unsafe": ["苯妥英钠", "苯巴比妥", "丙戊酸 / 丙戊酸钠 (可诱发失神发作持续状态)"],
             "uncertain": ["CYP3A4 抑制剂"]
         }
@@ -937,7 +937,7 @@ ADDITIONAL_CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["酒精 / 乙醇 (梦游致命行为发生率急剧上升)", "阿片类药物"],
+            "dangerous": ["Alcohol (梦游致命行为发生率急剧上升)", "阿片类药物"],
             "unsafe": ["酮康唑", "利福平 (清除加速 70%)", "氟伏沙明"],
             "uncertain": ["选择性5-羟色胺再摄取抑制剂 (SSRI)"]
         }
@@ -974,7 +974,7 @@ ADDITIONAL_CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["酒精 / 乙醇 (严重协同神经抑制与谵妄)", "阿片类药物"],
+            "dangerous": ["Alcohol (严重协同神经抑制与谵妄)", "阿片类药物"],
             "unsafe": ["红霉素", "酮康唑", "卡马西平"],
             "uncertain": ["西咪替丁"]
         }
@@ -1059,6 +1059,8 @@ ADDITIONAL_CURATED_DRUGS = [
         "aliases": ["一舒", "BuSpar", "盐酸丁螺环酮"],
         "url": "https://en.wikipedia.org/wiki/Buspirone",
         "categories": ["anxiolytic", "common"],
+        "remove_categories": ["psychedelic"],
+        "remove_common_names": ["DMT", "Dimethyltryptamine", "Dmitri"],
         "summary": "氮杂双环葵烷二酮类 5-HT1A 受体部分激动剂。无镇静嗜睡、肌松松弛及成瘾滥用倾向，不产生戒断反应，但需要连续服用数周起效。",
         "pk": {
             "brandName": "一舒 (BuSpar) | 百时美施贵宝 (BMS)",
@@ -1275,7 +1277,7 @@ ADDITIONAL_CURATED_DRUGS = [
         ],
         "interactions": {
             "dangerous": ["阿片类药物 (严重协同呼吸抑制与昏迷风险)"],
-            "unsafe": ["劳拉西泮", "酒精 / 乙醇 (运动协调障碍与镇静大幅放大)", "噻唑烷二酮类降糖药 (加剧水肿)"],
+            "unsafe": ["劳拉西泮", "Alcohol (运动协调障碍与镇静大幅放大)", "噻唑烷二酮类降糖药 (加剧水肿)"],
             "uncertain": ["羟考酮"]
         }
     },
@@ -1316,7 +1318,7 @@ ADDITIONAL_CURATED_DRUGS = [
         ],
         "interactions": {
             "dangerous": ["单胺氧化酶抑制剂 (MAOI)", "血管加压药 / 升压药"],
-            "unsafe": ["酒精 / 乙醇 (破坏缓释机制导致剂量倾泻)", "华法林", "抗惊厥 / 抗癫痫药"],
+            "unsafe": ["Alcohol (破坏缓释机制导致剂量倾泻)", "华法林", "抗惊厥 / 抗癫痫药"],
             "uncertain": ["可乐定"]
         }
     },
@@ -1437,7 +1439,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "aliases": ["黛力新", "Deanxit", "氟哌噻吨美利曲辛片"],
         "url": "https://en.wikipedia.org/wiki/Flupentixol/melitracen",
         "categories": ["antidepressant", "anxiolytic", "common"],
-        "summary": "小剂量噻吨类抗精神病药 (氟哌噻吨 0.5mg) 与小剂量三环抗抑郁药 (美利曲辛 10mg) 复方制剂。协同作用于突触前膜增强多巴胺/去甲肾上腺素传递，起效迅速，综合医院广泛用于轻中度焦虑抑郁伴躯体化障碍。",
+        "summary": "小剂量噻吨类抗精神病药 (氟哌噻吨 0.5mg) 与小剂量三环抗抑郁药 (美利曲辛 10mg) 复方制剂（每片总有效成分 10.5mg，常规 1~2 片/日即 10.5~21.0mg，极量 4 片/日即 42.0mg）。协同作用于突触前膜增强多巴胺/去甲肾上腺素传递，起效迅速，综合医院广泛用于轻中度焦虑抑郁伴躯体化障碍。",
         "pk": {
             "brandName": "黛力新 (Deanxit) | 丹麦灵北 (Lundbeck)",
             "halfLife": "氟哌噻吨约 35 小时；美利曲辛约 19 小时",
@@ -1453,7 +1455,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 1.0, "commonMin": 2.0, "strongMin": 2.0, "heavyMin": 4.0},
+                "dose": {"units": "mg", "lightMin": 10.5, "commonMin": 21.0, "strongMin": 31.5, "heavyMin": 42.0},
                 "duration": {
                     "onset": {"min": 1.0, "max": 2.0, "units": "hours"},
                     "peak": {"min": 3.0, "max": 5.0, "units": "hours"},
@@ -1635,7 +1637,7 @@ ADDITIONAL_CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["无直接药理学相互作用"],
+            "dangerous": [],
             "unsafe": ["延长 QT 间期药物 (雄激素去势可能轻度延长心电QT)"],
             "uncertain": ["升高催乳素水平药物"]
         }
@@ -1672,7 +1674,7 @@ ADDITIONAL_CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["无直接相互作用冲突"],
+            "dangerous": [],
             "unsafe": ["延长 QT 间期药物"],
             "uncertain": ["抗雄激素药物 (初始阶段联用对抗睾酮骤升)"]
         }

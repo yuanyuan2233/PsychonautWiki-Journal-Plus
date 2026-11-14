@@ -715,7 +715,7 @@ CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["酒精 / 乙醇 (长期合用肝毒性高危)", "酮康唑 (血药浓度暴增翻倍)"],
+            "dangerous": ["Alcohol (长期合用肝毒性高危)", "酮康唑 (血药浓度暴增翻倍)"],
             "unsafe": ["利福平", "卡马西平", "他汀类药物 (他汀类可能加重肌病)"],
             "uncertain": ["口服降糖药 (可影响糖耐量)"]
         }
@@ -750,7 +750,7 @@ CURATED_DRUGS = [
         "interactions": {
             "dangerous": ["补钾制剂 (补钾剂合用极高致死性高血钾风险)", "ACEI 类降压药 (卡托普利、依那普利等)", "ARB 类降压药 (氯沙坦等)"],
             "unsafe": ["非甾体抗炎药 (NSAIDs) (降低利尿抗雄效果且损害肾脏升高血钾)", "地高辛 (延长地高辛半衰期致蓄积)"],
-            "uncertain": ["酒精 / 乙醇 (增强体位性低血压)"]
+            "uncertain": ["Alcohol (增强体位性低血压)"]
         }
     },
     {
@@ -1007,13 +1007,15 @@ def main():
             if item.get("summary") and (not target.get("summary") or len(target.get("summary", "")) < 20):
                 target["summary"] = item["summary"]
 
-            # 合并分类与别名
-            cur_cats = list(target.get("categories", []))
+            # 合并分类与别名（同时清理已知上游错误污染条目）
+            remove_cats = set(item.get("remove_categories", []))
+            cur_cats = [c for c in target.get("categories", []) if c not in remove_cats]
             for c in item["categories"]:
                 if c not in cur_cats: cur_cats.append(c)
             target["categories"] = cur_cats
 
-            cur_commons = list(target.get("commonNames", []))
+            remove_commons = set(item.get("remove_common_names", []))
+            cur_commons = [c for c in target.get("commonNames", []) if c not in remove_commons]
             for c in combined_commons:
                 if c not in cur_commons: cur_commons.append(c)
             target["commonNames"] = cur_commons
