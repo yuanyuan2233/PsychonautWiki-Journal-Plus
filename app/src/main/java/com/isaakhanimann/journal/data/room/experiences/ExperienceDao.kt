@@ -548,8 +548,14 @@ interface ExperienceDao {
         experience: Experience,
         substanceCompanion: SubstanceCompanion
     ) {
-        insert(ingestion)
-        insert(experience)
+        // 先插入父表 Experience 再插入子表 Ingestion，满足 Room 外键约束
+        val insertedExperienceId = insert(experience).toInt()
+        val resolvedIngestion = if (ingestion.experienceId <= 0) {
+            ingestion.copy(experienceId = insertedExperienceId)
+        } else {
+            ingestion
+        }
+        insert(resolvedIngestion)
         insert(substanceCompanion)
     }
 
