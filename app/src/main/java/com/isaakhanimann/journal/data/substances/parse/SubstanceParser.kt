@@ -18,12 +18,14 @@
 
 package com.isaakhanimann.journal.data.substances.parse
 
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.data.substances.classes.*
 import com.isaakhanimann.journal.data.substances.classes.roa.*
 import org.json.JSONArray
 import org.json.JSONObject
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,11 +33,19 @@ import javax.inject.Singleton
 class SubstanceParser @Inject constructor() : SubstanceParserInterface {
 
     override fun parseSubstanceFile(string: String): SubstanceFile {
-        val wholeFile = JSONObject(string)
-        return SubstanceFile(
-            categories = parseCategories(wholeFile),
-            substances = parseSubstances(wholeFile)
-        )
+        return try {
+            val wholeFile = JSONObject(string)
+            SubstanceFile(
+                categories = parseCategories(wholeFile),
+                substances = parseSubstances(wholeFile)
+            )
+        } catch (e: Exception) {
+            logWarning("Failed to parse substance file JSON", e)
+            SubstanceFile(
+                categories = emptyList(),
+                substances = emptyList()
+            )
+        }
     }
 
     override fun extractSubstanceString(string: String): String? {
@@ -50,41 +60,63 @@ class SubstanceParser @Inject constructor() : SubstanceParserInterface {
     }
 
     private fun parseCategories(wholeFile: JSONObject): List<Category> {
-        val jsonCategories = wholeFile.getJSONArray("categories")
+        val jsonCategories = wholeFile.getOptionalJSONArray("categories") ?: run {
+            logWarning("Missing or invalid 'categories' array in substance file")
+            return emptyList()
+        }
         val categories: MutableList<Category> = mutableListOf()
         for (i in 0 until jsonCategories.length()) {
             val jsonCategory = jsonCategories.getOptionalJSONObject(i) ?: continue
-            val newCategory = parseCategory(jsonCategory) ?: continue
-            categories.add(newCategory)
+            try {
+                val newCategory = parseCategory(jsonCategory) ?: continue
+                categories.add(newCategory)
+            } catch (e: Exception) {
+                logWarning("Failed to parse category at index $i", e)
+            }
         }
         return categories
     }
 
     private fun parseSubstances(wholeFile: JSONObject): List<Substance> {
-        val jsonSubstances = wholeFile.getJSONArray("substances")
+        val jsonSubstances = wholeFile.getOptionalJSONArray("substances") ?: run {
+            logWarning("Missing or invalid 'substances' array in substance file")
+            return emptyList()
+        }
         val substances: MutableList<Substance> = mutableListOf()
         for (i in 0 until jsonSubstances.length()) {
-            val jsonCategory = jsonSubstances.getOptionalJSONObject(i) ?: continue
-            val newSubstance = parseSubstance(jsonCategory)
-            substances.add(newSubstance)
+            val jsonSubstance = jsonSubstances.getOptionalJSONObject(i)
+            if (jsonSubstance == null) {
+                logWarning("Skipping non-object substance entry at index $i")
+                continue
+            }
+            try {
+                val newSubstance = parseSubstance(jsonSubstance)
+                if (newSubstance == null) {
+                    logWarning("Skipping invalid substance entry at index $i")
+                    continue
+                }
+                substances.add(newSubstance)
+            } catch (e: Exception) {
+                logWarning("Failed to parse substance entry at index $i", e)
+            }
         }
         return substances
     }
 
     private fun parseCategory(jsonCategory: JSONObject): Category? {
-        val name = jsonCategory.getOptionalString("name") ?: return null
-        val description = jsonCategory.getOptionalString("description") ?: return null
+        val name = jsonCategory.getOptionalString("name")?.takeIf { it.isNotBlank() } ?: return null
+        val description = jsonCategory.getOptionalString("description")?.takeIf { it.isNotBlank() } ?: return null
         val url = jsonCategory.getOptionalString("url")
         val colorDecimal = jsonCategory.getOptionalLong("color") ?: 4278876927
         val color = Color(colorDecimal)
         return Category(name, description, url, color)
     }
 
-    private fun parseSubstance(jsonSubstance: JSONObject): Substance {
-        val name = jsonSubstance.getString("name")
+    private fun parseSubstance(jsonSubstance: JSONObject): Substance? {
+        val name = jsonSubstance.getOptionalString("name")?.takeIf { it.isNotBlank() } ?: return null
         val jsonCommonNames = jsonSubstance.getOptionalJSONArray("commonNames")
         val commonNames = parseCommonNames(jsonCommonNames, removeName = name)
-        val url = jsonSubstance.getString("url")
+        val url = jsonSubstance.getOptionalString("url")?.takeIf { it.isNotBlank() } ?: return null
         val isApproved = jsonSubstance.getOptionalBoolean("isApproved") ?: false
         val jsonTolerance = jsonSubstance.getOptionalJSONObject("tolerance")
         val tolerance = parseTolerance(jsonTolerance)
@@ -200,29 +232,23 @@ class SubstanceParser @Inject constructor() : SubstanceParserInterface {
         val roas: MutableList<Roa> = mutableListOf()
         for (i in 0 until jsonRoas.length()) {
             val oneJsonRoa = jsonRoas.getOptionalJSONObject(i) ?: continue
-            val roa = parseRoa(oneJsonRoa)
-            if (roa != null) {
-                roas.add(roa)
+            try {
+                val roa = parseRoa(oneJsonRoa)
+                if (roa != null) {
+                    roas.add(roa)
+                }
+            } catch (e: Exception) {
+                logWarning("Failed to parse ROA entry at index $i", e)
             }
         }
         return roas
     }
 
     private fun parseRoa(oneJsonRoa: JSONObject): Roa? {
-        val routeName = oneJsonRoa.getOptionalString("name")?.uppercase() ?: return null
-        val route = when (routeName) {
-            AdministrationRoute.ORAL.name -> AdministrationRoute.ORAL
-            AdministrationRoute.SUBLINGUAL.name -> AdministrationRoute.SUBLINGUAL
-            AdministrationRoute.BUCCAL.name -> AdministrationRoute.BUCCAL
-            AdministrationRoute.INSUFFLATED.name -> AdministrationRoute.INSUFFLATED
-            AdministrationRoute.RECTAL.name -> AdministrationRoute.RECTAL
-            AdministrationRoute.TRANSDERMAL.name -> AdministrationRoute.TRANSDERMAL
-            AdministrationRoute.SUBCUTANEOUS.name -> AdministrationRoute.SUBCUTANEOUS
-            AdministrationRoute.INTRAMUSCULAR.name -> AdministrationRoute.INTRAMUSCULAR
-            AdministrationRoute.INTRAVENOUS.name -> AdministrationRoute.INTRAVENOUS
-            AdministrationRoute.SMOKED.name -> AdministrationRoute.SMOKED
-            AdministrationRoute.INHALED.name -> AdministrationRoute.INHALED
-            else -> return null
+        val rawRouteName = oneJsonRoa.getOptionalString("name") ?: return null
+        val route = mapAdministrationRoute(rawRouteName) ?: run {
+            logWarning("Skipping unknown administration route '$rawRouteName'")
+            return null
         }
         val jsonRoaDose = oneJsonRoa.getOptionalJSONObject("dose")
         val roaDose = parseRoaDose(jsonRoaDose)
@@ -240,7 +266,10 @@ class SubstanceParser @Inject constructor() : SubstanceParserInterface {
 
     private fun parseRoaDose(jsonDose: JSONObject?): RoaDose? {
         if (jsonDose == null) return null
-        val units = jsonDose.getString("units")
+        val units = jsonDose.getOptionalString("units")?.takeIf { it.isNotBlank() } ?: run {
+            logWarning("Skipping RoaDose with missing or blank 'units'")
+            return null
+        }
         val lightMin = jsonDose.getOptionalDouble("lightMin")
         val commonMin = jsonDose.getOptionalDouble("commonMin")
         val strongMin = jsonDose.getOptionalDouble("strongMin")
@@ -323,5 +352,40 @@ class SubstanceParser @Inject constructor() : SubstanceParserInterface {
             tolNames.add(tolName)
         }
         return tolNames
+    }
+
+    private fun logWarning(message: String, throwable: Throwable? = null) {
+        try {
+            if (throwable != null) {
+                Log.w(TAG, message, throwable)
+            } else {
+                Log.w(TAG, message)
+            }
+        } catch (_: RuntimeException) {
+            System.err.println("$TAG: $message${throwable?.let { " (${it.message})" } ?: ""}")
+        }
+    }
+
+    internal companion object {
+        private const val TAG = "SubstanceParser"
+
+        internal fun mapAdministrationRoute(rawRouteName: String?): AdministrationRoute? {
+            val routeName = rawRouteName?.trim()?.takeIf { it.isNotEmpty() }?.uppercase(Locale.ROOT)
+                ?: return null
+            return when (routeName) {
+                AdministrationRoute.ORAL.name -> AdministrationRoute.ORAL
+                AdministrationRoute.SUBLINGUAL.name -> AdministrationRoute.SUBLINGUAL
+                AdministrationRoute.BUCCAL.name -> AdministrationRoute.BUCCAL
+                AdministrationRoute.INSUFFLATED.name -> AdministrationRoute.INSUFFLATED
+                AdministrationRoute.RECTAL.name -> AdministrationRoute.RECTAL
+                AdministrationRoute.TRANSDERMAL.name -> AdministrationRoute.TRANSDERMAL
+                AdministrationRoute.SUBCUTANEOUS.name -> AdministrationRoute.SUBCUTANEOUS
+                AdministrationRoute.INTRAMUSCULAR.name -> AdministrationRoute.INTRAMUSCULAR
+                AdministrationRoute.INTRAVENOUS.name -> AdministrationRoute.INTRAVENOUS
+                AdministrationRoute.SMOKED.name -> AdministrationRoute.SMOKED
+                AdministrationRoute.INHALED.name -> AdministrationRoute.INHALED
+                else -> null
+            }
+        }
     }
 }

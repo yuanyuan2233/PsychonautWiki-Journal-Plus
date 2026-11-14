@@ -19,12 +19,20 @@
 package com.isaakhanimann.journal.data.substances.repositories
 
 import android.content.Context
+import android.util.Log
 import com.isaakhanimann.journal.data.substances.classes.Category
 import com.isaakhanimann.journal.data.substances.classes.Substance
 import com.isaakhanimann.journal.data.substances.classes.SubstanceFile
 import com.isaakhanimann.journal.data.substances.classes.SubstanceWithCategories
 import com.isaakhanimann.journal.data.substances.parse.SubstanceParserInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,26 +42,56 @@ class SubstanceRepository @Inject constructor(
     substanceParser: SubstanceParserInterface,
 ) : SubstanceRepositoryInterface {
 
-    private var substanceFile: SubstanceFile
+    private val loadScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val substanceFileDeferred = CompletableDeferred<SubstanceFile>()
+
+    @Volatile
+    private var cachedSubstanceFile: SubstanceFile? = null
 
     init {
-        val fileContent = getAssetsSubstanceFileContent()
-        substanceFile = substanceParser.parseSubstanceFile(string = fileContent)
+        loadScope.launch {
+            try {
+                val fileContent = getAssetsSubstanceFileContent()
+                val parsed = substanceParser.parseSubstanceFile(string = fileContent)
+                substanceFileDeferred.complete(parsed)
+            } catch (e: CancellationException) {
+                substanceFileDeferred.cancel(e)
+                throw e
+            } catch (e: Exception) {
+                logError("Failed to load Substances.json from assets", e)
+                substanceFileDeferred.complete(
+                    SubstanceFile(
+                        categories = emptyList(),
+                        substances = emptyList()
+                    )
+                )
+            }
+        }
     }
 
     private fun getAssetsSubstanceFileContent(): String {
         return appContext.assets.open("Substances.json").bufferedReader().use { it.readText() }
     }
 
+    private fun getSubstanceFile(): SubstanceFile {
+        cachedSubstanceFile?.let { return it }
+        return runBlocking {
+            substanceFileDeferred.await()
+        }.also {
+            cachedSubstanceFile = it
+        }
+    }
+
     override fun getAllSubstances(): List<Substance> {
-        return substanceFile.substances
+        return getSubstanceFile().substances
     }
 
     override fun getAllSubstancesWithCategories(): List<SubstanceWithCategories> {
-        return substanceFile.substances.map { substance ->
+        val file = getSubstanceFile()
+        return file.substances.map { substance ->
             SubstanceWithCategories(
                 substance = substance,
-                categories = substanceFile.categories.filter { category ->
+                categories = file.categories.filter { category ->
                     substance.categories.contains(category.name)
                 }
             )
@@ -61,23 +99,35 @@ class SubstanceRepository @Inject constructor(
     }
 
     override fun getAllCategories(): List<Category> {
-        return substanceFile.categories
+        return getSubstanceFile().categories
     }
 
     override fun getSubstance(substanceName: String): Substance? {
-        return substanceFile.substancesMap.getOrDefault(key = substanceName, defaultValue = null)
+        return getSubstanceFile().substancesMap.getOrDefault(key = substanceName, defaultValue = null)
     }
 
     override fun getCategory(categoryName: String): Category? {
-        return substanceFile.categories.firstOrNull { it.name == categoryName }
+        return getSubstanceFile().categories.firstOrNull { it.name == categoryName }
     }
 
     override fun getSubstanceWithCategories(substanceName: String): SubstanceWithCategories? {
-        val substance =
-            substanceFile.substances.firstOrNull { it.name == substanceName } ?: return null
+        val file = getSubstanceFile()
+        val substance = file.substancesMap[substanceName] ?: return null
         return SubstanceWithCategories(
             substance = substance,
-            categories = substanceFile.categories.filter { substance.categories.contains(it.name) }
+            categories = file.categories.filter { substance.categories.contains(it.name) }
         )
+    }
+
+    private fun logError(message: String, throwable: Throwable) {
+        try {
+            Log.e(TAG, message, throwable)
+        } catch (_: RuntimeException) {
+            System.err.println("$TAG: $message (${throwable.message})")
+        }
+    }
+
+    private companion object {
+        const val TAG = "SubstanceRepository"
     }
 }
