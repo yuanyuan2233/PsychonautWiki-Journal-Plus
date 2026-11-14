@@ -516,7 +516,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 25.0, "commonMin": 25.0, "strongMin": 50.0, "heavyMin": 50.0},
+                "dose": {"units": "mg", "lightMin": 12.5, "commonMin": 25.0, "strongMin": 50.0, "heavyMin": 75.0},
                 "duration": {
                     "onset": {"min": 0.5, "max": 1.0, "units": "hours"},
                     "peak": {"min": 0.75, "max": 1.5, "units": "hours"},
@@ -927,7 +927,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 5.0, "commonMin": 10.0, "strongMin": 10.0, "heavyMin": 20.0},
+                "dose": {"units": "mg", "lightMin": 5.0, "commonMin": 10.0, "strongMin": 15.0, "heavyMin": 20.0},
                 "duration": {
                     "onset": {"min": 0.25, "max": 0.5, "units": "hours"},
                     "peak": {"min": 0.5, "max": 1.5, "units": "hours"},
@@ -964,7 +964,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 3.75, "commonMin": 7.5, "strongMin": 7.5, "heavyMin": 15.0},
+                "dose": {"units": "mg", "lightMin": 3.75, "commonMin": 7.5, "strongMin": 11.25, "heavyMin": 15.0},
                 "duration": {
                     "onset": {"min": 0.3, "max": 0.6, "units": "hours"},
                     "peak": {"min": 1.0, "max": 2.0, "units": "hours"},
@@ -1001,7 +1001,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 1.0, "commonMin": 2.0, "strongMin": 3.0, "heavyMin": 3.0},
+                "dose": {"units": "mg", "lightMin": 1.0, "commonMin": 2.0, "strongMin": 3.0, "heavyMin": 5.0},
                 "duration": {
                     "onset": {"min": 0.25, "max": 0.5, "units": "hours"},
                     "peak": {"min": 0.8, "max": 1.5, "units": "hours"},
@@ -1038,7 +1038,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 5.0, "commonMin": 10.0, "strongMin": 10.0, "heavyMin": 20.0},
+                "dose": {"units": "mg", "lightMin": 5.0, "commonMin": 10.0, "strongMin": 15.0, "heavyMin": 20.0},
                 "duration": {
                     "onset": {"min": 0.2, "max": 0.4, "units": "hours"},
                     "peak": {"min": 0.5, "max": 1.0, "units": "hours"},
@@ -1101,7 +1101,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "name_zh": "卡马西平",
         "aliases": ["得理多", "Tegretol", "卡马西平片"],
         "url": "https://en.wikipedia.org/wiki/Carbamazepine",
-        "categories": ["mood stabilizer", "anticonvulsant", "common"],
+        "categories": ["mood-stabilizer", "anticonvulsant", "common"],
         "summary": "电压门控钠通道阻滞剂。双相障碍躁狂发作经典情绪稳定剂，三叉神经痛一线黄金用药；具有强大的自身酶诱导特性与重症药疹风险。",
         "pk": {
             "brandName": "得理多 (Tegretol) | 诺华 (Novartis)",
@@ -1138,7 +1138,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "name_zh": "奥卡西平",
         "aliases": ["曲莱", "Trileptal", "奥卡西平片"],
         "url": "https://en.wikipedia.org/wiki/Oxcarbazepine",
-        "categories": ["mood stabilizer", "anticonvulsant", "common"],
+        "categories": ["mood-stabilizer", "anticonvulsant", "common"],
         "summary": "卡马西平的 10-酮基结构类似物前药。在体内直接还原为活性单羟基衍生物 (MHD)，自身酶诱导与过敏发生率远低于卡马西平，但易引起低钠血症。",
         "pk": {
             "brandName": "曲莱 (Trileptal) | 诺华 (Novartis)",
@@ -1175,7 +1175,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "name_zh": "托吡酯",
         "aliases": ["妥泰", "Topamax", "托吡酯片"],
         "url": "https://en.wikipedia.org/wiki/Topiramate",
-        "categories": ["anticonvulsant", "mood stabilizer", "common"],
+        "categories": ["anticonvulsant", "mood-stabilizer", "common"],
         "summary": "磺胺取代单糖衍生物。具有阻断钠通道、增强 GABA、拮抗 AMPA/红藻氨酸受体及弱抑制碳酸酐酶多重机制。具有显著食欲抑制与减重特性，但可致认知迟钝。",
         "pk": {
             "brandName": "妥泰 (Topamax) | 强生杨森 (Janssen)",
@@ -1381,7 +1381,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 50.0, "commonMin": 150.0, "strongMin": 250.0, "heavyMin": 250.0},
+                "dose": {"units": "mg", "lightMin": 50.0, "commonMin": 150.0, "strongMin": 250.0, "heavyMin": 300.0},
                 "duration": {
                     "onset": {"min": 0.5, "max": 1.0, "units": "hours"},
                     "peak": {"min": 1.5, "max": 2.5, "units": "hours"},
@@ -1590,7 +1590,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 0.5, "commonMin": 0.5, "strongMin": 0.5, "heavyMin": 1.0},
+                "dose": {"units": "mg", "lightMin": 0.25, "commonMin": 0.5, "strongMin": 1.0, "heavyMin": 2.5},
                 "duration": {
                     "onset": {"min": 1.0, "max": 2.0, "units": "hours"},
                     "peak": {"min": 2.0, "max": 3.0, "units": "hours"},
@@ -1627,7 +1627,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "intramuscular",
-                "dose": {"units": "mg", "lightMin": 3.75, "commonMin": 3.75, "strongMin": 11.25, "heavyMin": 11.25},
+                "dose": {"units": "mg", "lightMin": 1.875, "commonMin": 3.75, "strongMin": 7.5, "heavyMin": 11.25},
                 "duration": {
                     "onset": {"min": 1.0, "max": 3.0, "units": "hours"},
                     "peak": {"min": 24.0, "max": 72.0, "units": "hours"},
@@ -1664,7 +1664,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "subcutaneous",
-                "dose": {"units": "mg", "lightMin": 3.6, "commonMin": 3.6, "strongMin": 10.8, "heavyMin": 10.8},
+                "dose": {"units": "mg", "lightMin": 1.8, "commonMin": 3.6, "strongMin": 7.2, "heavyMin": 10.8},
                 "duration": {
                     "onset": {"min": 24.0, "max": 48.0, "units": "hours"},
                     "peak": {"min": 288.0, "max": 360.0, "units": "hours"},
@@ -1701,7 +1701,7 @@ ADDITIONAL_CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 100.0, "commonMin": 100.0, "strongMin": 200.0, "heavyMin": 400.0},
+                "dose": {"units": "mg", "lightMin": 50.0, "commonMin": 100.0, "strongMin": 200.0, "heavyMin": 400.0},
                 "duration": {
                     "onset": {"min": 0.5, "max": 1.0, "units": "hours"},
                     "peak": {"min": 1.5, "max": 3.0, "units": "hours"},
@@ -1711,7 +1711,7 @@ ADDITIONAL_CURATED_DRUGS = [
             },
             {
                 "name": "rectal",
-                "dose": {"units": "mg", "lightMin": 100.0, "commonMin": 100.0, "strongMin": 200.0, "heavyMin": 200.0},
+                "dose": {"units": "mg", "lightMin": 50.0, "commonMin": 100.0, "strongMin": 200.0, "heavyMin": 400.0},
                 "duration": {
                     "onset": {"min": 0.5, "max": 1.0, "units": "hours"},
                     "peak": {"min": 2.0, "max": 4.0, "units": "hours"},

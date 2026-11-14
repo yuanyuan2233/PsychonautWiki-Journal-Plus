@@ -170,6 +170,131 @@
       "description": "心境稳定剂与抗惊厥药物，双相情感障碍治疗基础。",
       "url": "https://en.wikipedia.org/wiki/Mood_stabilizer",
       "color": 4288256511
+    },
+    {
+      "name": "adhd",
+      "description": "注意力缺陷多动障碍（ADHD）治疗药物，涵盖中枢兴奋剂与非兴奋剂两类临床制剂。",
+      "color": 4282927359
+    },
+    {
+      "name": "analgesic",
+      "description": "镇痛药，通过中枢或外周机制缓解各类型急性或慢性疼痛。",
+      "color": 4294945600
+    },
+    {
+      "name": "anticonvulsant",
+      "description": "抗惊厥药，用于预防或控制癫痫发作及神经元异常高频放电。",
+      "color": 4285959400
+    },
+    {
+      "name": "antidiarrheal",
+      "description": "止泻药，减缓肠道蠕动以缓解急性或慢性腹泻症状。",
+      "color": 4289901234
+    },
+    {
+      "name": "antidote",
+      "description": "解毒剂或拮抗剂，用于逆转特定药物过量或中毒反应。",
+      "color": 4278242960
+    },
+    {
+      "name": "antiepileptic",
+      "description": "抗癫痫药物，同时常兼作心境稳定剂或神经病理性疼痛治疗药。",
+      "color": 4286292200
+    },
+    {
+      "name": "antihistamine",
+      "description": "组胺受体拮抗剂，用于抗过敏、止吐或中枢镇静助眠。",
+      "color": 4284852223
+    },
+    {
+      "name": "antihypertensive",
+      "description": "降压药，通过调控血管张力或交感活性降低血压。",
+      "color": 4280991487
+    },
+    {
+      "name": "antiparkinsonian",
+      "description": "抗帕金森病及抗锥体外系反应药物，用于改善多巴胺/乙酰胆碱平衡。",
+      "color": 4288205540
+    },
+    {
+      "name": "antiviral",
+      "description": "抗病毒药物，部分药物（如金刚烷胺）兼具多巴胺能或 NMDA 调节活性。",
+      "color": 4283424700
+    },
+    {
+      "name": "anxiolytic",
+      "description": "抗焦虑药，用于减轻焦虑紧张及惊恐发作。",
+      "color": 4286566143
+    },
+    {
+      "name": "atypical antipsychotic",
+      "description": "非典型（第二代）抗精神病药，同时作用于多巴胺与 5-HT2A 受体。",
+      "color": 4291348680
+    },
+    {
+      "name": "typical antipsychotic",
+      "description": "典型（第一代）抗精神病药，主要通过阻断 D2 多巴胺受体起效。",
+      "color": 4293467747
+    },
+    {
+      "name": "gnrh agonist",
+      "description": "促性腺激素释放激素（GnRH）激动剂，持续给药可实现垂体-性腺轴降调节。",
+      "color": 4293956830
+    },
+    {
+      "name": "hormone",
+      "description": "内源性激素及其合成衍生物或拮抗制剂。",
+      "color": 4294218975
+    },
+    {
+      "name": "maoi",
+      "description": "单胺氧化酶抑制剂（MAOI），与 5-HT/儿茶酚胺能药物合用存在极高交互风险。",
+      "color": 4294924066
+    },
+    {
+      "name": "melatonergic",
+      "description": "褪黑素受体激动剂类药物，用于调节昼夜节律及治疗抑郁、失眠。",
+      "color": 4285501951
+    },
+    {
+      "name": "multimodal",
+      "description": "多模式抗抑郁药，兼具 5-HT 转运体抑制及多亚型 5-HT 受体调节作用。",
+      "color": 4284927231
+    },
+    {
+      "name": "nassa",
+      "description": "去甲肾上腺素能与特异性 5-羟色胺能抗抑郁药（NaSSA）。",
+      "color": 4287412991
+    },
+    {
+      "name": "ndri",
+      "description": "去甲肾上腺素-多巴胺再摄取抑制剂（NDRI）。",
+      "color": 4281519359
+    },
+    {
+      "name": "sari",
+      "description": "5-羟色胺拮抗与再摄取抑制剂（SARI）。",
+      "color": 4289773055
+    },
+    {
+      "name": "sedative",
+      "description": "镇静剂，用于降低中枢兴奋性、诱导平静或助眠。",
+      "color": 4292117760
+    },
+    {
+      "name": "tca",
+      "description": "三环类抗抑郁药（TCA），过量及联合用药心脏毒性与血清素综合征风险较高。",
+      "color": 4294937720
+    },
+    {
+      "name": "wakefulness",
+      "description": "促觉醒药物，用于治疗发作性睡病与过度嗜睡。",
+      "color": 4280279807
+    },
+    {
+      "name": "z-drug",
+      "description": "非苯二氮䓬类 GABAA 受体阳性别构调节催眠药（Z-类药物）。",
+      "color": 4289564159
     }
   ],
   "substances": [
@@ -277,7 +402,6 @@
         "Butylene Glycol",
         "One Four B-D-O",
         "1,4-丁二醇",
-        "GHB_Prodrugs",
         "or One Four B-D-O",
         "4-B",
         "1dec",
@@ -4191,7 +4315,7 @@
       },
       "crossTolerances": [
         "dopamine",
-        "serotonin|serotonergic",
+        "serotonergic",
         "stimulant"
       ],
       "addictionPotential": "具有中度成瘾性，且滥用潜力较高",
@@ -4339,7 +4463,7 @@
       },
       "crossTolerances": [
         "dopamine",
-        "serotonin|serotonergic",
+        "serotonergic",
         "stimulant"
       ],
       "addictionPotential": "具有中度成瘾性，且滥用潜力较高",
@@ -7177,7 +7301,7 @@
             "lightMin": 15,
             "commonMin": 75,
             "strongMin": 150,
-            "heavyMin": 150
+            "heavyMin": 200
           },
           "duration": {
             "onset": {
@@ -9919,7 +10043,7 @@
       },
       "crossTolerances": [
         "benzhydryl",
-        "nootropic|nootropics"
+        "nootropics"
       ],
       "addictionPotential": "无成瘾性，滥用风险较低",
       "toxicities": [],
@@ -10104,10 +10228,10 @@
           "name": "oral",
           "dose": {
             "units": "mg",
-            "lightMin": 25.0,
+            "lightMin": 12.5,
             "commonMin": 25.0,
             "strongMin": 50.0,
-            "heavyMin": 50.0
+            "heavyMin": 75.0
           },
           "duration": {
             "onset": {
@@ -10176,7 +10300,6 @@
         "Bevvy",
         "酒精",
         "乙醇",
-        "Screenshot_2026-04-18-23-30-21-63_149003a2d400f6adb210d7e357a3a646",
         "Ethanol",
         "Ethyl alcohol",
         "EtOH",
@@ -10555,6 +10678,43 @@
           "bioavailability": {
             "min": 80.0,
             "max": 90.0
+          }
+        },
+        {
+          "name": "inhaled",
+          "dose": {
+            "units": "mg",
+            "lightMin": 0.05,
+            "commonMin": 0.25,
+            "strongMin": 0.5,
+            "heavyMin": 1
+          },
+          "duration": {
+            "onset": {
+              "min": 5,
+              "max": 10,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 5,
+              "max": 10,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 1,
+              "max": 2,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 2,
+              "max": 3,
+              "units": "hours"
+            },
+            "total": {
+              "min": 4,
+              "max": 5,
+              "units": "hours"
+            }
           }
         }
       ],
@@ -11538,7 +11698,40 @@
         },
         {
           "name": "subcutaneous",
-          "dose": null
+          "dose": {
+            "units": "mg",
+            "lightMin": 1.0,
+            "commonMin": 2.0,
+            "strongMin": 4.0,
+            "heavyMin": 6.0
+          },
+          "duration": {
+            "onset": {
+              "min": 5.0,
+              "max": 15.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 0.5,
+              "max": 1.0,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 0.5,
+              "max": 1.0,
+              "units": "hours"
+            },
+            "total": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "hours"
+            }
+          }
         }
       ]
     },
@@ -11653,7 +11846,7 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 2.0,
+              "min": 1.0,
               "max": 2.0,
               "units": "hours"
             },
@@ -11781,7 +11974,7 @@
             "lightMin": 50.0,
             "commonMin": 150.0,
             "strongMin": 250.0,
-            "heavyMin": 250.0
+            "heavyMin": 300.0
           },
           "duration": {
             "onset": {
@@ -11860,7 +12053,8 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "psychedelic",
+        "tentative"
       ],
       "summary": "Arundo donax（维基百科）\n Arundo donax（Erowid Vault）",
       "interactions": {
@@ -11914,9 +12108,7 @@
       "crossTolerances": [],
       "addictionPotential": null,
       "toxicities": [],
-      "categories": [
-        "research-chemical"
-      ],
+      "categories": [],
       "summary": "免责声明：本网站的给药剂量信息仅基于用户与资料整理而成，目的仅为教育用途，并不构成推荐哦，准确性还请结合其他来源核实呢。",
       "interactions": {
         "dangerous": [],
@@ -13340,6 +13532,12 @@
             "min": 3.0,
             "max": 6.0
           }
+        },
+        {
+          "name": "sublingual",
+          "dose": {
+            "units": "mg"
+          }
         }
       ],
       "pharmacokinetics": {
@@ -13647,8 +13845,8 @@
               "units": "hours"
             },
             "offset": {
-              "min": 6,
-              "max": 10,
+              "min": 0.5,
+              "max": 1.0,
               "units": "hours"
             },
             "total": {
@@ -13689,13 +13887,13 @@
               "units": "hours"
             },
             "offset": {
-              "min": 6,
-              "max": 10,
+              "min": 1.0,
+              "max": 2.0,
               "units": "hours"
             },
             "total": {
-              "min": 2,
-              "max": 5,
+              "min": 3.0,
+              "max": 6.0,
               "units": "hours"
             },
             "afterglow": {
@@ -13877,7 +14075,6 @@
         "Tree",
         "THC",
         "大麻",
-        "Gx9i6VsWIAE4mpH",
         "dm",
         "da'ma",
         "dama"
@@ -14072,7 +14269,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "mood stabilizer",
+        "mood-stabilizer",
         "anticonvulsant",
         "common"
       ],
@@ -15371,7 +15568,6 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical",
         "antipsychotic",
         "atypical antipsychotic",
         "common"
@@ -15717,18 +15913,18 @@
               "units": "minutes"
             },
             "comeup": {
-              "min": 1,
-              "max": 2,
+              "min": 0.5,
+              "max": 1.0,
               "units": "hours"
             },
             "peak": {
-              "min": 3,
-              "max": 5,
+              "min": 2.0,
+              "max": 3.0,
               "units": "hours"
             },
             "offset": {
-              "min": 2,
-              "max": 4,
+              "min": 1.0,
+              "max": 2.0,
               "units": "hours"
             },
             "total": {
@@ -16052,7 +16248,6 @@
       "commonNames": [
         "翠冠玉",
         "假乌羽玉",
-        "800px-Lophophoradiffusa1",
         "cgy",
         "jwyy",
         "cui'guan'yu",
@@ -16067,7 +16262,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "psychedelic"
       ],
       "summary": "翠冠玉，又称假乌羽玉，是仙人掌科中的一种无刺仙人掌。该物种含有零至痕量的麦斯卡林，但含有其他精神活性生物碱。",
       "interactions": {
@@ -17267,7 +17462,7 @@
         "臭草",
         "魔鬼草",
         "月光花",
-        "Datura_inoxia",
+        "Datura inoxia",
         "Angel's",
         "Trumpets",
         "Devil's",
@@ -17325,7 +17520,9 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "deliriant",
+        "depressant",
+        "tentative"
       ],
       "summary": "曼陀罗非常难以预测，它的使用与精神病、严重伤害和死亡有很强的关联呢。请查看这一章节了解更多细节喵。",
       "interactions": {
@@ -17959,7 +18156,6 @@
         "DexAlone",
         "Duract",
         "右美沙芬",
-        "HGNGVPuacAADF36",
         "ymsf",
         "you'mei'sha'fen",
         "youmeishafen"
@@ -18303,7 +18499,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "deliriant"
       ],
       "summary": "颠茄，通常也被称为颠茄或致命龙葵，是一种属于茄科的植物，原产于欧洲、北非和西亚。它含有属于谵妄剂的托烷类物质。其叶片和浆果都具有极强毒性，内含托烷类生物碱。这些毒素包括阿托品、东莨菪碱和莨菪碱。它们会引发怪异的谵妄与幻觉（与曼陀罗类似），同时也被用作药用抗胆碱剂。",
       "interactions": {
@@ -19336,8 +19532,8 @@
               "units": "hours"
             },
             "offset": {
-              "min": 6.0,
-              "max": 6.0,
+              "min": 5.0,
+              "max": 8.0,
               "units": "hours"
             },
             "total": {
@@ -19423,10 +19619,10 @@
           "name": "oral",
           "dose": {
             "units": "mg",
-            "lightMin": 0.5,
+            "lightMin": 0.25,
             "commonMin": 0.5,
-            "strongMin": 0.5,
-            "heavyMin": 1.0
+            "strongMin": 1.0,
+            "heavyMin": 2.5
           },
           "duration": {
             "onset": {
@@ -20353,8 +20549,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 2.0,
-              "max": 2.0,
+              "min": 1.5,
+              "max": 3.0,
               "units": "hours"
             },
             "peak": {
@@ -21167,7 +21363,6 @@
         "与苯二氮䓬类、酒精或阿片类等中枢神经系统抑制剂混用时具有潜在致命风险"
       ],
       "categories": [
-        "hallucinogen",
         "depressant",
         "hypnotic",
         "habit-forming",
@@ -21183,7 +21378,7 @@
             "lightMin": 1.0,
             "commonMin": 2.0,
             "strongMin": 3.0,
-            "heavyMin": 3.0
+            "heavyMin": 5.0
           },
           "duration": {
             "onset": {
@@ -22241,7 +22436,7 @@
           "name": "oral",
           "dose": {
             "units": "mg",
-            "lightMin": 1.0,
+            "lightMin": 0.5,
             "commonMin": 1.0,
             "strongMin": 2.5,
             "heavyMin": 5.0
@@ -22910,8 +23105,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 4.0,
-              "max": 4.0,
+              "min": 3.0,
+              "max": 5.0,
               "units": "hours"
             },
             "peak": {
@@ -23712,9 +23907,9 @@
           "name": "subcutaneous",
           "dose": {
             "units": "mg",
-            "lightMin": 3.6,
+            "lightMin": 1.8,
             "commonMin": 3.6,
-            "strongMin": 10.8,
+            "strongMin": 7.2,
             "heavyMin": 10.8
           },
           "duration": {
@@ -24379,7 +24574,7 @@
       "name": "HupA",
       "commonNames": [
         "石杉碱甲",
-        "Huperzine_A",
+        "Huperzine A",
         "ssjj",
         "shi'shan'jian'jia",
         "shishanjianjia"
@@ -24391,7 +24586,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "nootropic"
       ],
       "summary": "免责声明：本条目所汇编的剂量信息仅供减害科普与药理教育参考，来源涵盖临床文献与使用者报告，绝不构成任何用药推荐。在实际参考前必须经由其他权威医学专业来源进行交叉核实。",
       "interactions": {
@@ -25708,7 +25903,8 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "stimulant",
+        "habit-forming"
       ],
       "summary": "可可（Cocoa）及其粉末来源于锦葵科可可树（Theobroma cacao）种子的天然产物，也是制作巧克力的核心原料。可可豆及其提取粉末中天然含有可可碱（Theobromine）和咖啡因等黄嘌呤类中枢神经活性化合物，经摄入后可作为轻度至中度的温和兴奋剂。商业上广泛作为烘焙与饮品配料流通。",
       "interactions": {
@@ -25967,7 +26163,7 @@
         "Kratom",
         "Kratum",
         "卡痛",
-        "Mitragyna_speciosa",
+        "Mitragyna speciosa",
         "kt",
         "ka'tong",
         "katong"
@@ -26789,7 +26985,7 @@
           "name": "subcutaneous",
           "dose": {
             "units": "mg",
-            "lightMin": 3.75,
+            "lightMin": 1.875,
             "commonMin": 3.75,
             "strongMin": 7.5,
             "heavyMin": 11.25
@@ -27355,7 +27551,7 @@
         "埃斯潘德",
         "埃斯凡德",
         "叙利亚芸香",
-        "Peganum_harmala",
+        "Peganum harmala",
         "ltp",
         "aspd",
         "asfd",
@@ -27376,7 +27572,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "maoi"
       ],
       "summary": "骆驼蓬（Peganum harmala），俗称叙利亚芸香（Syrian Rue）、野生芸香或阿斯潘德（Harmal/Esfand），是一种原产于从伊朗东部至印度等干旱荒漠地带的多年生草本植物。它也作为外来入侵物种扩散至美国西部的多个州。该植物的成熟种子富含骆驼蓬碱（Harmine）、氢化骆驼蓬碱（Harmaline）等高浓度可逆性单胺氧化酶A抑制剂（RIMA），常在死藤水类似配方中作为口服DMT的酶解抑制增效剂使用。",
       "interactions": {
@@ -27854,7 +28050,7 @@
       },
       "crossTolerances": [
         "dopamine",
-        "serotonin|serotonergic",
+        "serotonergic",
         "stimulant"
       ],
       "addictionPotential": "具有中度成瘾性，且滥用潜力较高",
@@ -29289,8 +29485,7 @@
         "Ebixa",
         "Namenda",
         "Namenda XR",
-        "Namzaric (with donepezil",
-        "both extended-release)",
+        "Namzaric (with donepezil, both extended-release)",
         "美金刚",
         "与多奈哌齐联用",
         "均为缓释",
@@ -29536,7 +29731,7 @@
         "full": "反复给药数日内产生完全耐受"
       },
       "crossTolerances": [
-        "GABA|gabaergic",
+        "GABAergic",
         "depressants"
       ],
       "addictionPotential": "高度成瘾性",
@@ -30238,7 +30433,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "GABA|gabaergic",
+        "GABAergic",
         "depressants"
       ],
       "addictionPotential": "极具成瘾性",
@@ -31139,6 +31334,48 @@
             "min": 25.0,
             "max": 35.0
           }
+        },
+        {
+          "name": "insufflated",
+          "dose": {
+            "units": "mg",
+            "lightMin": 1,
+            "commonMin": 10,
+            "strongMin": 30,
+            "heavyMin": 60
+          },
+          "duration": {
+            "onset": {
+              "min": 5,
+              "max": 20,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 15,
+              "max": 40,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 30,
+              "max": 45,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 2,
+              "max": 4,
+              "units": "hours"
+            },
+            "total": {
+              "min": 2,
+              "max": 4,
+              "units": "hours"
+            },
+            "afterglow": {
+              "min": 1,
+              "max": 4,
+              "units": "hours"
+            }
+          }
         }
       ],
       "pharmacokinetics": {
@@ -31185,7 +31422,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "thienzodiazepines",
+        "thienodiazepines",
         "benzodiazepines"
       ],
       "addictionPotential": "极具成瘾性",
@@ -31573,6 +31810,38 @@
             "min": 30.0,
             "max": 45.0
           }
+        },
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 1,
+            "commonMin": 2,
+            "strongMin": 4,
+            "heavyMin": 5
+          },
+          "duration": {
+            "onset": {
+              "min": 4,
+              "max": 6,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 1,
+              "max": 4,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 0.5,
+              "max": 1.5,
+              "units": "hours"
+            },
+            "total": {
+              "min": 2,
+              "max": 6,
+              "units": "hours"
+            }
+          }
         }
       ],
       "interactions": {
@@ -31763,7 +32032,7 @@
       },
       "crossTolerances": [
         "benzhydryl",
-        "nootropic|nootropics"
+        "nootropics"
       ],
       "addictionPotential": "无成瘾性，滥用潜力低",
       "toxicities": [
@@ -32296,7 +32565,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "norepinephrine|noradrenergic",
+        "noradrenergic",
         "dopamine",
         "stimulant"
       ],
@@ -32433,7 +32702,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "modafanil",
+        "modafinil",
         "analog"
       ],
       "addictionPotential": "轻度成瘾性，滥用潜力低",
@@ -32837,9 +33106,7 @@
       "crossTolerances": [],
       "addictionPotential": null,
       "toxicities": [],
-      "categories": [
-        "research-chemical"
-      ],
+      "categories": [],
       "summary": "在临床毒理与物质分类中，吸入剂（Inhalants）并不包含那些需要通过加热汽化或点燃燃烧后吸入肺部的物质。例如，亚硝酸异戊酯（Poppers）、氧化亚氮（笑气/Nitrous oxide）和甲苯等化合物被归类为吸入剂，是因为它们在常温常压下即极易挥发，无需外界辅助热源即可自发由液态或高压气瓶转化为气体被吸入。而烟草、大麻、快克可卡因（裂缝可卡因）或其他需要借助打火机、燃烧炭火等外部热源加热产生气溶胶或烟雾吸入肺部的精神活性物质，在医学分类学上均不属于吸入剂类物质。",
       "interactions": {
         "dangerous": [],
@@ -33088,7 +33355,6 @@
         "尼古丁",
         "烟碱",
         "烟草素",
-        "Screenshot_2026-04-18-23-30-21-63_149003a2d400f6adb210d7e357a3a646",
         "ngd",
         "yj",
         "ycs",
@@ -33356,7 +33622,7 @@
         "N2O",
         "Nangs",
         "氧化亚氮",
-        "Nitrous_Oxide",
+        "Nitrous oxide",
         "NO",
         "yhyd",
         "yang'hua'ya'dan",
@@ -33918,7 +34184,6 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical",
         "antipsychotic",
         "atypical antipsychotic",
         "common"
@@ -34257,7 +34522,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "mood stabilizer",
+        "mood-stabilizer",
         "anticonvulsant",
         "common"
       ],
@@ -34929,7 +35194,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "dissociative|dissociatives"
+        "dissociatives"
       ],
       "addictionPotential": "具有高度成瘾性，且引发精神病性症状等严重不良反应的风险极高",
       "toxicities": [],
@@ -36199,8 +36464,8 @@
               "units": "hours"
             },
             "total": {
-              "min": 4,
-              "max": 6,
+              "min": 18.0,
+              "max": 36.0,
               "units": "hours"
             },
             "afterglow": {
@@ -36612,7 +36877,6 @@
         "Nervalin",
         "普瑞巴林",
         "乐瑞卡",
-        "HEVLZcnbYAIWHkb",
         "3-Isobutyl GABA",
         "prbl",
         "lrk",
@@ -36693,6 +36957,48 @@
           "bioavailability": {
             "min": 90.0,
             "max": 95.0
+          }
+        },
+        {
+          "name": "rectal",
+          "dose": {
+            "units": "mg",
+            "lightMin": 40,
+            "commonMin": 200,
+            "strongMin": 450,
+            "heavyMin": 600
+          },
+          "duration": {
+            "onset": {
+              "min": 15,
+              "max": 30,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 30,
+              "max": 120,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 2,
+              "max": 3,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 3,
+              "max": 5,
+              "units": "hours"
+            },
+            "total": {
+              "min": 5,
+              "max": 8,
+              "units": "hours"
+            },
+            "afterglow": {
+              "min": 6,
+              "max": 12,
+              "units": "hours"
+            }
           }
         }
       ],
@@ -36826,7 +37132,7 @@
           "name": "oral",
           "dose": {
             "units": "mg",
-            "lightMin": 100.0,
+            "lightMin": 50.0,
             "commonMin": 100.0,
             "strongMin": 200.0,
             "heavyMin": 400.0
@@ -36867,10 +37173,10 @@
           "name": "rectal",
           "dose": {
             "units": "mg",
-            "lightMin": 100.0,
+            "lightMin": 50.0,
             "commonMin": 100.0,
             "strongMin": 200.0,
-            "heavyMin": 200.0
+            "heavyMin": 400.0
           },
           "duration": {
             "onset": {
@@ -37783,8 +38089,8 @@
               "units": "minutes"
             },
             "peak": {
-              "min": 1.75,
-              "max": 1.75,
+              "min": 1.5,
+              "max": 2.0,
               "units": "hours"
             },
             "comeup": {
@@ -37935,7 +38241,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "dissociative|dissociatives"
+        "dissociatives"
       ],
       "addictionPotential": "具有高度成瘾性，且引发精神病性症状等严重不良反应的风险极高",
       "toxicities": [],
@@ -38109,7 +38415,7 @@
         "Methylguanidoacetic Acid",
         "S-腺苷蛋氨酸",
         "甲基胍基乙酸",
-        "S-Adenosyl_methionine",
+        "S-Adenosyl methionine",
         "SAMe",
         "Sxgdas",
         "jjgjys",
@@ -38223,9 +38529,7 @@
       "crossTolerances": [],
       "addictionPotential": null,
       "toxicities": [],
-      "categories": [
-        "research-chemical"
-      ],
+      "categories": [],
       "summary": "日本白兔牌退热止咳复方制剂（BRON 糖衣片），每片通常含有磷酸二氢可待因、盐酸甲基麻黄碱、氯苯那敏及无水咖啡因。因其含有阿片类中枢镇咳成分可待因，过量滥用极易产生依赖性与中毒风险。",
       "interactions": {
         "dangerous": [],
@@ -38922,7 +39226,7 @@
       "name": "Shuweicaosujia",
       "commonNames": [
         "鼠尾草素甲",
-        "Salvinorin_A",
+        "Salvinorin A",
         "swcsj",
         "shu'wei'cao'su'jia",
         "shuweicaosujia"
@@ -39087,8 +39391,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 4.0,
-              "max": 4.0,
+              "min": 3.0,
+              "max": 5.0,
               "units": "hours"
             },
             "peak": {
@@ -39413,7 +39717,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "nootropic"
       ],
       "summary": "L-苏糖酸镁（Magnesium L-Threonate）是一种高脑生物利用度的特异性镁螯合物，能够有效穿透血脑屏障提高脑脊液中的镁离子浓度，从而促进突触可塑性并改善学习与记忆认知功能。",
       "interactions": {
@@ -39999,8 +40303,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 0.5,
-              "max": 0.5,
+              "min": 0.3,
+              "max": 0.7,
               "units": "hours"
             },
             "peak": {
@@ -40646,9 +40950,9 @@
           "name": "intramuscular",
           "dose": {
             "units": "mg",
-            "lightMin": 500.0,
-            "commonMin": 1000.0,
-            "strongMin": 1000.0,
+            "lightMin": 250.0,
+            "commonMin": 500.0,
+            "strongMin": 750.0,
             "heavyMin": 1000.0
           },
           "duration": {
@@ -40782,7 +41086,7 @@
           "name": "insufflated",
           "dose": {
             "units": "mg",
-            "lightMin": 25,
+            "lightMin": 15,
             "commonMin": 25,
             "strongMin": 100
           },
@@ -40961,7 +41265,7 @@
         "zero": "1 - 2 周"
       },
       "crossTolerances": [
-        "trycyclic antidepressants",
+        "tricyclic antidepressants",
         "opioids"
       ],
       "addictionPotential": "轻度成瘾性",
@@ -41291,7 +41595,9 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "stimulant",
+        "habit-forming",
+        "common"
       ],
       "summary": "烟草（主要活性成分为尼古丁）是一种常见的中枢兴奋性茄科植物制品。尼古丁通过激动神经型烟碱乙酰胆碱受体（nAChR）产生轻度兴奋与奖赏效应，具有极强的成瘾性与心血管负荷风险。",
       "interactions": {
@@ -41374,7 +41680,7 @@
       "toxicities": [],
       "categories": [
         "anticonvulsant",
-        "mood stabilizer",
+        "mood-stabilizer",
         "common"
       ],
       "summary": "磺胺取代单糖衍生物。具有阻断钠通道、增强 GABA、拮抗 AMPA/红藻氨酸受体及弱抑制碳酸酐酶多重机制。具有显著食欲抑制与减重特性，但可致认知迟钝。",
@@ -41920,10 +42226,10 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical",
         "deliriant",
         "depressant",
-        "common"
+        "common",
+        "antiparkinsonian"
       ],
       "summary": "药物历史：  \n苯海索于1949年在美国首次临床应用并获批，原作为抗帕金森病药物，源于早期颠茄碱类治疗震颤麻痹的延续。20世纪中叶广泛用于药物诱发锥体外系反应（EPS）矫正，尤其伴随经典抗精神病药使用。2003年FDA扩展适应症至各类帕金森综合征。目前为处方药，在精神科及神经科常见，但因中枢抗胆碱效应引发的欣快及幻觉潜力，21世纪以来滥用报告渐增，部分地区视为潜在滥用物质。",
       "interactions": {
@@ -41957,8 +42263,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 0.5,
-              "max": 0.5,
+              "min": 0.3,
+              "max": 0.7,
               "units": "hours"
             },
             "peak": {
@@ -42050,9 +42356,9 @@
           "name": "intramuscular",
           "dose": {
             "units": "mg",
-            "lightMin": 3.75,
+            "lightMin": 1.875,
             "commonMin": 3.75,
-            "strongMin": 11.25,
+            "strongMin": 7.5,
             "heavyMin": 11.25
           },
           "duration": {
@@ -42591,8 +42897,8 @@
               "units": "hours"
             },
             "comeup": {
-              "min": 3.0,
-              "max": 3.0,
+              "min": 2.0,
+              "max": 4.0,
               "units": "hours"
             },
             "peak": {
@@ -42864,7 +43170,6 @@
       "name": "Wuyuyu",
       "commonNames": [
         "乌羽玉",
-        "Lophophora_williamsii_ies",
         "wyy",
         "wu'yu'yu",
         "wuyuyu"
@@ -42876,7 +43181,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "psychedelic"
       ],
       "summary": "乌羽玉（Lophophora williamsii，俗称佩奥特 Peyote）是一种生长缓慢且无刺的仙人掌科植物，富含麦斯卡林等多种苯乙胺类致幻生物碱，在北美原住民文化中具有数千年的宗教与精神仪式使用历史。",
       "interactions": {
@@ -43154,7 +43459,6 @@
       "commonNames": [
         "银冠玉",
         "假佩奥特",
-        "Lophophora-fricii-albiflora",
         "ygy",
         "jpat",
         "yin'guan'yu",
@@ -43169,7 +43473,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "psychedelic"
       ],
       "summary": "银冠玉（Lophophora fricii）是仙人掌科乌羽玉属植物。其佩落碱和安哈罗尼定含量相对较高，而麦斯卡林含量极低，通常不具备显著的经典致幻活性。",
       "interactions": {
@@ -43216,7 +43520,7 @@
       "addictionPotential": null,
       "toxicities": [],
       "categories": [
-        "research-chemical"
+        "stimulant"
       ],
       "summary": "育亨宾（Yohimbine）是一种提取自育亨宾树树皮的吲哚类生物碱，为选择性中枢 α2-肾上腺素受体拮抗剂，具有显著的中枢兴奋、血管扩张及升高血压效应。",
       "interactions": {
@@ -43303,9 +43607,7 @@
       "crossTolerances": [],
       "addictionPotential": null,
       "toxicities": [],
-      "categories": [
-        "research-chemical"
-      ],
+      "categories": [],
       "summary": "愈美片是一种复方口服止咳制剂，主要有效成分为氢溴酸右美沙芬（中枢性镇咳药）与愈创木酚甘油醚（祛痰药）。超量滥用极易因愈创木酚甘油醚引起剧烈恶心呕吐，且右美沙芬过量具有解离性中毒致幻与呼吸抑制风险。",
       "interactions": {
         "dangerous": [],
@@ -43423,7 +43725,7 @@
             "units": "mg",
             "lightMin": 5.0,
             "commonMin": 10.0,
-            "strongMin": 10.0,
+            "strongMin": 15.0,
             "heavyMin": 20.0
           },
           "duration": {
@@ -43646,7 +43948,6 @@
         "Zolpimist",
         "唑吡坦",
         "思诺思",
-        "HGNGVPqbwAAunLT",
         "Stilnox",
         "zbt",
         "sns",
@@ -43668,7 +43969,6 @@
         "与酒精或阿片类等中枢神经系统抑制剂混用时极易致命"
       ],
       "categories": [
-        "hallucinogen",
         "depressant",
         "habit-forming",
         "common",
@@ -43683,7 +43983,7 @@
             "units": "mg",
             "lightMin": 5.0,
             "commonMin": 10.0,
-            "strongMin": 10.0,
+            "strongMin": 15.0,
             "heavyMin": 20.0
           },
           "duration": {
@@ -43789,7 +44089,6 @@
         "与苯二氮䓬类、酒精或阿片类等中枢神经系统抑制剂混用时极易致命"
       ],
       "categories": [
-        "hallucinogen",
         "depressant",
         "habit-forming",
         "common",
@@ -43804,7 +44103,7 @@
             "units": "mg",
             "lightMin": 3.75,
             "commonMin": 7.5,
-            "strongMin": 7.5,
+            "strongMin": 11.25,
             "heavyMin": 15.0
           },
           "duration": {
@@ -43824,8 +44123,8 @@
               "units": "hours"
             },
             "offset": {
-              "min": 4.0,
-              "max": 4.0,
+              "min": 3.0,
+              "max": 5.0,
               "units": "hours"
             },
             "total": {
@@ -44276,8 +44575,8 @@
               "units": "hours"
             },
             "onset": {
-              "min": 1.0,
-              "max": 1.0,
+              "min": 0.5,
+              "max": 1.5,
               "units": "minutes"
             },
             "afterglow": {

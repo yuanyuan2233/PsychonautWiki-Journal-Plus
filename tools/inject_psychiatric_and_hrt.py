@@ -808,7 +808,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 1.0, "commonMin": 1.0, "strongMin": 2.5, "heavyMin": 5.0},
+                "dose": {"units": "mg", "lightMin": 0.5, "commonMin": 1.0, "strongMin": 2.5, "heavyMin": 5.0},
                 "duration": {"onset": {"min": 0.5, "max": 1.0, "units": "hours"}, "peak": {"min": 1.0, "max": 2.0, "units": "hours"}, "total": {"min": 12.0, "max": 24.0, "units": "hours"}},
                 "bioavailability": {"min": 60.0, "max": 70.0}
             }
@@ -841,7 +841,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "subcutaneous",
-                "dose": {"units": "mg", "lightMin": 3.75, "commonMin": 3.75, "strongMin": 7.5, "heavyMin": 11.25},
+                "dose": {"units": "mg", "lightMin": 1.875, "commonMin": 3.75, "strongMin": 7.5, "heavyMin": 11.25},
                 "duration": {"onset": {"min": 24.0, "max": 48.0, "units": "hours"}, "peak": {"min": 48.0, "max": 96.0, "units": "hours"}, "total": {"min": 672.0, "max": 2016.0, "units": "hours"}},
                 "bioavailability": {"min": 95.0, "max": 100.0}
             }
@@ -911,7 +911,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "intramuscular",
-                "dose": {"units": "mg", "lightMin": 500.0, "commonMin": 1000.0, "strongMin": 1000.0, "heavyMin": 1000.0},
+                "dose": {"units": "mg", "lightMin": 250.0, "commonMin": 500.0, "strongMin": 750.0, "heavyMin": 1000.0},
                 "duration": {"onset": {"min": 24.0, "max": 48.0, "units": "hours"}, "peak": {"min": 168.0, "max": 336.0, "units": "hours"}, "total": {"min": 1680.0, "max": 2352.0, "units": "hours"}},
                 "bioavailability": {"min": 98.0, "max": 100.0}
             },
@@ -1001,7 +1001,15 @@ def main():
             # 增强已有物质
             target["pharmacokinetics"] = item["pk"]
             if item.get("roas"):
-                target["roas"] = item["roas"]
+                existing_roas = {r.get("name"): i for i, r in enumerate(target.get("roas", []))}
+                merged_roas = list(target.get("roas", []))
+                for roa in item["roas"]:
+                    rname = roa.get("name")
+                    if rname in existing_roas:
+                        merged_roas[existing_roas[rname]] = roa
+                    else:
+                        merged_roas.append(roa)
+                target["roas"] = merged_roas
             if item.get("interactions"):
                 target["interactions"] = item["interactions"]
             if item.get("summary") and (not target.get("summary") or len(target.get("summary", "")) < 20):
