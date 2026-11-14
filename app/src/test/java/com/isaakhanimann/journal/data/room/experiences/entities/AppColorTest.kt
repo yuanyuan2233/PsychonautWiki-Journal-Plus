@@ -49,6 +49,16 @@ class AppColorTest {
         assertEquals(1f, shortHex.getComposeColor().red, 0.01f)
         assertEquals(1f, shortHex.getComposeColor().green, 0.01f)
         assertEquals(1f, shortHex.getComposeColor().blue, 0.01f)
+
+        // 非法或带正负号字符串必须安全回退为默认蓝色而非抛异常或误解析负数
+        val fallback = parseHexColor("#007AFF").let { parseHexColor("invalid") }
+        assertEquals(fallback, parseHexColor("-12345"))
+        assertEquals(fallback, parseHexColor("+12345"))
+        assertEquals(fallback, parseHexColor("#GGGGGG"))
+        assertEquals(fallback, parseHexColor("#12"))
+        val argb = parseHexColor("#80FF0000")
+        assertEquals(0.502f, argb.alpha, 0.01f)
+        assertEquals(1f, argb.red, 0.01f)
     }
 
     @Test

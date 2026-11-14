@@ -121,7 +121,10 @@ object ToleranceTimeParser {
      */
     fun parseTimeToHours(text: String?): Double? {
         if (text.isNullOrBlank()) return null
-        val lower = text.lowercase(java.util.Locale.ROOT).trim()
+        val lower = DECIMAL_COMMA_REGEX.replace(
+            text.lowercase(java.util.Locale.ROOT).trim(),
+            "$1.$2"
+        )
 
         // 排除非时间性质描述（如 "with prolonged use", "unknown"）
         if (lower.contains("prolonged") || lower.contains("unknown") || lower.contains("长期") || lower.contains("未知")) {
@@ -149,6 +152,7 @@ object ToleranceTimeParser {
         }
     }
 
+    private val DECIMAL_COMMA_REGEX = Regex("(\\d+),(\\d{1,2})(?!\\d)")
     private val MINUTE_UNIT_REGEX = Regex("(?<![a-z])(?:minutes?|mins?)(?![a-z])")
     private val HOUR_UNIT_REGEX = Regex("(?<![a-z])(?:hours?|hrs?|h)(?![a-z])")
 }

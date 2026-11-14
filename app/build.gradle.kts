@@ -114,6 +114,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.adaptive.navigation.suite.android)
     testImplementation(libs.junit)
+    // 为 JVM 本地单元测试提供真实 org.json 实现，避免被 Android SDK 存根跳过 TestParse
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

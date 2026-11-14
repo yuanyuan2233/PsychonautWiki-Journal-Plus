@@ -207,4 +207,22 @@ class TestParse {
             Locale.setDefault(previousLocale)
         }
     }
+
+    @Test
+    fun parseBundledSubstancesAsset_succeedsWithNonEmptyCatalog() {
+        assumeTrue(
+            "Requires real org.json implementation",
+            isRealOrgJsonAvailable()
+        )
+        val candidates = listOf(
+            java.io.File("src/main/assets/Substances.json"),
+            java.io.File("app/src/main/assets/Substances.json")
+        )
+        val assetFile = candidates.firstOrNull { it.isFile }
+            ?: throw AssertionError("Substances.json not found from ${java.io.File(".").absolutePath}")
+        val result = SubstanceParser().parseSubstanceFile(assetFile.readText(Charsets.UTF_8))
+        assertTrue("Expected non-empty categories", result.categories.isNotEmpty())
+        assertTrue("Expected large substance catalog", result.substances.size > 100)
+        assertTrue("LSD should exist in catalog", result.substances.any { it.name == "LSD" })
+    }
 }

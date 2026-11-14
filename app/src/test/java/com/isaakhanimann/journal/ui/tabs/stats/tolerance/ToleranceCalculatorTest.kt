@@ -39,6 +39,16 @@ class ToleranceCalculatorTest {
         assertEquals(36.0, ToleranceTimeParser.getHalfToleranceInHours("2C-B", null)!!, 0.01)
         assertEquals(72.0, ToleranceTimeParser.getZeroToleranceInHours("2C-B", null)!!, 0.01)
         assertEquals(2.0, ToleranceTimeParser.getZeroToleranceInHours("Changa", null)!!, 0.01)
+
+        // 回归：4-AcO-DMT 不得因包含 "DMT" 子串而误命中 DMT 的 2 小时归零期
+        assertNull(ToleranceTimeParser.getZeroToleranceInHours("4-AcO-DMT", null))
+        assertEquals(120.0, ToleranceTimeParser.getZeroToleranceInHours("lsd", null)!!, 0.01)
+
+        // 回归："within 30 minutes" 不得被词首外的字母 'h' 误判为小时，逗号小数与连字符正常解析
+        assertEquals(0.5, ToleranceTimeParser.parseTimeToHours("within 30 minutes")!!, 0.001)
+        assertEquals(2.0, ToleranceTimeParser.parseTimeToHours("within 2 hours")!!, 0.001)
+        assertEquals(24.0, ToleranceTimeParser.parseTimeToHours("24h")!!, 0.001)
+        assertEquals(36.0, ToleranceTimeParser.parseTimeToHours("1,5 天")!!, 0.001)
     }
 
     @Test
