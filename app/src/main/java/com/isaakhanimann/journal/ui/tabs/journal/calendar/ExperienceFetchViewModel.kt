@@ -21,6 +21,7 @@ package com.isaakhanimann.journal.ui.tabs.journal.calendar
 import androidx.lifecycle.ViewModel
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.data.room.experiences.relations.ExperienceWithIngestionsCompanionsAndRatings
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -28,9 +29,18 @@ import javax.inject.Inject
 @HiltViewModel
 class ExperienceFetchViewModel @Inject constructor(
     val experienceRepo: ExperienceRepository,
+    private val routineSchedulerManager: RoutineSchedulerManager,
 ) : ViewModel() {
 
     suspend fun getExperience(experienceId: Int): ExperienceWithIngestionsCompanionsAndRatings? {
         return experienceRepo.getExperienceWithIngestionsCompanionsAndRatings(experienceId)
+    }
+
+    suspend fun confirmRoutineIngestion(ingestionId: Int) {
+        routineSchedulerManager.confirmDose(ingestionId)
+    }
+
+    suspend fun skipRoutineIngestion(ingestionId: Int) {
+        routineSchedulerManager.skipOrDeleteRoutineIngestion(ingestionId)
     }
 }

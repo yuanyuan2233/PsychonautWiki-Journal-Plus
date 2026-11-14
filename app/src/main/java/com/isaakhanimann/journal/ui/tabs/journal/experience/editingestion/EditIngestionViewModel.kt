@@ -29,6 +29,7 @@ import androidx.navigation.toRoute
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.data.room.experiences.entities.CustomUnit
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.ui.main.navigation.graphs.EditIngestionRoute
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.time.IngestionTimePickerOption
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.toPreservedString
@@ -54,12 +55,15 @@ import javax.inject.Inject
 class EditIngestionViewModel @Inject constructor(
     private val experienceRepo: ExperienceRepository,
     private val userPreferences: UserPreferences,
+    private val routineSchedulerManager: RoutineSchedulerManager,
     state: SavedStateHandle
 ) : ViewModel() {
     private var ingestionFlow: MutableStateFlow<Ingestion?> = MutableStateFlow(null)
     var ingestion: Ingestion? = null
     var note by mutableStateOf("")
     var isEstimate by mutableStateOf(false)
+    var isConfirmed by mutableStateOf(true)
+    var isRoutineLinked by mutableStateOf(false)
     var isKnown by mutableStateOf(true)
     var dose by mutableStateOf("")
     var estimatedDoseStandardDeviation by mutableStateOf("")
@@ -98,6 +102,8 @@ class EditIngestionViewModel @Inject constructor(
             ingestion = ing
             note = ing.notes ?: ""
             isEstimate = ing.isDoseAnEstimate
+            isConfirmed = ing.isConfirmed
+            isRoutineLinked = ing.routineScheduleId != null || !ing.isConfirmed
             estimatedDoseStandardDeviation = ing.estimatedDoseStandardDeviation?.toPreservedString() ?: ""
             experienceId = ing.experienceId
             dose = ing.dose?.toPreservedString() ?: ""
@@ -170,6 +176,10 @@ class EditIngestionViewModel @Inject constructor(
         isEstimate = newIsEstimate
     }
 
+    fun onChangeIsConfirmed(newIsConfirmed: Boolean) {
+        isConfirmed = newIsConfirmed
+    }
+
     fun saveClonedIngestionTime() = viewModelScope.launch {
         userPreferences.saveClonedIngestionTime(ingestion?.time)
     }
@@ -199,6 +209,7 @@ class EditIngestionViewModel @Inject constructor(
             ingestion?.let {
                 it.notes = note
                 it.isDoseAnEstimate = isEstimate
+                it.isConfirmed = isConfirmed
                 it.experienceId = experienceId
                 it.dose = if (isKnown) dose.toDoubleOrNull() else null
                 it.estimatedDoseStandardDeviation = if (isEstimate) estimatedDoseStandardDeviation.toDoubleOrNull() else null
@@ -208,6 +219,13 @@ class EditIngestionViewModel @Inject constructor(
                 it.endTime = endTime
                 it.consumerName = consumerName.ifBlank { null }
                 experienceRepo.update(it)
+                if (it.routineScheduleId != null) {
+                    if (isConfirmed) {
+                        routineSchedulerManager.confirmDose(it.id)
+                    } else {
+                        routineSchedulerManager.markDoseUnconfirmed(it.id)
+                    }
+                }
             }
         }
     }
@@ -215,7 +233,11 @@ class EditIngestionViewModel @Inject constructor(
     fun deleteIngestion() {
         viewModelScope.launch {
             ingestion?.let {
-                experienceRepo.delete(ingestion = it)
+                if (it.routineScheduleId != null) {
+                    routineSchedulerManager.skipOrDeleteRoutineIngestion(it.id)
+                } else {
+                    experienceRepo.delete(ingestion = it)
+                }
             }
         }
     }

@@ -83,11 +83,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.isaakhanimann.journal.R
+import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.ui.FULL_STOMACH_DISCLAIMER
 import com.isaakhanimann.journal.ui.YOU
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions.Interaction
+import com.isaakhanimann.journal.ui.tabs.journal.components.UnconfirmedDoseActionDialog
+import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineUiHelpers
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CardTitle
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CumulativeDoseRow
@@ -170,7 +173,9 @@ fun ExperienceScreen(
         onChangeTimeDisplayOption = viewModel::saveTimeDisplayOption,
         navigateToTimelineScreen = navigateToTimelineScreen,
         areDosageDotsHidden = viewModel.areDosageDotsHiddenFlow.collectAsState().value,
-        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsState().value
+        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsState().value,
+        onConfirmRoutineIngestion = viewModel::confirmRoutineIngestion,
+        onSkipRoutineIngestion = viewModel::skipRoutineIngestion,
     )
 }
 
@@ -232,7 +237,32 @@ fun ExperienceScreen(
     navigateToTimelineScreen: (consumerName: String) -> Unit,
     areDosageDotsHidden: Boolean,
     isTimelineHidden: Boolean,
+    onConfirmRoutineIngestion: (Int) -> Unit = {},
+    onSkipRoutineIngestion: (Int) -> Unit = {},
 ) {
+    var pendingUnconfirmedIngestion by remember { mutableStateOf<Ingestion?>(null) }
+
+    pendingUnconfirmedIngestion?.let { ing ->
+        UnconfirmedDoseActionDialog(
+            substanceName = ing.substanceName,
+            doseTimeText = RoutineUiHelpers.formatInstantDateTime(ing.time),
+            onConfirmTaken = {
+                onConfirmRoutineIngestion(ing.id)
+                pendingUnconfirmedIngestion = null
+            },
+            onSkipDelete = {
+                onSkipRoutineIngestion(ing.id)
+                pendingUnconfirmedIngestion = null
+            },
+            onEditRecord = {
+                val id = ing.id
+                pendingUnconfirmedIngestion = null
+                navigateToIngestionScreen(id)
+            },
+            onDismiss = { pendingUnconfirmedIngestion = null }
+        )
+    }
+
     Scaffold(
         topBar = {
             ExperienceTopBar(
@@ -275,7 +305,8 @@ fun ExperienceScreen(
                     oneExperienceScreenModel = oneExperienceScreenModel,
                     areDosageDotsHidden = areDosageDotsHidden,
                     navigateToIngestionScreen = navigateToIngestionScreen,
-                    timeDisplayOption = timeDisplayOption
+                    timeDisplayOption = timeDisplayOption,
+                    onUnconfirmedBadgeClick = { ing -> pendingUnconfirmedIngestion = ing }
                 )
             }
             val cumulativeDoses = oneExperienceScreenModel.cumulativeDoses
@@ -320,7 +351,8 @@ fun ExperienceScreen(
                     timeDisplayOption = timeDisplayOption,
                     areDosageDotsHidden = areDosageDotsHidden,
                     navigateToIngestionScreen = navigateToIngestionScreen,
-                    isTimelineHidden = isTimelineHidden
+                    isTimelineHidden = isTimelineHidden,
+                    onUnconfirmedBadgeClick = { ing -> pendingUnconfirmedIngestion = ing }
                 )
             }
             val interactions = oneExperienceScreenModel.interactions
@@ -386,7 +418,8 @@ private fun ConsumerSection(
     timeDisplayOption: TimeDisplayOption,
     areDosageDotsHidden: Boolean,
     navigateToIngestionScreen: (ingestionId: Int) -> Unit,
-    isTimelineHidden: Boolean
+    isTimelineHidden: Boolean,
+    onUnconfirmedBadgeClick: (Ingestion) -> Unit = {},
 ) {
     ElevatedCard(modifier = Modifier.padding(vertical = verticalCardPadding)) {
         Row(
@@ -428,15 +461,19 @@ private fun ConsumerSection(
         }
         HorizontalDivider()
         consumerWithIngestions.ingestionElements.forEachIndexed { index, ingestionElement ->
+            val currentIngestion = ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion
             IngestionRow(
                 ingestionElement = ingestionElement,
                 areDosageDotsHidden = areDosageDotsHidden,
                 modifier = Modifier
                     .clickable {
-                        navigateToIngestionScreen(ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion.id)
+                        navigateToIngestionScreen(currentIngestion.id)
                     }
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp, horizontal = horizontalPadding)
+                    .padding(vertical = 5.dp, horizontal = horizontalPadding),
+                onUnconfirmedBadgeClick = if (!currentIngestion.isConfirmed) {
+                    { onUnconfirmedBadgeClick(currentIngestion) }
+                } else null
             ) {
                 val ingestion = ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion
                 IngestionTimeOrDurationText(
@@ -604,7 +641,8 @@ private fun MyIngestionList(
     oneExperienceScreenModel: OneExperienceScreenModel,
     areDosageDotsHidden: Boolean,
     navigateToIngestionScreen: (ingestionId: Int) -> Unit,
-    timeDisplayOption: TimeDisplayOption
+    timeDisplayOption: TimeDisplayOption,
+    onUnconfirmedBadgeClick: (Ingestion) -> Unit = {},
 ) {
     ElevatedCard(modifier = Modifier.padding(vertical = verticalCardPadding)) {
         CardTitle(
@@ -614,15 +652,19 @@ private fun MyIngestionList(
             HorizontalDivider()
         }
         oneExperienceScreenModel.ingestionElements.forEachIndexed { index, ingestionElement ->
+            val currentIngestion = ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion
             IngestionRow(
                 ingestionElement = ingestionElement,
                 areDosageDotsHidden = areDosageDotsHidden,
                 modifier = Modifier
                     .clickable {
-                        navigateToIngestionScreen(ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion.id)
+                        navigateToIngestionScreen(currentIngestion.id)
                     }
                     .fillMaxWidth()
-                    .padding(vertical = 5.dp, horizontal = horizontalPadding)
+                    .padding(vertical = 5.dp, horizontal = horizontalPadding),
+                onUnconfirmedBadgeClick = if (!currentIngestion.isConfirmed) {
+                    { onUnconfirmedBadgeClick(currentIngestion) }
+                } else null
             ) {
                 val ingestion = ingestionElement.ingestionWithCompanionAndCustomUnit.ingestion
                 IngestionTimeOrDurationText(

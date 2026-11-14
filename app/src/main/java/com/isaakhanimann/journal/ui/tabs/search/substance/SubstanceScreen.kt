@@ -46,6 +46,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.GppBad
 import androidx.compose.material.icons.filled.Update
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
@@ -55,6 +56,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -114,6 +116,7 @@ fun SubstanceScreen(
     navigateToExplainTimeline: () -> Unit,
     navigateToCategoryScreen: (categoryName: String) -> Unit,
     navigateBack: () -> Unit,
+    navigateToCreateRoutineSchedule: (substanceName: String) -> Unit = {},
     viewModel: SubstanceViewModel = hiltViewModel()
 ) {
     SubstanceScreen(
@@ -129,6 +132,7 @@ fun SubstanceScreen(
         navigateBack = navigateBack,
         substanceWithCategories = viewModel.substanceWithCategories,
         customUnits = viewModel.customUnitsFlow.collectAsState().value,
+        navigateToCreateRoutineSchedule = navigateToCreateRoutineSchedule,
     )
 }
 
@@ -171,7 +175,8 @@ fun SubstanceScreen(
     navigateToCategoryScreen: (categoryName: String) -> Unit,
     navigateBack: () -> Unit,
     substanceWithCategories: SubstanceWithCategories?,
-    customUnits: List<CustomUnit>
+    customUnits: List<CustomUnit>,
+    navigateToCreateRoutineSchedule: (substanceName: String) -> Unit = {},
 ) {
     BackHandler(onBack = navigateBack)
     if (substanceWithCategories == null) {
@@ -289,6 +294,20 @@ fun SubstanceScreen(
                 }
             }
             val categories = substanceWithCategories.categories
+            OutlinedButton(
+                onClick = { navigateToCreateRoutineSchedule(substance.name) },
+                modifier = Modifier
+                    .padding(horizontal = horizontalPadding, vertical = verticalPaddingCards)
+                    .fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Alarm,
+                    contentDescription = null,
+                    modifier = Modifier.size(ButtonDefaults.IconSize)
+                )
+                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                Text(text = stringResource(R.string.routine_quick_create_cta))
+            }
             if (substance.summary != null || categories.isNotEmpty()) {
                 VerticalSpace()
                 ElevatedCard(

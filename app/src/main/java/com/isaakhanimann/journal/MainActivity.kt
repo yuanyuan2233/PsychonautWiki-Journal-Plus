@@ -20,6 +20,7 @@ package com.isaakhanimann.journal
 
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.AssetManager
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -33,18 +34,30 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import com.isaakhanimann.journal.data.routine.RoutineNotificationHelper
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.ui.main.MainScreen
 import com.isaakhanimann.journal.ui.tabs.settings.AppLanguage
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import com.isaakhanimann.journal.ui.theme.JournalTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Locale
 import javax.inject.Inject
+
+data class RoutineDeepLinkRequest(
+    val openRoutineRecords: Boolean = false,
+    val experienceId: Int? = null
+)
 
 class LocalizedActivityContext(
     base: Context,
@@ -60,10 +73,18 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var userPreferences: UserPreferences
 
+    @Inject
+    lateinit var routineSchedulerManager: RoutineSchedulerManager
+
+    private var routineDeepLinkState by mutableStateOf<RoutineDeepLinkRequest?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) {
+            routineDeepLinkState = extractRoutineDeepLink(intent)
+        }
         setContent {
             val appLanguage by userPreferences.appLanguageFlow.collectAsState(initial = AppLanguage.FOLLOW_SYSTEM)
             val currentContext = LocalContext.current
@@ -97,10 +118,40 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        MainScreen()
+                        MainScreen(
+                            routineDeepLink = routineDeepLinkState,
+                            onConsumeRoutineDeepLink = { routineDeepLinkState = null }
+                        )
                     }
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        routineDeepLinkState = extractRoutineDeepLink(intent)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        lifecycleScope.launch(Dispatchers.IO) {
+            routineSchedulerManager.reconcileAndRescheduleAll()
+        }
+    }
+
+    private fun extractRoutineDeepLink(intent: Intent?): RoutineDeepLinkRequest? {
+        if (intent == null) return null
+        val openRecords = intent.getBooleanExtra(RoutineNotificationHelper.EXTRA_OPEN_ROUTINE_RECORDS, false)
+        val expId = intent.getIntExtra(RoutineNotificationHelper.EXTRA_OPEN_EXPERIENCE_ID, -1)
+            .takeIf { it > 0 }
+        intent.removeExtra(RoutineNotificationHelper.EXTRA_OPEN_ROUTINE_RECORDS)
+        intent.removeExtra(RoutineNotificationHelper.EXTRA_OPEN_EXPERIENCE_ID)
+        return if (openRecords || expId != null) {
+            RoutineDeepLinkRequest(openRoutineRecords = openRecords, experienceId = expId)
+        } else {
+            null
         }
     }
 }

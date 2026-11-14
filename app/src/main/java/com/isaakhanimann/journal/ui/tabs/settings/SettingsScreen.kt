@@ -38,6 +38,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ContactSupport
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FileDownload
@@ -125,6 +126,7 @@ fun SettingsScreen(
     navigateToSubstanceColors: () -> Unit,
     navigateToCustomUnits: () -> Unit,
     navigateToDonate: () -> Unit,
+    navigateToRoutineSchedules: () -> Unit = {},
 ) {
     val context = LocalContext.current
     LaunchedEffect(viewModel, context) {
@@ -142,6 +144,7 @@ fun SettingsScreen(
         navigateToSubstanceColors = navigateToSubstanceColors,
         navigateToCustomUnits = navigateToCustomUnits,
         navigateToDonate = navigateToDonate,
+        navigateToRoutineSchedules = navigateToRoutineSchedules,
         deleteEverything = viewModel::deleteEverything,
         importFile = viewModel::importFile,
         exportFile = viewModel::exportFile,
@@ -177,6 +180,7 @@ fun SettingsScreen(
     saveAreSubstanceHeightsIndependent: (Boolean) -> Unit,
     appLanguage: AppLanguage,
     saveAppLanguage: (AppLanguage) -> Unit,
+    navigateToRoutineSchedules: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -258,6 +262,13 @@ fun SettingsScreen(
                     text = stringResource(R.string.settings_custom_units)
                 ) {
                     navigateToCustomUnits()
+                }
+                HorizontalDivider()
+                SettingsButton(
+                    imageVector = Icons.Outlined.Alarm,
+                    text = stringResource(R.string.routine_settings_item_title)
+                ) {
+                    navigateToRoutineSchedules()
                 }
                 HorizontalDivider()
                 SettingsButton(

@@ -30,6 +30,9 @@ import com.isaakhanimann.journal.data.room.experiences.entities.CustomUnit
 import com.isaakhanimann.journal.data.room.experiences.entities.Experience
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.Location
+import com.isaakhanimann.journal.data.room.experiences.entities.MedicationSchedule
+import com.isaakhanimann.journal.data.room.experiences.entities.RoutineOccurrence
+import com.isaakhanimann.journal.data.room.experiences.entities.ScheduleSlotCodec
 import com.isaakhanimann.journal.data.room.experiences.entities.ShulginRating
 import com.isaakhanimann.journal.data.room.experiences.entities.SubstanceCompanion
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
@@ -43,6 +46,7 @@ import com.isaakhanimann.journal.data.room.experiences.relations.IngestionWithCo
 import com.isaakhanimann.journal.data.room.experiences.relations.IngestionWithExperienceAndCustomUnit
 import com.isaakhanimann.journal.ui.tabs.settings.CustomUnitSerializable
 import com.isaakhanimann.journal.ui.tabs.settings.JournalExport
+import com.isaakhanimann.journal.ui.tabs.settings.MedicationScheduleSerializable
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -268,6 +272,8 @@ interface ExperienceDao {
         deleteAllCustomSubstances()
         deleteAllRatings()
         deleteAllCustomUnits()
+        deleteAllRoutineOccurrences()
+        deleteAllMedicationSchedules()
     }
 
     @Transaction
@@ -306,6 +312,42 @@ interface ExperienceDao {
                 customUnitIdMap.putIfAbsent(unitSerializable.id, newId)
             }
         }
+
+        val scheduleIdMap = mutableMapOf<Int, Int>()
+        val seenOldScheduleIds = mutableSetOf<Int>()
+        val deferredSchedules = mutableListOf<MedicationScheduleSerializable>()
+        journalExport.medicationSchedules.forEach { scheduleSerializable ->
+            val mappedCustomUnitId = scheduleSerializable.customUnitId?.let { customUnitIdMap[it] }
+            if (scheduleSerializable.id > 0 && seenOldScheduleIds.add(scheduleSerializable.id)) {
+                val insertedRowId = insertMedicationScheduleOrAbort(
+                    scheduleSerializable.toMedicationSchedule(
+                        idOverride = scheduleSerializable.id,
+                        customUnitIdOverride = mappedCustomUnitId
+                    )
+                )
+                val newId = insertedRowId.toInt()
+                if (newId > 0) {
+                    scheduleIdMap[scheduleSerializable.id] = newId
+                }
+            } else {
+                deferredSchedules.add(scheduleSerializable)
+            }
+        }
+        deferredSchedules.forEach { scheduleSerializable ->
+            val mappedCustomUnitId = scheduleSerializable.customUnitId?.let { customUnitIdMap[it] }
+            val insertedRowId = insertMedicationScheduleOrAbort(
+                scheduleSerializable.toMedicationSchedule(
+                    idOverride = 0,
+                    customUnitIdOverride = mappedCustomUnitId
+                )
+            )
+            val newId = insertedRowId.toInt()
+            if (scheduleSerializable.id > 0 && newId > 0) {
+                scheduleIdMap.putIfAbsent(scheduleSerializable.id, newId)
+            }
+        }
+
+        val importedIngestionIdsByKey = mutableMapOf<Pair<Int, Long>, Int>()
         journalExport.experiences.forEachIndexed { indexExperience, experienceSerializable ->
             val experienceID = indexExperience + 1
             val newExperience = Experience(
@@ -323,12 +365,16 @@ interface ExperienceDao {
                     )
                 } else {
                     null
-                }
+                },
+                isRoutineOnly = experienceSerializable.isRoutineOnly
             )
             insert(newExperience)
             experienceSerializable.ingestions.forEach { ingestionSerializable ->
                 val mappedCustomUnitId = ingestionSerializable.customUnitId?.let { oldUnitId ->
                     customUnitIdMap[oldUnitId]
+                }
+                val mappedScheduleId = ingestionSerializable.routineScheduleId?.let { oldScheduleId ->
+                    scheduleIdMap[oldScheduleId] ?: oldScheduleId
                 }
                 val newIngestion = Ingestion(
                     substanceName = ingestionSerializable.substanceName,
@@ -344,9 +390,16 @@ interface ExperienceDao {
                     notes = ingestionSerializable.notes,
                     stomachFullness = ingestionSerializable.stomachFullness,
                     consumerName = ingestionSerializable.consumerName,
-                    customUnitId = mappedCustomUnitId
+                    customUnitId = mappedCustomUnitId,
+                    isConfirmed = ingestionSerializable.isConfirmed,
+                    routineScheduleId = mappedScheduleId,
+                    scheduledEpochMillis = ingestionSerializable.scheduledEpochMillis
                 )
-                insert(newIngestion)
+                val insertedIngestionId = insertIngestionReturningId(newIngestion).toInt()
+                val scheduledMillis = ingestionSerializable.scheduledEpochMillis
+                if (mappedScheduleId != null && scheduledMillis != null && insertedIngestionId > 0) {
+                    importedIngestionIdsByKey[mappedScheduleId to scheduledMillis] = insertedIngestionId
+                }
             }
             experienceSerializable.timedNotes.forEach { timedNoteSerializable ->
                 val newTimedNote = TimedNote(
@@ -371,6 +424,22 @@ interface ExperienceDao {
         }
         journalExport.substanceCompanions.forEach { insert(it) }
         journalExport.customSubstances.forEach { insert(it) }
+        journalExport.routineOccurrences.forEach { occSerializable ->
+            val mappedScheduleId = scheduleIdMap[occSerializable.scheduleId] ?: occSerializable.scheduleId
+            val remappedIngestionId = importedIngestionIdsByKey[
+                mappedScheduleId to occSerializable.scheduledEpochMillis
+            ]
+            insert(
+                RoutineOccurrence(
+                    scheduleId = mappedScheduleId,
+                    slotId = occSerializable.slotId,
+                    scheduledEpochMillis = occSerializable.scheduledEpochMillis,
+                    status = occSerializable.status,
+                    ingestionId = remappedIngestionId,
+                    handledAt = occSerializable.handledAt
+                )
+            )
+        }
     }
 
 
@@ -418,8 +487,28 @@ interface ExperienceDao {
     @Query("DELETE FROM customsubstance")
     suspend fun deleteAllCustomSubstances()
 
+    @Transaction
+    @Query("DELETE FROM medicationschedule")
+    suspend fun deleteAllMedicationSchedules()
+
+    @Transaction
+    @Query("DELETE FROM routineoccurrence")
+    suspend fun deleteAllRoutineOccurrences()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(ingestion: Ingestion)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIngestionReturningId(ingestion: Ingestion): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(schedule: MedicationSchedule): Long
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertMedicationScheduleOrAbort(schedule: MedicationSchedule): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(occurrence: RoutineOccurrence): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(rating: ShulginRating)
@@ -525,5 +614,35 @@ private fun CustomUnitSerializable.toCustomUnit(idOverride: Int): CustomUnit {
         unitPlural = unitPlural,
         originalUnit = originalUnit,
         note = note
+    )
+}
+
+private fun MedicationScheduleSerializable.toMedicationSchedule(
+    idOverride: Int,
+    customUnitIdOverride: Int?
+): MedicationSchedule {
+    return MedicationSchedule(
+        id = idOverride,
+        substanceName = substanceName,
+        administrationRoute = administrationRoute,
+        customUnitId = customUnitIdOverride,
+        consumerName = consumerName,
+        isEnabled = isEnabled,
+        notifyOnTrigger = notifyOnTrigger,
+        recurrenceType = recurrenceType,
+        daysOfWeekMask = daysOfWeekMask,
+        intervalDays = intervalDays,
+        intervalMinutes = intervalMinutes,
+        cycleOnDays = cycleOnDays,
+        cycleOffDays = cycleOffDays,
+        timeSlotsJson = ScheduleSlotCodec.encodeSlots(timeSlots),
+        anchorEpochMillis = anchorEpochMillis,
+        startEpochDay = startEpochDay,
+        endEpochDay = endEpochDay,
+        maxOccurrences = maxOccurrences,
+        customHalfLifeHours = customHalfLifeHours,
+        note = note,
+        createdAt = createdAt,
+        updatedAt = updatedAt
     )
 }

@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
@@ -32,6 +33,9 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.isaakhanimann.journal.RoutineDeepLinkRequest
+import com.isaakhanimann.journal.ui.main.navigation.graphs.ExperienceRoute
+import com.isaakhanimann.journal.ui.main.navigation.graphs.RoutineRecordsRoute
 import com.isaakhanimann.journal.ui.main.navigation.graphs.journalGraph
 import com.isaakhanimann.journal.ui.main.navigation.graphs.saferGraph
 import com.isaakhanimann.journal.ui.main.navigation.graphs.searchGraph
@@ -42,11 +46,31 @@ import com.isaakhanimann.journal.ui.main.navigation.topLevelRoutes
 
 @Composable
 fun MainScreen(
+    routineDeepLink: RoutineDeepLinkRequest? = null,
+    onConsumeRoutineDeepLink: () -> Unit = {},
     viewModel: MainScreenViewModel = hiltViewModel()
 ) {
     if (viewModel.isAcceptedFlow.collectAsState().value) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
+        LaunchedEffect(routineDeepLink) {
+            val target = routineDeepLink ?: return@LaunchedEffect
+            navController.navigate(JournalTopLevelRoute) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    saveState = false
+                }
+                launchSingleTop = true
+            }
+            when {
+                target.openRoutineRecords -> navController.navigate(RoutineRecordsRoute) {
+                    launchSingleTop = true
+                }
+                target.experienceId != null -> navController.navigate(ExperienceRoute(target.experienceId)) {
+                    launchSingleTop = true
+                }
+            }
+            onConsumeRoutineDeepLink()
+        }
         NavigationSuiteScaffold(
             navigationSuiteItems = {
                 val currentDestination = navBackStackEntry?.destination

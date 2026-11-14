@@ -47,6 +47,7 @@ class EditCustomUnitViewModel @Inject constructor(
 ) : ViewModel() {
 
     private var customUnit: CustomUnit? = null
+    val customUnitId: Int = state.toRoute<EditCustomUnitRoute>().customUnitId
 
     var roaDose: RoaDose? = null
 

@@ -22,6 +22,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.SavedTimeDisplayOption
@@ -48,6 +49,7 @@ class UserPreferences @Inject constructor(private val dataStore: DataStore<Prefe
         val KEY_ARE_SUBSTANCE_HEIGHTS_INDEPENDENT = booleanPreferencesKey("KEY_ARE_SUBSTANCE_HEIGHTS_INDEPENDENT")
         val KEY_IS_TIMELINE_HIDDEN = booleanPreferencesKey("KEY_IS_TIMELINE_HIDDEN")
         val KEY_APP_LANGUAGE = stringPreferencesKey("key_app_language")
+        val KEY_ROUTINE_CATCH_UP_DAYS = intPreferencesKey("key_routine_catch_up_days")
     }
 
     suspend fun saveTimeDisplayOption(value: SavedTimeDisplayOption) {
@@ -149,5 +151,20 @@ class UserPreferences @Inject constructor(private val dataStore: DataStore<Prefe
             val code = preferences[PreferencesKeys.KEY_APP_LANGUAGE]
             AppLanguage.fromCode(code)
         }
+
+    suspend fun saveRoutineCatchUpDays(days: Int) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.KEY_ROUTINE_CATCH_UP_DAYS] = days.coerceIn(1, 30)
+        }
+    }
+
+    val routineCatchUpDaysFlow: Flow<Int> = dataStore.data
+        .map { preferences ->
+            (preferences[PreferencesKeys.KEY_ROUTINE_CATCH_UP_DAYS] ?: DEFAULT_ROUTINE_CATCH_UP_DAYS).coerceIn(1, 30)
+        }
+
+    companion object {
+        const val DEFAULT_ROUTINE_CATCH_UP_DAYS = 7
+    }
 }
 

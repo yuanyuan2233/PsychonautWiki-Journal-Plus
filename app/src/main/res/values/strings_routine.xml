@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notifications -->
+    <string name="routine_notification_channel_name">Routine Medication Reminders</string>
+    <string name="routine_notification_channel_desc">Alerts and quick actions for scheduled routine medications</string>
+    <string name="routine_notification_title">Routine Dose: %1$s</string>
+    <string name="routine_notification_body_with_dose">Auto-logged (unconfirmed) · %1$s · %2$s</string>
+    <string name="routine_notification_body_no_dose">Auto-logged (unconfirmed) · %1$s</string>
+    <string name="routine_notification_action_confirm">Taken</string>
+    <string name="routine_notification_action_skip">Skip</string>
+    <string name="routine_day_container_title">Routine Medications (%1$s)</string>
+
+    <!-- Journal top bar & Routine sub-page -->
+    <string name="routine_journal_entry">Routine</string>
+    <string name="routine_journal_entry_cd">Open routine medication records</string>
+    <string name="routine_records_title">Routine Medications</string>
+    <string name="routine_records_manage_schedules">Manage Schedules</string>
+    <string name="routine_records_reconcile_now">Sync &amp; Catch Up</string>
+    <string name="routine_records_filter_all">All</string>
+    <string name="routine_records_filter_unconfirmed">Unconfirmed</string>
+    <string name="routine_records_filter_memo">Same-Day Memos</string>
+    <string name="routine_records_empty_title">No routine medication logs yet</string>
+    <string name="routine_records_empty_subtitle">Create a routine schedule to automatically log doses, receive popup reminders, and track unconfirmed doses.</string>
+    <string name="routine_records_pending_summary">%1$d unconfirmed dose(s)</string>
+    <string name="routine_records_confirm_all">Confirm All</string>
+
+    <!-- Badges & Dialogs -->
+    <string name="routine_badge_unconfirmed_cd">Possibly not taken (unconfirmed)</string>
+    <string name="routine_badge_copy_memo">Same-Day Memo</string>
+    <string name="routine_badge_copy_memo_short">Memo</string>
+    <string name="routine_badge_copy_memo_cd">Attached to same-day experience</string>
+    <string name="routine_unconfirmed_dialog_title">Confirm Routine Dose?</string>
+    <string name="routine_unconfirmed_dialog_body">This %1$s record was auto-created by your routine schedule at %2$s and has not been confirmed yet (marked as possibly not taken).</string>
+    <string name="routine_unconfirmed_dialog_confirm">Mark as Taken</string>
+    <string name="routine_unconfirmed_dialog_skip">Not Taken (Delete)</string>
+    <string name="routine_unconfirmed_dialog_edit">Edit Record</string>
+    <string name="routine_memo_dialog_title">Same-Day Copy Memo</string>
+    <string name="routine_memo_dialog_body">Because you have another experience \"%1$s\" in this period, this %2$s dose is attached directly to that experience (timeline, interactions &amp; stats stay single-counted) and mirrored here as a quick reference.</string>
+    <string name="routine_memo_dialog_open_exp">Open Experience</string>
+    <string name="routine_memo_attached_prefix">Attached to: %1$s</string>
+    <string name="routine_edit_confirmed_label">Dose taken (confirmed)</string>
+    <string name="routine_edit_confirmed_hint">Uncheck to mark as unconfirmed (possibly not taken)</string>
+
+    <!-- Schedules management -->
+    <string name="routine_schedules_title">Routine Medication Schedules</string>
+    <string name="routine_schedules_add">New Schedule</string>
+    <string name="routine_schedules_empty_title">No routine schedules configured</string>
+    <string name="routine_schedules_empty_desc">Tap + to add daily, weekly, interval, or cycle medication reminders with per-slot doses.</string>
+    <string name="routine_schedules_next_trigger">Next: %1$s</string>
+    <string name="routine_schedules_no_upcoming">No upcoming triggers</string>
+    <string name="routine_schedules_notify_on">Popup + Auto-Log</string>
+    <string name="routine_schedules_notify_off">Silent Auto-Log</string>
+    <string name="routine_schedules_disabled">Paused</string>
+    <string name="routine_schedules_delete_title">Delete Schedule?</string>
+    <string name="routine_schedules_delete_desc">Stops future reminders for %1$s. Historical medication records already saved in your journal are kept.</string>
+    <string name="routine_catch_up_title">Missed Dose Catch-up Window</string>
+    <string name="routine_catch_up_subtitle">Auto-fill unconfirmed logs on startup up to past %1$d day(s)</string>
+    <string name="routine_perm_notification_title">Enable Notification Permission</string>
+    <string name="routine_perm_notification_desc">Allow notifications to show heads-up medication alerts with Taken / Skip quick actions.</string>
+    <string name="routine_perm_notification_btn">Grant</string>
+    <string name="routine_perm_exact_alarm_title">Allow Exact Alarms</string>
+    <string name="routine_perm_exact_alarm_desc">Grant exact alarm permission so medication reminders fire on the exact minute even in Doze mode.</string>
+    <string name="routine_perm_exact_alarm_btn">Open Settings</string>
+
+    <!-- Edit Schedule -->
+    <string name="routine_edit_title_new">New Routine Schedule</string>
+    <string name="routine_edit_title_edit">Edit Routine Schedule</string>
+    <string name="routine_edit_save">Save</string>
+    <string name="routine_edit_substance_section">Substance &amp; Route</string>
+    <string name="routine_edit_pick_substance">Select Substance</string>
+    <string name="routine_edit_pick_custom_unit">Use Custom Unit (Optional)</string>
+    <string name="routine_edit_clear_custom_unit">Clear Custom Unit</string>
+    <string name="routine_edit_consumer_label">Consumer (Optional, leave blank for You)</string>
+    <string name="routine_edit_recurrence_section">Recurrence Rule</string>
+    <string name="routine_mode_daily">Daily</string>
+    <string name="routine_mode_weekly">Weekly</string>
+    <string name="routine_mode_every_n_days">Every N Days</string>
+    <string name="routine_mode_every_n_minutes">Every N Hours/Min</string>
+    <string name="routine_mode_cycle_on_off">On / Off Cycle</string>
+    <string name="routine_every_n_days_label">Repeat every N days</string>
+    <string name="routine_every_hours_label">Interval Hours</string>
+    <string name="routine_every_minutes_label">Extra Minutes</string>
+    <string name="routine_anchor_time_label">Anchor Start Time</string>
+    <string name="routine_cycle_on_label">Active (On) Days</string>
+    <string name="routine_cycle_off_label">Rest (Off) Days</string>
+    <string name="routine_slots_section">Time Slots &amp; Doses</string>
+    <string name="routine_add_slot">Add Time Slot</string>
+    <string name="routine_slot_time">Time</string>
+    <string name="routine_slot_dose">Dose</string>
+    <string name="routine_slot_units">Unit</string>
+    <string name="routine_slot_estimate">Estimated dose</string>
+    <string name="routine_slot_sd">Std. Dev (±)</string>
+    <string name="routine_slot_note">Slot note (optional)</string>
+    <string name="routine_advanced_section">Behavior &amp; Smart Grouping</string>
+    <string name="routine_toggle_enabled">Enable Schedule</string>
+    <string name="routine_toggle_notify">Heads-up Reminder Notification</string>
+    <string name="routine_toggle_notify_hint">Off = silently auto-log as unconfirmed without system popup</string>
+    <string name="routine_start_date_label">Start Date</string>
+    <string name="routine_start_date_now">From save time</string>
+    <string name="routine_end_date_label">End Date</string>
+    <string name="routine_end_date_none">No end date</string>
+    <string name="routine_max_occurrences_label">Max Total Occurrences (Optional)</string>
+    <string name="routine_half_life_override_label">Custom Half-Life Hours (Optional, for PK grouping)</string>
+    <string name="routine_half_life_auto_hint">Built-in PK: %1$s (window clamped 12–48h)</string>
+    <string name="routine_half_life_missing_hint">No built-in half-life; defaults to duration or same calendar day</string>
+    <string name="routine_note_label">Schedule Note (Optional)</string>
+    <string name="routine_validation_need_substance">Please select a substance</string>
+    <string name="routine_validation_need_weekdays">Select at least one weekday</string>
+    <string name="routine_validation_need_slot">Add at least one time slot</string>
+    <string name="routine_validation_bad_interval">Interval must be greater than 0</string>
+    <string name="routine_search_substance_placeholder">Search built-in or custom substances...</string>
+    <string name="routine_summary_daily">%1$d slot(s) daily</string>
+    <string name="routine_summary_weekly">Weekly · %1$s</string>
+    <string name="routine_summary_every_n_days">Every %1$d day(s)</string>
+    <string name="routine_summary_every_n_minutes">Every %1$s</string>
+    <string name="routine_summary_cycle">%1$d day(s) ON / %2$d day(s) OFF</string>
+
+    <!-- Entry points -->
+    <string name="routine_quick_create_cta">Set as Routine Reminder</string>
+    <string name="routine_settings_item_title">Routine Medications</string>
+    <string name="routine_settings_item_subtitle">Auto-log schedules, popup reminders &amp; unconfirmed badges</string>
+    <string name="routine_weekday_mon">Mon</string>
+    <string name="routine_weekday_tue">Tue</string>
+    <string name="routine_weekday_wed">Wed</string>
+    <string name="routine_weekday_thu">Thu</string>
+    <string name="routine_weekday_fri">Fri</string>
+    <string name="routine_weekday_sat">Sat</string>
+    <string name="routine_weekday_sun">Sun</string>
+    <string name="routine_common_cancel">Cancel</string>
+    <string name="routine_common_close">Close</string>
+    <string name="routine_common_delete">Delete</string>
+</resources>

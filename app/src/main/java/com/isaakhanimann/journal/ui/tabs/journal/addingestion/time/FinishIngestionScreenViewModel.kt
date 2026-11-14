@@ -32,6 +32,7 @@ import com.isaakhanimann.journal.data.room.experiences.entities.Experience
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.SubstanceCompanion
 import com.isaakhanimann.journal.data.room.experiences.relations.ExperienceWithIngestions
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.ui.main.navigation.graphs.FinishIngestionRoute
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
@@ -67,6 +68,7 @@ enum class IngestionTimePickerOption {
 class FinishIngestionScreenViewModel @Inject constructor(
     private val experienceRepo: ExperienceRepository,
     userPreferences: UserPreferences,
+    private val routineSchedulerManager: RoutineSchedulerManager,
     state: SavedStateHandle
 ) : ViewModel() {
     var substanceName by mutableStateOf("")
@@ -303,6 +305,7 @@ class FinishIngestionScreenViewModel @Inject constructor(
                 substanceCompanion = substanceCompanion
             )
         }
+        routineSchedulerManager.syncRoutineContainersWithExistingExperiences()
     }
 
     private suspend fun createNewIngestion(experienceId: Int): Ingestion {

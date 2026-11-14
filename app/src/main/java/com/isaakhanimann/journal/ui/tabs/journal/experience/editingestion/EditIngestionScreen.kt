@@ -135,6 +135,8 @@ fun EditIngestionScreen(
         customUnit = viewModel.customUnit,
         onCustomUnitChange = viewModel::onChangeCustomUnit,
         otherCustomUnits = viewModel.otherCustomUnits.collectAsState().value,
+        isConfirmed = viewModel.isConfirmed,
+        onChangeIsConfirmed = viewModel::onChangeIsConfirmed,
         addIngestionWithClonedTime = {
             viewModel.saveClonedIngestionTime()
             navigateBack()
@@ -216,7 +218,9 @@ fun EditIngestionScreen(
     customUnit: CustomUnit?,
     onCustomUnitChange: (CustomUnit?) -> Unit,
     otherCustomUnits: List<CustomUnit>,
-    addIngestionWithClonedTime: () -> Unit
+    addIngestionWithClonedTime: () -> Unit,
+    isConfirmed: Boolean = true,
+    onChangeIsConfirmed: (Boolean) -> Unit = {},
 ) {
     var isPresentingBottomSheet by rememberSaveable { mutableStateOf(false) }
     val skipPartiallyExpanded by remember { mutableStateOf(false) }
@@ -416,6 +420,29 @@ fun EditIngestionScreen(
                     if (it.note.isNotBlank()) {
                         Text("${it.name}: ${it.note}")
                     }
+                }
+            }
+            CardWithTitle(title = stringResource(R.string.routine_edit_confirmed_label)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                        Text(
+                            text = stringResource(R.string.routine_edit_confirmed_label),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Text(
+                            text = stringResource(R.string.routine_edit_confirmed_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = isConfirmed,
+                        onCheckedChange = onChangeIsConfirmed
+                    )
                 }
             }
             CardWithTitle(title = stringResource(R.string.journal_ingestion_notes)) {

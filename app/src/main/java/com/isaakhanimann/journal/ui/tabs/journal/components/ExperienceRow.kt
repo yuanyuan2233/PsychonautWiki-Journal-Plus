@@ -39,7 +39,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +57,7 @@ import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.relations.ExperienceWithIngestionsCompanionsAndRatings
 import com.isaakhanimann.journal.data.room.experiences.entities.AppColor
 import com.isaakhanimann.journal.data.room.experiences.relations.IngestionWithCompanionAndCustomUnit
+import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineUiHelpers
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
 import com.isaakhanimann.journal.ui.utils.getDateWithWeekdayText
 
@@ -66,8 +70,54 @@ import androidx.compose.ui.text.style.TextOverflow
 fun ExperienceRow(
     @PreviewParameter(ExperienceWithIngestionsCompanionsAndRatingsPreviewProvider::class) experienceWithIngestionsCompanionsAndRatings: ExperienceWithIngestionsCompanionsAndRatings,
     navigateToExperienceScreen: () -> Unit = {},
-    isTimeRelativeToNow: Boolean = true
+    isTimeRelativeToNow: Boolean = true,
+    onConfirmRoutineIngestion: (Int) -> Unit = {},
+    onSkipRoutineIngestion: (Int) -> Unit = {},
+    navigateToEditIngestion: (Int) -> Unit = {}
 ) {
+    val ingestions = experienceWithIngestionsCompanionsAndRatings.ingestionsWithCompanions.sortedBy { it.ingestion.time }
+    val experience = experienceWithIngestionsCompanionsAndRatings.experience
+    val unconfirmedIngestions = remember(ingestions) {
+        ingestions.map { it.ingestion }.filter { !it.isConfirmed }
+    }
+    var showUnconfirmedDialog by remember { mutableStateOf(false) }
+
+    if (showUnconfirmedDialog && unconfirmedIngestions.isNotEmpty()) {
+        if (unconfirmedIngestions.size == 1) {
+            val single = unconfirmedIngestions.first()
+            UnconfirmedDoseActionDialog(
+                substanceName = single.substanceName,
+                doseTimeText = RoutineUiHelpers.formatInstantDateTime(single.time),
+                onConfirmTaken = {
+                    showUnconfirmedDialog = false
+                    onConfirmRoutineIngestion(single.id)
+                },
+                onSkipDelete = {
+                    showUnconfirmedDialog = false
+                    onSkipRoutineIngestion(single.id)
+                },
+                onEditRecord = {
+                    showUnconfirmedDialog = false
+                    navigateToEditIngestion(single.id)
+                },
+                onDismiss = { showUnconfirmedDialog = false }
+            )
+        } else {
+            MultiUnconfirmedDoseActionDialog(
+                items = unconfirmedIngestions.map {
+                    Triple(it.id, it.substanceName, RoutineUiHelpers.formatInstantDateTime(it.time))
+                },
+                onConfirmTaken = { id -> onConfirmRoutineIngestion(id) },
+                onSkipDelete = { id -> onSkipRoutineIngestion(id) },
+                onEditRecord = { id ->
+                    showUnconfirmedDialog = false
+                    navigateToEditIngestion(id)
+                },
+                onDismiss = { showUnconfirmedDialog = false }
+            )
+        }
+    }
+
     Row(
         modifier = Modifier
             .clickable {
@@ -79,18 +129,32 @@ fun ExperienceRow(
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val ingestions = experienceWithIngestionsCompanionsAndRatings.ingestionsWithCompanions.sortedBy { it.ingestion.time }
-        val experience = experienceWithIngestionsCompanionsAndRatings.experience
         ColorRectangle(ingestions = ingestions)
         Column {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 val localizedExperienceTitle = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.getSubstanceDisplayName(experience.title)
                 Text(
                     text = localizedExperienceTitle,
                     style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.weight(1f)
                 )
-                if (experience.isFavorite) {
-                    Icon(imageVector = Icons.Filled.Star, contentDescription = stringResource(R.string.journal_action_is_favorite))
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (unconfirmedIngestions.isNotEmpty()) {
+                        UnconfirmedMedicationBadge(
+                            count = unconfirmedIngestions.size,
+                            onClick = { showUnconfirmedDialog = true }
+                        )
+                    }
+                    if (experience.isFavorite) {
+                        Icon(imageVector = Icons.Filled.Star, contentDescription = stringResource(R.string.journal_action_is_favorite))
+                    }
                 }
             }
             Row(

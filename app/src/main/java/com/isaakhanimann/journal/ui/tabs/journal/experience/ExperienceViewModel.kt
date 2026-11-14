@@ -23,6 +23,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
+import com.isaakhanimann.journal.data.room.experiences.RoutineDao
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
+import com.isaakhanimann.journal.data.routine.SmartExperienceSelector
 import com.isaakhanimann.journal.data.room.experiences.entities.AdaptiveColor
 import com.isaakhanimann.journal.data.room.experiences.entities.AppColor
 import com.isaakhanimann.journal.data.room.experiences.relations.IngestionWithCompanionAndCustomUnit
@@ -71,8 +74,22 @@ class ExperienceViewModel @Inject constructor(
     private val interactionChecker: InteractionChecker,
     private val userPreferences: UserPreferences,
     combinationSettingsStorage: CombinationSettingsStorage,
+    private val routineDao: RoutineDao,
+    private val routineSchedulerManager: RoutineSchedulerManager,
     state: SavedStateHandle
 ) : ViewModel() {
+
+    fun confirmRoutineIngestion(ingestionId: Int) {
+        viewModelScope.launch {
+            routineSchedulerManager.confirmDose(ingestionId)
+        }
+    }
+
+    fun skipRoutineIngestion(ingestionId: Int) {
+        viewModelScope.launch {
+            routineSchedulerManager.skipOrDeleteRoutineIngestion(ingestionId)
+        }
+    }
 
     private val areSubstanceHeightsIndependentFlow =
         userPreferences.areSubstanceHeightsIndependentFlow.stateIn(
@@ -338,8 +355,31 @@ class ExperienceViewModel @Inject constructor(
 
     val interactionsFlow =
         sortedIngestionsWithCompanionsFlow.combine(combinationSettingsStorage.enabledInteractionsFlow) { ingestions, enabledInteractions ->
+            val currentUserIngestions = ingestions.filter { it.ingestion.consumerName == null }
+            val currentSubstanceNames = currentUserIngestions.map { it.ingestion.substanceName }
+            val expStart = currentUserIngestions.minOfOrNull { it.ingestion.time }
+                ?: ingestions.minOfOrNull { it.ingestion.time }
+                ?: Instant.now()
+            val expEnd = currentUserIngestions.maxOfOrNull { it.ingestion.endTime ?: it.ingestion.time }
+                ?: ingestions.maxOfOrNull { it.ingestion.endTime ?: it.ingestion.time }
+                ?: expStart
+            val lookbackIngestions = routineDao.getRoutineIngestionsBetween(
+                fromTime = expStart.minus(SmartExperienceSelector.MAX_INTERACTION_LOOKBACK_HOURS, ChronoUnit.HOURS),
+                toTime = expEnd
+            ).filter { routineIng ->
+                routineIng.consumerName == null && routineIng.experienceId != experienceId
+            }
+            val residualRoutineSubstances = lookbackIngestions.filter { routineIng ->
+                val windowHours = routineSchedulerManager.getSmartWindowHoursForIngestion(routineIng)
+                SmartExperienceSelector.isRoutineDoseActiveForInteractions(
+                    routineTime = routineIng.time,
+                    experienceStartTime = expStart,
+                    experienceEndTime = expEnd,
+                    windowHours = windowHours
+                )
+            }.map { it.substanceName }
             val interactionsToCheck =
-                ingestions.filter { it.ingestion.consumerName == null }.map { it.ingestion.substanceName }.plus(enabledInteractions).distinct()
+                (currentSubstanceNames + residualRoutineSubstances + enabledInteractions).distinct()
             return@combine interactionsToCheck.flatMapIndexed { index: Int, interaction: String ->
                 return@flatMapIndexed interactionsToCheck.drop(index + 1).mapNotNull { other ->
                     interactionChecker.getInteractionBetween(

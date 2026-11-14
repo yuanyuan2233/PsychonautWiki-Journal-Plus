@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -53,6 +54,7 @@ import com.isaakhanimann.journal.ui.tabs.settings.customunits.add.EditCustomUnit
 @Composable
 fun EditCustomUnitScreen(
     navigateBack: () -> Unit,
+    navigateToCreateRoutineSchedule: (substanceName: String, routeName: String, customUnitId: Int) -> Unit = { _, _, _ -> },
     viewModel: EditCustomUnitViewModel = hiltViewModel()
 ) {
     EditCustomUnitScreenContent(
@@ -83,6 +85,13 @@ fun EditCustomUnitScreen(
         onChangeOfNote = viewModel::onChangeOfNote,
         isArchived = viewModel.isArchived,
         onChangeOfIsArchived = viewModel::onChangeOfIsArchived,
+        onCreateRoutineSchedule = {
+            navigateToCreateRoutineSchedule(
+                viewModel.substanceName,
+                viewModel.administrationRoute.name,
+                viewModel.customUnitId
+            )
+        },
         onDelete = {
             viewModel.deleteCustomUnit {
                 navigateBack()
@@ -154,7 +163,8 @@ private fun EditCustomUnitScreenContent(
     onChangeOfNote: (String) -> Unit,
     isArchived: Boolean,
     onChangeOfIsArchived: (Boolean) -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCreateRoutineSchedule: () -> Unit = {},
 ) {
     BackHandler(onBack = dismiss)
     Scaffold(
@@ -171,6 +181,12 @@ private fun EditCustomUnitScreenContent(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onCreateRoutineSchedule) {
+                        Icon(
+                            imageVector = Icons.Outlined.Alarm,
+                            contentDescription = stringResource(R.string.routine_quick_create_cta)
+                        )
+                    }
                     var isShowingDeleteDialog by remember { mutableStateOf(false) }
                     IconButton(onClick = { isShowingDeleteDialog = true }) {
                         Icon(

@@ -28,6 +28,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.room.Room
 import com.isaakhanimann.journal.data.room.AppDatabase
 import com.isaakhanimann.journal.data.room.experiences.ExperienceDao
+import com.isaakhanimann.journal.data.room.experiences.RoutineDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -43,6 +44,11 @@ object AppModule {
     @Provides
     fun provideExperiencesDao(appDatabase: AppDatabase): ExperienceDao =
         appDatabase.experienceDao()
+
+    @Singleton
+    @Provides
+    fun provideRoutineDao(appDatabase: AppDatabase): RoutineDao =
+        appDatabase.routineDao()
 
     @Singleton
     @Provides

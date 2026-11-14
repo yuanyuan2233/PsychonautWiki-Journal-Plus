@@ -21,6 +21,9 @@ package com.isaakhanimann.journal.ui.tabs.settings
 import com.isaakhanimann.journal.data.room.experiences.entities.AdaptiveColor
 import com.isaakhanimann.journal.data.room.experiences.entities.AppColor
 import com.isaakhanimann.journal.data.room.experiences.entities.CustomSubstance
+import com.isaakhanimann.journal.data.room.experiences.entities.RecurrenceType
+import com.isaakhanimann.journal.data.room.experiences.entities.RoutineOccurrenceStatus
+import com.isaakhanimann.journal.data.room.experiences.entities.ScheduleTimeSlot
 import com.isaakhanimann.journal.data.room.experiences.entities.ShulginRatingOption
 import com.isaakhanimann.journal.data.room.experiences.entities.StomachFullness
 import com.isaakhanimann.journal.data.room.experiences.entities.SubstanceCompanion
@@ -34,14 +37,18 @@ data class JournalExport(
     val substanceCompanions: List<SubstanceCompanion> = emptyList(),
     val customSubstances: List<CustomSubstance> = emptyList(),
     val customUnits: List<CustomUnitSerializable> = emptyList(),
-    val toleranceCustomizations: List<ToleranceCustomizationExport> = emptyList()
+    val toleranceCustomizations: List<ToleranceCustomizationExport> = emptyList(),
+    val medicationSchedules: List<MedicationScheduleSerializable> = emptyList(),
+    val routineOccurrences: List<RoutineOccurrenceSerializable> = emptyList()
 ) {
     fun isEmpty(): Boolean {
         return experiences.isEmpty() &&
             substanceCompanions.isEmpty() &&
             customSubstances.isEmpty() &&
             customUnits.isEmpty() &&
-            toleranceCustomizations.isEmpty()
+            toleranceCustomizations.isEmpty() &&
+            medicationSchedules.isEmpty() &&
+            routineOccurrences.isEmpty()
     }
 }
 
@@ -63,7 +70,8 @@ data class ExperienceSerializable(
     val ingestions: List<IngestionSerializable> = emptyList(),
     val location: LocationSerializable? = null,
     val ratings: List<RatingSerializable> = emptyList(),
-    val timedNotes: List<TimedNoteSerializable> = emptyList()
+    val timedNotes: List<TimedNoteSerializable> = emptyList(),
+    val isRoutineOnly: Boolean = false
 )
 
 @Serializable
@@ -104,7 +112,46 @@ data class IngestionSerializable(
     var notes: String? = null,
     var stomachFullness: StomachFullness? = null,
     var consumerName: String? = null,
-    var customUnitId: Int? = null
+    var customUnitId: Int? = null,
+    var isConfirmed: Boolean = true,
+    var routineScheduleId: Int? = null,
+    var scheduledEpochMillis: Long? = null
+)
+
+@Serializable
+data class MedicationScheduleSerializable(
+    val id: Int = 0,
+    val substanceName: String,
+    val administrationRoute: AdministrationRoute,
+    val customUnitId: Int? = null,
+    val consumerName: String? = null,
+    val isEnabled: Boolean = true,
+    val notifyOnTrigger: Boolean = true,
+    val recurrenceType: RecurrenceType = RecurrenceType.DAILY,
+    val daysOfWeekMask: Int = 0b1111111,
+    val intervalDays: Int = 1,
+    val intervalMinutes: Int = 480,
+    val cycleOnDays: Int = 5,
+    val cycleOffDays: Int = 2,
+    val timeSlots: List<ScheduleTimeSlot> = emptyList(),
+    val anchorEpochMillis: Long = 0L,
+    val startEpochDay: Long? = null,
+    val endEpochDay: Long? = null,
+    val maxOccurrences: Int? = null,
+    val customHalfLifeHours: Double? = null,
+    val note: String? = null,
+    @Serializable(with = InstantSerializer::class) val createdAt: Instant = Instant.now(),
+    @Serializable(with = InstantSerializer::class) val updatedAt: Instant = Instant.now()
+)
+
+@Serializable
+data class RoutineOccurrenceSerializable(
+    val scheduleId: Int,
+    val slotId: String,
+    val scheduledEpochMillis: Long,
+    val status: RoutineOccurrenceStatus,
+    val ingestionId: Int? = null,
+    @Serializable(with = InstantSerializer::class) val handledAt: Instant = Instant.now()
 )
 
 @Serializable
