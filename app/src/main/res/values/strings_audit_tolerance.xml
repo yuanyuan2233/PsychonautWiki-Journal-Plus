@@ -1,0 +1,6 @@
+<resources>
+    <string name="tolerance_chart_beyond_view">Continues beyond view →</string>
+    <string name="tolerance_sheet_error_invalid_days">Enter a valid finite number between 0 and 3650 days</string>
+    <string name="tolerance_sheet_error_zero_required_with_full">Zero tolerance days is required when full tolerance days is set</string>
+    <string name="tolerance_sheet_error_full_exceeds_zero">Full tolerance days cannot exceed zero tolerance days</string>
+</resources>

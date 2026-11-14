@@ -4,6 +4,7 @@
 
 package com.isaakhanimann.journal.ui.tabs.stats.tolerance
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.RestartAlt
@@ -61,6 +64,9 @@ fun ToleranceAdaptiveBottomSheet(
     var zeroDaysText by remember(currentCustomization) {
         mutableStateOf(currentCustomization?.customZeroDays?.toString() ?: "")
     }
+    val validation = remember(fullDaysText, zeroDaysText) {
+        validateToleranceInputs(fullDaysText, zeroDaysText)
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -69,6 +75,7 @@ fun ToleranceAdaptiveBottomSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 36.dp)
         ) {
@@ -122,11 +129,18 @@ fun ToleranceAdaptiveBottomSheet(
             Spacer(modifier = Modifier.height(20.dp))
 
             // 自由修改完全耐受天数
+            val fullErrorRes = validation.fullDaysErrorRes
             OutlinedTextField(
                 value = fullDaysText,
                 onValueChange = { fullDaysText = it },
                 label = { Text(stringResource(R.string.tolerance_sheet_full_days_label)) },
                 placeholder = { Text(stringResource(R.string.tolerance_sheet_full_days_placeholder)) },
+                isError = fullErrorRes != null,
+                supportingText = if (fullErrorRes != null) {
+                    { Text(text = stringResource(fullErrorRes)) }
+                } else {
+                    null
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -135,11 +149,18 @@ fun ToleranceAdaptiveBottomSheet(
             Spacer(modifier = Modifier.height(12.dp))
 
             // 自由修改耐受归零天数
+            val zeroErrorRes = validation.zeroDaysErrorRes
             OutlinedTextField(
                 value = zeroDaysText,
                 onValueChange = { zeroDaysText = it },
                 label = { Text(stringResource(R.string.tolerance_sheet_zero_days_label)) },
                 placeholder = { Text(stringResource(R.string.tolerance_sheet_zero_days_placeholder)) },
+                isError = zeroErrorRes != null,
+                supportingText = if (zeroErrorRes != null) {
+                    { Text(text = stringResource(zeroErrorRes)) }
+                } else {
+                    null
+                },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
@@ -165,17 +186,18 @@ fun ToleranceAdaptiveBottomSheet(
 
                 Button(
                     onClick = {
-                        val fullVal = fullDaysText.toDoubleOrNull()
-                        val zeroVal = zeroDaysText.toDoubleOrNull()
+                        if (!validation.canSave || validation.zeroDays == null) return@Button
                         onSaveCustomization(
                             SubstanceToleranceCustomization(
                                 substanceName = substanceName,
-                                customFullDays = fullVal,
-                                customZeroDays = zeroVal
+                                customFullDays = validation.fullDays,
+                                customZeroDays = validation.zeroDays,
+                                manualResetInstant = currentCustomization?.manualResetInstant
                             )
                         )
                         onDismiss()
                     },
+                    enabled = validation.canSave,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(stringResource(R.string.tolerance_sheet_save))
@@ -183,4 +205,75 @@ fun ToleranceAdaptiveBottomSheet(
             }
         }
     }
+}
+
+internal const val MAX_CUSTOM_TOLERANCE_DAYS = 3650.0
+
+internal data class ToleranceInputValidation(
+    val fullDays: Double?,
+    val zeroDays: Double?,
+    @StringRes val fullDaysErrorRes: Int?,
+    @StringRes val zeroDaysErrorRes: Int?,
+    val canSave: Boolean
+)
+
+/**
+ * 校验自定义耐受天数输入：
+ * - fullDays（如填写）与 zeroDays 必须为有限数字、非负且不超过 MAX_CUSTOM_TOLERANCE_DAYS；
+ * - 若填写了 fullDays，则必须同时填写 zeroDays 且满足 fullDays <= zeroDays。
+ */
+internal fun validateToleranceInputs(
+    fullDaysText: String,
+    zeroDaysText: String
+): ToleranceInputValidation {
+    val fullTrimmed = fullDaysText.trim()
+    val zeroTrimmed = zeroDaysText.trim()
+
+    var fullDaysErrorRes: Int? = null
+    var zeroDaysErrorRes: Int? = null
+
+    val fullValue: Double? = if (fullTrimmed.isEmpty()) {
+        if (fullDaysText.isNotEmpty()) {
+            fullDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
+        }
+        null
+    } else {
+        val parsed = fullTrimmed.toDoubleOrNull()
+        if (parsed == null || !parsed.isFinite() || parsed !in 0.0..MAX_CUSTOM_TOLERANCE_DAYS) {
+            fullDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
+            null
+        } else {
+            if (parsed == 0.0) 0.0 else parsed
+        }
+    }
+
+    val zeroValue: Double? = if (zeroTrimmed.isEmpty()) {
+        if (zeroDaysText.isNotEmpty()) {
+            zeroDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
+        } else if (fullTrimmed.isNotEmpty()) {
+            zeroDaysErrorRes = R.string.tolerance_sheet_error_zero_required_with_full
+        }
+        null
+    } else {
+        val parsed = zeroTrimmed.toDoubleOrNull()
+        if (parsed == null || !parsed.isFinite() || parsed !in 0.0..MAX_CUSTOM_TOLERANCE_DAYS) {
+            zeroDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
+            null
+        } else {
+            if (parsed == 0.0) 0.0 else parsed
+        }
+    }
+
+    if (fullDaysErrorRes == null && zeroDaysErrorRes == null && fullValue != null && zeroValue != null && fullValue > zeroValue) {
+        fullDaysErrorRes = R.string.tolerance_sheet_error_full_exceeds_zero
+    }
+
+    val canSave = fullDaysErrorRes == null && zeroDaysErrorRes == null && zeroValue != null
+    return ToleranceInputValidation(
+        fullDays = fullValue,
+        zeroDays = zeroValue,
+        fullDaysErrorRes = fullDaysErrorRes,
+        zeroDaysErrorRes = zeroDaysErrorRes,
+        canSave = canSave
+    )
 }

@@ -1,0 +1,6 @@
+<resources>
+    <string name="tolerance_chart_beyond_view">向右延续 · 超出视图 →</string>
+    <string name="tolerance_sheet_error_invalid_days">请输入 0 至 3650 之间的有效数字天数</string>
+    <string name="tolerance_sheet_error_zero_required_with_full">填写完全耐受天数时，请同时填写耐受归零天数</string>
+    <string name="tolerance_sheet_error_full_exceeds_zero">完全耐受天数不能大于耐受归零天数</string>
+</resources>

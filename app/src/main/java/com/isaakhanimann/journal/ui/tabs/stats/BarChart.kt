@@ -52,110 +52,126 @@ fun BarChart(buckets: List<List<ColorCount>>, startDateText: String) {
                 .fillMaxWidth()
                 .height(150.dp)
         ) {
+            if (buckets.isEmpty()) return@Canvas
             val canvasHeightOuter = size.height
-            if (canvasHeightOuter > 0) { // for unknown reason canvasHeight can be 0 and then the app crashes
+            if (canvasHeightOuter > 0f) { // for unknown reason canvasHeight can be 0 and then the app crashes
                 val maxCount = buckets.maxOf { bucket ->
-                    bucket.sumOf { it.count }
+                    bucket.sumOf { it.count.coerceAtLeast(0) }
                 }
+                val safeMaxCount = maxCount.coerceAtLeast(1)
                 val half = maxCount / 2
-                val halfLineHeight = half.toFloat() * canvasHeightOuter / maxCount
+                val halfLineHeight = half.toFloat() * canvasHeightOuter / safeMaxCount
                 val halfLabelHeight = labelHeight / 2
-                val numLettersInLabel = maxCount.toString().length
+                val numLettersInLabel = safeMaxCount.toString().length
                 val labelWidth = (numLettersInLabel + 1) * labelHeight * 0.6f
                 val spaceBetweenLabelAndChart = labelHeight * 0.5f
+                if (size.width <= labelWidth) return@Canvas
+                val labelPaint = Paint().apply {
+                    textSize = labelHeight
+                    color = Color.GRAY
+                    textAlign = Paint.Align.RIGHT
+                }
                 drawContext.canvas.nativeCanvas.apply {
-                    drawText(
-                        half.toString(),
-                        labelWidth - spaceBetweenLabelAndChart,
-                        canvasHeightOuter - halfLineHeight + halfLabelHeight,
-                        Paint().apply {
-                            textSize = labelHeight
-                            color = Color.GRAY
-                            textAlign = Paint.Align.RIGHT
-                        }
-                    )
-                    drawText(
-                        maxCount.toString(),
-                        labelWidth - spaceBetweenLabelAndChart,
-                        halfLabelHeight,
-                        Paint().apply {
-                            textSize = labelHeight
-                            color = Color.GRAY
-                            textAlign = Paint.Align.RIGHT
-                        }
-                    )
+                    if (maxCount == 0) {
+                        drawText(
+                            "0",
+                            labelWidth - spaceBetweenLabelAndChart,
+                            canvasHeightOuter - 6f,
+                            labelPaint
+                        )
+                    } else {
+                        drawText(
+                            half.toString(),
+                            labelWidth - spaceBetweenLabelAndChart,
+                            canvasHeightOuter - halfLineHeight + halfLabelHeight,
+                            labelPaint
+                        )
+                        drawText(
+                            maxCount.toString(),
+                            labelWidth - spaceBetweenLabelAndChart,
+                            halfLabelHeight,
+                            labelPaint
+                        )
+                    }
                 }
                 inset(left = labelWidth, right = 0f, top = 0f, bottom = 0f) {
                     val horizontalLinesWidth = 4f
                     val canvasWidthWithoutLabel = size.width
-                    // top line
-                    drawLine(
-                        color = tickColor,
-                        start = Offset(x = 0f, y = 0f),
-                        end = Offset(x = canvasWidthWithoutLabel, y = 0f),
-                        strokeWidth = horizontalLinesWidth / 2,
-                        cap = StrokeCap.Round
-                    )
-                    // half line
-                    drawLine(
-                        color = tickColor,
-                        start = Offset(x = 0f, y = canvasHeightOuter - halfLineHeight),
-                        end = Offset(
-                            x = canvasWidthWithoutLabel,
-                            y = canvasHeightOuter - halfLineHeight
-                        ),
-                        strokeWidth = horizontalLinesWidth / 2,
-                        cap = StrokeCap.Round
-                    )
-                    // bottom line
-                    val tickHeight = 6f
-                    val numBuckets = buckets.size
-                    val spaceBetweenTicks = canvasWidthWithoutLabel / numBuckets
-                    val numSpacers = numBuckets + 1
-                    drawLine(
-                        color = tickColor,
-                        start = Offset(x = 0f, y = canvasHeightOuter - tickHeight),
-                        end = Offset(
-                            x = canvasWidthWithoutLabel,
-                            y = canvasHeightOuter - tickHeight
-                        ),
-                        strokeWidth = horizontalLinesWidth,
-                        cap = StrokeCap.Round
-                    )
-                    // ticks
-                    for (index in 0 until numSpacers) {
-                        val xSpacer = index * spaceBetweenTicks
+                    if (canvasWidthWithoutLabel > 0f) {
+                        // top line
                         drawLine(
                             color = tickColor,
-                            start = Offset(x = xSpacer, y = canvasHeightOuter),
-                            end = Offset(x = xSpacer, y = canvasHeightOuter - tickHeight),
+                            start = Offset(x = 0f, y = 0f),
+                            end = Offset(x = canvasWidthWithoutLabel, y = 0f),
+                            strokeWidth = horizontalLinesWidth / 2,
+                            cap = StrokeCap.Round
+                        )
+                        // half line
+                        drawLine(
+                            color = tickColor,
+                            start = Offset(x = 0f, y = canvasHeightOuter - halfLineHeight),
+                            end = Offset(
+                                x = canvasWidthWithoutLabel,
+                                y = canvasHeightOuter - halfLineHeight
+                            ),
+                            strokeWidth = horizontalLinesWidth / 2,
+                            cap = StrokeCap.Round
+                        )
+                        // bottom line
+                        val tickHeight = 6f
+                        val numBuckets = buckets.size
+                        val spaceBetweenTicks = canvasWidthWithoutLabel / numBuckets
+                        val numSpacers = numBuckets + 1
+                        drawLine(
+                            color = tickColor,
+                            start = Offset(x = 0f, y = canvasHeightOuter - tickHeight),
+                            end = Offset(
+                                x = canvasWidthWithoutLabel,
+                                y = canvasHeightOuter - tickHeight
+                            ),
                             strokeWidth = horizontalLinesWidth,
                             cap = StrokeCap.Round
                         )
-                    }
-                    val percentageOfBucketWidthToSpaceBetweenTicks = 0.7f
-                    val bucketWidth =
-                        spaceBetweenTicks * percentageOfBucketWidthToSpaceBetweenTicks
-                    val spaceWidth = spaceBetweenTicks - bucketWidth
-                    inset(left = 0f, top = 0f, right = 0f, bottom = tickHeight) {
-                        val canvasHeightInner = size.height
-                        buckets.forEachIndexed { index, colorCounts ->
-                            val xBucket = (((index * 2f) + 1) / 2) * (spaceWidth + bucketWidth)
-                            var yStart = canvasHeightInner
-                            colorCounts.forEach { colorCount ->
-                                val yLength = colorCount.count * canvasHeightInner / maxCount
-                                val yEnd = yStart - yLength
-                                val cornerRadius = bucketWidth / 6
-                                drawRoundRect(
-                                    color = colorCount.color.getComposeColor(isDarkTheme),
-                                    topLeft = Offset(x = xBucket - (bucketWidth / 2), y = yEnd),
-                                    size = Size(width = bucketWidth, height = yLength),
-                                    cornerRadius = CornerRadius(
-                                        x = cornerRadius,
-                                        y = cornerRadius
-                                    )
-                                )
-                                yStart = yEnd
+                        // ticks
+                        for (index in 0 until numSpacers) {
+                            val xSpacer = index * spaceBetweenTicks
+                            drawLine(
+                                color = tickColor,
+                                start = Offset(x = xSpacer, y = canvasHeightOuter),
+                                end = Offset(x = xSpacer, y = canvasHeightOuter - tickHeight),
+                                strokeWidth = horizontalLinesWidth,
+                                cap = StrokeCap.Round
+                            )
+                        }
+                        val percentageOfBucketWidthToSpaceBetweenTicks = 0.7f
+                        val bucketWidth =
+                            spaceBetweenTicks * percentageOfBucketWidthToSpaceBetweenTicks
+                        val spaceWidth = spaceBetweenTicks - bucketWidth
+                        inset(left = 0f, top = 0f, right = 0f, bottom = tickHeight) {
+                            val canvasHeightInner = size.height
+                            if (canvasHeightInner > 0f) {
+                                buckets.forEachIndexed { index, colorCounts ->
+                                    val xBucket = (((index * 2f) + 1) / 2) * (spaceWidth + bucketWidth)
+                                    var yStart = canvasHeightInner
+                                    colorCounts.forEach { colorCount ->
+                                        val count = colorCount.count.coerceAtLeast(0)
+                                        if (count > 0) {
+                                            val yLength = count * canvasHeightInner / safeMaxCount
+                                            val yEnd = yStart - yLength
+                                            val cornerRadius = bucketWidth / 6
+                                            drawRoundRect(
+                                                color = colorCount.color.getComposeColor(isDarkTheme),
+                                                topLeft = Offset(x = xBucket - (bucketWidth / 2), y = yEnd),
+                                                size = Size(width = bucketWidth, height = yLength),
+                                                cornerRadius = CornerRadius(
+                                                    x = cornerRadius,
+                                                    y = cornerRadius
+                                                )
+                                            )
+                                            yStart = yEnd
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
