@@ -26,6 +26,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
+import com.isaakhanimann.journal.data.room.experiences.RoutineDao
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -42,6 +44,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val experienceRepository: ExperienceRepository,
+    private val routineDao: RoutineDao,
+    private val routineSchedulerManager: RoutineSchedulerManager,
     private val fileSystemConnection: FileSystemConnection,
     private val userPreferences: UserPreferences,
     @ApplicationContext private val context: Context,
@@ -113,7 +117,9 @@ class SettingsViewModel @Inject constructor(
                         return@launch
                     }
                     withContext(Dispatchers.IO) {
+                        routineSchedulerManager.cancelAllAlarms()
                         experienceRepository.replaceEverything(journalExport)
+                        routineSchedulerManager.reconcileAndRescheduleAll()
                     }
                     snackbarHostState.showSnackbar(
                         message = context.getString(R.string.settings_import_successful),
@@ -156,7 +162,10 @@ class SettingsViewModel @Inject constructor(
                             notes = ingestion.notes,
                             stomachFullness = ingestion.stomachFullness,
                             consumerName = ingestion.consumerName,
-                            customUnitId = ingestion.customUnitId
+                            customUnitId = ingestion.customUnitId,
+                            isConfirmed = ingestion.isConfirmed,
+                            routineScheduleId = ingestion.routineScheduleId,
+                            scheduledEpochMillis = ingestion.scheduledEpochMillis
                         )
                     },
                     location = if (location != null) {
@@ -183,7 +192,8 @@ class SettingsViewModel @Inject constructor(
                             color = timedNote.color,
                             isPartOfTimeline = timedNote.isPartOfTimeline
                         )
-                    }
+                    },
+                    isRoutineOnly = it.experience.isRoutineOnly
                 )
             }
             val customUnitsSerializable = experienceRepository.getAllCustomUnitsSorted().map {
@@ -203,11 +213,49 @@ class SettingsViewModel @Inject constructor(
                     note = it.note
                 )
             }
+            val schedulesSerializable = routineDao.getAllSchedulesSorted().map {
+                MedicationScheduleSerializable(
+                    id = it.id,
+                    substanceName = it.substanceName,
+                    administrationRoute = it.administrationRoute,
+                    customUnitId = it.customUnitId,
+                    consumerName = it.consumerName,
+                    isEnabled = it.isEnabled,
+                    notifyOnTrigger = it.notifyOnTrigger,
+                    recurrenceType = it.recurrenceType,
+                    daysOfWeekMask = it.daysOfWeekMask,
+                    intervalDays = it.intervalDays,
+                    intervalMinutes = it.intervalMinutes,
+                    cycleOnDays = it.cycleOnDays,
+                    cycleOffDays = it.cycleOffDays,
+                    timeSlots = it.decodedSlots(),
+                    anchorEpochMillis = it.anchorEpochMillis,
+                    startEpochDay = it.startEpochDay,
+                    endEpochDay = it.endEpochDay,
+                    maxOccurrences = it.maxOccurrences,
+                    customHalfLifeHours = it.customHalfLifeHours,
+                    note = it.note,
+                    createdAt = it.createdAt,
+                    updatedAt = it.updatedAt
+                )
+            }
+            val occurrencesSerializable = routineDao.getAllOccurrencesSorted().map {
+                RoutineOccurrenceSerializable(
+                    scheduleId = it.scheduleId,
+                    slotId = it.slotId,
+                    scheduledEpochMillis = it.scheduledEpochMillis,
+                    status = it.status,
+                    ingestionId = it.ingestionId,
+                    handledAt = it.handledAt
+                )
+            }
             val journalExport = JournalExport(
                 experiences = experiencesSerializable,
                 substanceCompanions = experienceRepository.getAllSubstanceCompanions(),
                 customSubstances = experienceRepository.getAllCustomSubstances(),
-                customUnits = customUnitsSerializable
+                customUnits = customUnitsSerializable,
+                medicationSchedules = schedulesSerializable,
+                routineOccurrences = occurrencesSerializable
             )
             try {
                 val jsonList = withContext(Dispatchers.Default) {
@@ -231,6 +279,7 @@ class SettingsViewModel @Inject constructor(
 
     fun deleteEverything() {
         viewModelScope.launch {
+            routineSchedulerManager.cancelAllAlarms()
             experienceRepository.deleteEverything()
         }
     }

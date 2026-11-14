@@ -30,6 +30,9 @@ import com.isaakhanimann.journal.data.room.experiences.entities.CustomUnit
 import com.isaakhanimann.journal.data.room.experiences.entities.Experience
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.Location
+import com.isaakhanimann.journal.data.room.experiences.entities.MedicationSchedule
+import com.isaakhanimann.journal.data.room.experiences.entities.RoutineOccurrence
+import com.isaakhanimann.journal.data.room.experiences.entities.ScheduleSlotCodec
 import com.isaakhanimann.journal.data.room.experiences.entities.ShulginRating
 import com.isaakhanimann.journal.data.room.experiences.entities.SubstanceCompanion
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
@@ -267,6 +270,8 @@ interface ExperienceDao {
         deleteAllCustomSubstances()
         deleteAllRatings()
         deleteAllCustomUnits()
+        deleteAllRoutineOccurrences()
+        deleteAllMedicationSchedules()
     }
 
     @Transaction
@@ -328,8 +333,25 @@ interface ExperienceDao {
     @Query("DELETE FROM customsubstance")
     suspend fun deleteAllCustomSubstances()
 
+    @Transaction
+    @Query("DELETE FROM medicationschedule")
+    suspend fun deleteAllMedicationSchedules()
+
+    @Transaction
+    @Query("DELETE FROM routineoccurrence")
+    suspend fun deleteAllRoutineOccurrences()
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(ingestion: Ingestion)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertIngestionReturningId(ingestion: Ingestion): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(schedule: MedicationSchedule): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(occurrence: RoutineOccurrence): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(rating: ShulginRating)
@@ -355,6 +377,7 @@ interface ExperienceDao {
     suspend fun insertEverything(
         journalExport: JournalExport
     ) {
+        val importedIngestionIdsByKey = mutableMapOf<Pair<Int, Long>, Int>()
         journalExport.experiences.forEachIndexed { indexExperience, experienceSerializable ->
             val experienceID = indexExperience + 1
             val newExperience = Experience(
@@ -372,7 +395,8 @@ interface ExperienceDao {
                     )
                 } else {
                     null
-                }
+                },
+                isRoutineOnly = experienceSerializable.isRoutineOnly
             )
             insert(newExperience)
             experienceSerializable.ingestions.forEach { ingestionSerializable ->
@@ -390,9 +414,17 @@ interface ExperienceDao {
                     notes = ingestionSerializable.notes,
                     stomachFullness = ingestionSerializable.stomachFullness,
                     consumerName = ingestionSerializable.consumerName,
-                    customUnitId = ingestionSerializable.customUnitId
+                    customUnitId = ingestionSerializable.customUnitId,
+                    isConfirmed = ingestionSerializable.isConfirmed,
+                    routineScheduleId = ingestionSerializable.routineScheduleId,
+                    scheduledEpochMillis = ingestionSerializable.scheduledEpochMillis
                 )
-                insert(newIngestion)
+                val insertedIngestionId = insertIngestionReturningId(newIngestion).toInt()
+                val scheduleId = ingestionSerializable.routineScheduleId
+                val scheduledMillis = ingestionSerializable.scheduledEpochMillis
+                if (scheduleId != null && scheduledMillis != null) {
+                    importedIngestionIdsByKey[scheduleId to scheduledMillis] = insertedIngestionId
+                }
             }
             experienceSerializable.timedNotes.forEach { timedNoteSerializable ->
                 val newTimedNote = TimedNote(
@@ -433,6 +465,49 @@ interface ExperienceDao {
                     unitPlural = it.unitPlural,
                     originalUnit = it.originalUnit,
                     note = it.note
+                )
+            )
+        }
+        journalExport.medicationSchedules.forEach { scheduleSerializable ->
+            insert(
+                MedicationSchedule(
+                    id = scheduleSerializable.id,
+                    substanceName = scheduleSerializable.substanceName,
+                    administrationRoute = scheduleSerializable.administrationRoute,
+                    customUnitId = scheduleSerializable.customUnitId,
+                    consumerName = scheduleSerializable.consumerName,
+                    isEnabled = scheduleSerializable.isEnabled,
+                    notifyOnTrigger = scheduleSerializable.notifyOnTrigger,
+                    recurrenceType = scheduleSerializable.recurrenceType,
+                    daysOfWeekMask = scheduleSerializable.daysOfWeekMask,
+                    intervalDays = scheduleSerializable.intervalDays,
+                    intervalMinutes = scheduleSerializable.intervalMinutes,
+                    cycleOnDays = scheduleSerializable.cycleOnDays,
+                    cycleOffDays = scheduleSerializable.cycleOffDays,
+                    timeSlotsJson = ScheduleSlotCodec.encodeSlots(scheduleSerializable.timeSlots),
+                    anchorEpochMillis = scheduleSerializable.anchorEpochMillis,
+                    startEpochDay = scheduleSerializable.startEpochDay,
+                    endEpochDay = scheduleSerializable.endEpochDay,
+                    maxOccurrences = scheduleSerializable.maxOccurrences,
+                    customHalfLifeHours = scheduleSerializable.customHalfLifeHours,
+                    note = scheduleSerializable.note,
+                    createdAt = scheduleSerializable.createdAt,
+                    updatedAt = scheduleSerializable.updatedAt
+                )
+            )
+        }
+        journalExport.routineOccurrences.forEach { occSerializable ->
+            val remappedIngestionId = importedIngestionIdsByKey[
+                occSerializable.scheduleId to occSerializable.scheduledEpochMillis
+            ]
+            insert(
+                RoutineOccurrence(
+                    scheduleId = occSerializable.scheduleId,
+                    slotId = occSerializable.slotId,
+                    scheduledEpochMillis = occSerializable.scheduledEpochMillis,
+                    status = occSerializable.status,
+                    ingestionId = remappedIngestionId,
+                    handledAt = occSerializable.handledAt
                 )
             )
         }
