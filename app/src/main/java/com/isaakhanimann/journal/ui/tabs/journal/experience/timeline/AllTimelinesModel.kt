@@ -104,13 +104,13 @@ class AllTimelinesModel(
             .maxOrNull() ?: 0f
         val latestRating = ratingTimes.maxOrNull()
         val maxWidthRating: Float = if (latestRating != null) {
-            Duration.between(startTime, latestRating).seconds.toFloat()
+            Duration.between(startTime, latestRating).seconds.toFloat().coerceAtLeast(0f)
         } else {
             0f
         }
         val latestNote = noteTimes.maxOrNull()
         val maxWidthNote: Float = if (latestNote != null) {
-            Duration.between(startTime, latestNote).seconds.toFloat()
+            Duration.between(startTime, latestNote).seconds.toFloat().coerceAtLeast(0f)
         } else {
             0f
         }

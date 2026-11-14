@@ -158,7 +158,9 @@ fun ExperienceScreen(
             viewModel.saveLastIngestionTimeOfExperience()
             navigateToAddIngestionSearch()
         },
-        deleteExperience = viewModel::deleteExperience,
+        deleteExperience = {
+            viewModel.deleteExperience(onDone = navigateBack)
+        },
         navigateToEditExperienceScreen = navigateToEditExperienceScreen,
         navigateToExplainTimeline = navigateToExplainTimeline,
         navigateToIngestionScreen = navigateToIngestionScreen,
@@ -867,7 +869,6 @@ private fun ExperienceTopBar(
                             onClick = {
                                 isShowingDeleteDialog = false
                                 deleteExperience()
-                                navigateBack()
                             }
                         ) {
                             Text(stringResource(R.string.journal_action_delete))

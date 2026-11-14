@@ -97,6 +97,22 @@ interface RoutineDao {
     @Query("SELECT COUNT(*) FROM Ingestion WHERE routineScheduleId IS NOT NULL AND isConfirmed = 0")
     fun getUnconfirmedRoutineCountFlow(): Flow<Int>
 
+    @Query("SELECT * FROM Ingestion WHERE routineScheduleId IS NOT NULL AND isConfirmed = 0")
+    suspend fun getUnconfirmedRoutineIngestions(): List<Ingestion>
+
+    @Query("SELECT * FROM Ingestion WHERE experienceId = :experienceId AND routineScheduleId IS NOT NULL")
+    suspend fun getRoutineIngestionsByExperienceId(experienceId: Int): List<Ingestion>
+
+    @Query(
+        "UPDATE RoutineOccurrence SET status = :status, ingestionId = NULL, handledAt = :handledAt " +
+            "WHERE ingestionId = :ingestionId"
+    )
+    suspend fun markOccurrenceByIngestionId(
+        ingestionId: Int,
+        status: RoutineOccurrenceStatus,
+        handledAt: Instant
+    )
+
     @Query("SELECT * FROM Ingestion WHERE id = :id LIMIT 1")
     suspend fun getIngestionById(id: Int): Ingestion?
 

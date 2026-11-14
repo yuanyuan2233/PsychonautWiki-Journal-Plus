@@ -86,7 +86,7 @@ class RoutineNotificationHelper @Inject constructor(
         ensureNotificationChannel(localizedContext)
         if (!hasNotificationPermission()) return
 
-        val notificationId = notificationIdFor(schedule.id, scheduledInstant.toEpochMilli())
+        val notificationId = notificationIdFor(schedule.id, scheduledInstant.toEpochMilli(), slot.id)
         val substanceDisplayName = SubstanceLocalizationHelper.getSubstanceDisplayName(schedule.substanceName)
         val timeText = TIME_FORMATTER.format(scheduledInstant.atZone(ZoneId.systemDefault()))
         val doseSummary = buildDoseSummary(localizedContext, slot, customUnit, schedule)
@@ -158,9 +158,11 @@ class RoutineNotificationHelper @Inject constructor(
         NotificationManagerCompat.from(appContext).notify(notificationId, builder.build())
     }
 
-    fun cancelNotification(scheduleId: Int, scheduledEpochMillis: Long) {
-        val notificationId = notificationIdFor(scheduleId, scheduledEpochMillis)
-        cancelNotificationById(notificationId)
+    fun cancelNotification(scheduleId: Int, scheduledEpochMillis: Long, slotId: String = "") {
+        cancelNotificationById(notificationIdFor(scheduleId, scheduledEpochMillis, slotId))
+        if (slotId.isNotEmpty()) {
+            cancelNotificationById(notificationIdFor(scheduleId, scheduledEpochMillis, ""))
+        }
     }
 
     fun cancelNotificationById(notificationId: Int) {
@@ -204,9 +206,10 @@ class RoutineNotificationHelper @Inject constructor(
 
         private val TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-        fun notificationIdFor(scheduleId: Int, scheduledEpochMillis: Long): Int {
-            val hash = ((scheduleId * 1_000_003) xor (scheduledEpochMillis / 60_000L).toInt()) and 0x0FFF_FFFF
-            return 10_000 + hash
+        fun notificationIdFor(scheduleId: Int, scheduledEpochMillis: Long, slotId: String = ""): Int {
+            val minuteBucket = (scheduledEpochMillis / 60_000L).toInt()
+            val raw = ((scheduleId * 1_000_003) xor (minuteBucket * 31) xor slotId.hashCode()) and 0x0FFF_FFFF
+            return 10_000 + raw
         }
     }
 }

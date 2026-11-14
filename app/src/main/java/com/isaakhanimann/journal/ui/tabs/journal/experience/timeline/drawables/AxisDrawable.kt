@@ -32,12 +32,21 @@ data class AxisDrawable(
     val widthInSeconds: Float
 ) {
     fun getFullHours(pixelsPerSec: Float, widthInPixels: Float): List<FullHour> {
+        if (!pixelsPerSec.isFinite() || pixelsPerSec <= 0f || !widthInPixels.isFinite() || widthInPixels <= 0f || !widthInSeconds.isFinite() || widthInSeconds <= 0f) {
+            return emptyList()
+        }
         val widthInWholeHours = widthInSeconds.toLong().toDuration(DurationUnit.SECONDS).inWholeHours
-        val widthPerHour = widthInPixels / widthInWholeHours
+        if (widthInWholeHours <= 0L) {
+            return emptyList()
+        }
+        val widthPerHour = widthInPixels / widthInWholeHours.toFloat()
+        if (!widthPerHour.isFinite() || widthPerHour <= 0f) {
+            return emptyList()
+        }
         val minWidthPerHour = 80.0
         var stepSize = (minWidthPerHour / widthPerHour).roundToLong()
-        if (stepSize == 0.toLong()) {
-            stepSize = 1
+        if (stepSize <= 0L) {
+            stepSize = 1L
         }
         val dates = getInstantsBetween(
             startTime = startTime,
@@ -55,12 +64,13 @@ data class AxisDrawable(
 
     companion object {
         fun getInstantsBetween(startTime: Instant, endTime: Instant, stepSizeInHours: Long): List<Instant> {
+            val safeStepHours = stepSizeInHours.coerceAtLeast(1L)
             val firstDate = startTime.nearestFullHourInTheFuture()
             val fullHours: MutableList<Instant> = mutableListOf()
             var checkTime = firstDate
             while (checkTime.isBefore(endTime)) {
                 fullHours.add(checkTime)
-                checkTime = checkTime.plus(stepSizeInHours, ChronoUnit.HOURS)
+                checkTime = checkTime.plus(safeStepHours, ChronoUnit.HOURS)
             }
             return fullHours.toList()
         }

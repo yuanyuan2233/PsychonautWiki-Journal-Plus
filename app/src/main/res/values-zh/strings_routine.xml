@@ -108,6 +108,10 @@
     <string name="routine_validation_need_weekdays">请至少选择一天</string>
     <string name="routine_validation_need_slot">请至少保留一个给药时段</string>
     <string name="routine_validation_bad_interval">间隔与周期数值必须大于 0</string>
+    <string name="routine_validation_bad_number">剂量与半衰期必须为大于 0 的有效数字（标准差不可为负）</string>
+    <string name="routine_validation_bad_date_range">结束日期不能早于开始日期</string>
+    <string name="routine_catch_up_chip_days">%1$d天</string>
+    <string name="routine_perm_open_settings_failed">无法在当前设备上打开闹钟权限设置页</string>
     <string name="routine_search_substance_placeholder">搜索内置物质或自定义物质…</string>
     <string name="routine_summary_daily">每日 %1$d 个时段</string>
     <string name="routine_summary_weekly">每周 %1$s</string>

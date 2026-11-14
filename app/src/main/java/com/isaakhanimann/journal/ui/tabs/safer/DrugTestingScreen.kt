@@ -137,7 +137,7 @@ fun DrugTestingScreen(navigateBack: () -> Unit = {}) {
                 TestingServiceItem(
                     name = "Get Your Drugs Tested",
                     city = stringResource(R.string.safer_city_vancouver),
-                    url = "http://www.vch.ca/public-health/harm-reduction/overdose-prevention-response/drug-checking"
+                    url = "https://www.vch.ca/en/health-topics/overdose-prevention-and-response"
                 )
                 HorizontalDivider()
                 TestingServiceItem(
@@ -169,7 +169,7 @@ fun DrugTestingScreen(navigateBack: () -> Unit = {}) {
                 TestingServiceItem(
                     name = "Centre \"Les Wads\"",
                     city = stringResource(R.string.safer_city_metz),
-                    url = "http://www.leswadscmsea.fr"
+                    url = "https://www.leswadscmsea.fr"
                 )
             }
             CardWithTesting(title = stringResource(R.string.safer_country_italy)) {

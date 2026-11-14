@@ -122,15 +122,18 @@ class EditTimedNoteViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000)
         )
 
-    fun delete() {
+    fun delete(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             timedNote?.let {
                 experienceRepo.delete(it)
             }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 
-    fun onDoneTap() {
+    fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val selectedInstant = localDateTimeFlow.firstOrNull()?.getInstant() ?: return@launch
             timedNote?.let {
@@ -139,6 +142,9 @@ class EditTimedNoteViewModel @Inject constructor(
                 it.color = color
                 it.isPartOfTimeline = isPartOfTimeline
                 experienceRepo.update(it)
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
             }
         }
     }

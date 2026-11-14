@@ -70,8 +70,7 @@ fun EditCustomSubstanceScreen(
                             TextButton(
                                 onClick = {
                                     isShowingDeleteDialog = false
-                                    viewModel.deleteCustomSubstance()
-                                    navigateBack()
+                                    viewModel.deleteCustomSubstance(onDone = navigateBack)
                                 }
                             ) {
                                 Text(stringResource(R.string.drugs_delete))
@@ -93,8 +92,7 @@ fun EditCustomSubstanceScreen(
                 ExtendedFloatingActionButton(
                     modifier = Modifier.imePadding(),
                     onClick = {
-                        viewModel.onDoneTap()
-                        navigateBack()
+                        viewModel.onDoneTap(onDone = navigateBack)
                     },
                     icon = {
                         Icon(

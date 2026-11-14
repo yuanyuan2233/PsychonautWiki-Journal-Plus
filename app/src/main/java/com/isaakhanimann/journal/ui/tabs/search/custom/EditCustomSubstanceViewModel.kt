@@ -61,7 +61,7 @@ class EditCustomSubstanceViewModel @Inject constructor(
         }
     }
 
-    fun onDoneTap() {
+    fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val cleanName = name.trim()
             if (cleanName.isBlank()) return@launch
@@ -81,13 +81,19 @@ class EditCustomSubstanceViewModel @Inject constructor(
             } else {
                 experienceRepo.insert(customSubstance)
             }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 
-    fun deleteCustomSubstance() {
+    fun deleteCustomSubstance(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             if (id > 0) {
                 experienceRepo.delete(CustomSubstance(id, originalName.ifBlank { name }, units, description))
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
             }
         }
     }

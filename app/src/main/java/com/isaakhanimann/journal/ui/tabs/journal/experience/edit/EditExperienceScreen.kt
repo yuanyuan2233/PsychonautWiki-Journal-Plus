@@ -57,8 +57,7 @@ fun EditExperienceScreen(
         onChangeOfEnteredTitle = { viewModel.enteredTitle = it },
         isEnteredTitleOk = viewModel.isEnteredTitleOk,
         onDoneTap = {
-            viewModel.onDoneTap()
-            navigateBack()
+            viewModel.onDoneTap(onDone = navigateBack)
         },
         text = viewModel.enteredText,
         onTextChange = { viewModel.enteredText = it },

@@ -30,7 +30,9 @@ import com.isaakhanimann.journal.data.room.experiences.entities.Experience
 import com.isaakhanimann.journal.data.room.experiences.entities.Location
 import com.isaakhanimann.journal.ui.main.navigation.graphs.EditExperienceRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
@@ -43,7 +45,7 @@ class EditExperienceViewModel @Inject constructor(
 
     var experience: Experience? = null
     var enteredTitle by mutableStateOf("")
-    val isEnteredTitleOk get() = enteredTitle.isNotEmpty()
+    val isEnteredTitleOk get() = enteredTitle.isNotBlank()
     var enteredText by mutableStateOf("")
     var enteredLocation by mutableStateOf("")
     private var oldLongitude: Double? = null
@@ -53,27 +55,32 @@ class EditExperienceViewModel @Inject constructor(
     init {
         val editExperienceRoute = state.toRoute<EditExperienceRoute>()
         viewModelScope.launch {
-            experience = repository.getExperience(id = editExperienceRoute.experienceId)!!
-            enteredTitle = experience!!.title
-            enteredText = experience!!.text
-            enteredLocation = experience!!.location?.name ?: ""
-            oldLongitude = experience!!.location?.longitude
-            oldLatitude = experience!!.location?.latitude
+            val loaded = repository.getExperience(id = editExperienceRoute.experienceId) ?: return@launch
+            experience = loaded
+            enteredTitle = loaded.title
+            enteredText = loaded.text
+            enteredLocation = loaded.location?.name ?: ""
+            oldLongitude = loaded.location?.longitude
+            oldLatitude = loaded.location?.latitude
         }
     }
 
-    fun onDoneTap() {
-        if (enteredTitle.isNotEmpty()) {
+    fun onDoneTap(onDone: () -> Unit = {}) {
+        val target = experience ?: return
+        if (enteredTitle.isNotBlank()) {
             viewModelScope.launch {
-                experience!!.title = enteredTitle
-                experience!!.text = enteredText
+                target.title = enteredTitle.trim()
+                target.text = enteredText
                 val location = if (enteredLocation.isNotBlank()) {
-                    Location(name = enteredLocation, longitude = oldLongitude, latitude = oldLatitude)
+                    Location(name = enteredLocation.trim(), longitude = oldLongitude, latitude = oldLatitude)
                 } else {
                     null
                 }
-                experience!!.location = location
-                repository.update(experience = experience!!)
+                target.location = location
+                repository.update(experience = target)
+                withContext(Dispatchers.Main) {
+                    onDone()
+                }
             }
         }
     }

@@ -75,21 +75,27 @@ class EditRatingViewModel @Inject constructor(
         selectedRatingOption = newRating
     }
 
-    fun delete() {
+    fun delete(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             rating?.let {
                 experienceRepo.delete(it)
             }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 
-    fun onDoneTap() {
+    fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val selectedInstant = localDateTimeFlow.firstOrNull()?.getInstant() ?: return@launch
             rating?.let {
                 it.time = if (isOverallRatingFlow.value) null else selectedInstant
                 it.option = selectedRatingOption
                 experienceRepo.update(it)
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
             }
         }
     }

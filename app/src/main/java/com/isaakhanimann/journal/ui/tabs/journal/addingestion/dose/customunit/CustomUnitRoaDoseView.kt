@@ -28,7 +28,7 @@ import kotlin.math.round
 fun CustomUnitRoaDoseView(roaDose: RoaDose, customUnit: CustomUnit) {
     fun convertToNewUnit(oldDose: Double?): Double? {
         return customUnit.dose?.let { dosePerUnit ->
-            if (oldDose != null) {
+            if (oldDose != null && dosePerUnit.isFinite() && dosePerUnit > 0.0) {
                 return@let roundToSensibly(oldDose / dosePerUnit)
             } else {
                 return@let null

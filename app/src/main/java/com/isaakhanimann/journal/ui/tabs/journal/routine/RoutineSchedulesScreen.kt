@@ -43,6 +43,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -52,7 +54,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +84,9 @@ fun RoutineSchedulesScreen(
     val hasNotificationPermission by viewModel.hasNotificationPermission.collectAsState()
     val canScheduleExactAlarms by viewModel.canScheduleExactAlarms.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val openSettingsFailedMsg = stringResource(R.string.routine_perm_open_settings_failed)
 
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.refreshPermissions()
@@ -127,6 +134,7 @@ fun RoutineSchedulesScreen(
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.routine_schedules_title)) },
@@ -179,7 +187,11 @@ fun RoutineSchedulesScreen(
                             val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
                                 data = Uri.parse("package:${context.packageName}")
                             }
-                            runCatching { context.startActivity(intent) }
+                            runCatching { context.startActivity(intent) }.onFailure {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(openSettingsFailedMsg)
+                                }
+                            }
                         }
                     )
                 }
@@ -207,7 +219,7 @@ fun RoutineSchedulesScreen(
                                 FilterChip(
                                     selected = catchUpDays == days,
                                     onClick = { viewModel.setCatchUpDays(days) },
-                                    label = { Text("${days}d") }
+                                    label = { Text(stringResource(R.string.routine_catch_up_chip_days, days)) }
                                 )
                             }
                         }

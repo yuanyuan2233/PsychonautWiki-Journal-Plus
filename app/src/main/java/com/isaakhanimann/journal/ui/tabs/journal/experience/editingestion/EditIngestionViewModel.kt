@@ -200,7 +200,7 @@ class EditIngestionViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000)
     )
 
-    fun onDoneTap() {
+    fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val selectedStartInstant = localDateTimeStartFlow.firstOrNull()?.getInstant() ?: return@launch
             val selectedEndInstant = localDateTimeEndFlow.firstOrNull()?.getInstant()
@@ -211,8 +211,8 @@ class EditIngestionViewModel @Inject constructor(
                 it.isDoseAnEstimate = isEstimate
                 it.isConfirmed = isConfirmed
                 it.experienceId = experienceId
-                it.dose = if (isKnown) dose.toDoubleOrNull() else null
-                it.estimatedDoseStandardDeviation = if (isEstimate) estimatedDoseStandardDeviation.toDoubleOrNull() else null
+                it.dose = if (isKnown) dose.replace(',', '.').trim().toDoubleOrNull()?.takeIf { d -> d.isFinite() && d >= 0.0 } else null
+                it.estimatedDoseStandardDeviation = if (isEstimate) estimatedDoseStandardDeviation.replace(',', '.').trim().toDoubleOrNull()?.takeIf { s -> s.isFinite() && s >= 0.0 } else null
                 it.units = units
                 it.customUnitId = customUnit?.id
                 it.time = selectedStartInstant
@@ -227,10 +227,13 @@ class EditIngestionViewModel @Inject constructor(
                     }
                 }
             }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 
-    fun deleteIngestion() {
+    fun deleteIngestion(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             ingestion?.let {
                 if (it.routineScheduleId != null) {
@@ -238,6 +241,9 @@ class EditIngestionViewModel @Inject constructor(
                 } else {
                     experienceRepo.delete(ingestion = it)
                 }
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
             }
         }
     }

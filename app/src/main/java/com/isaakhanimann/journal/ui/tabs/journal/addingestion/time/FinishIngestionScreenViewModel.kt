@@ -265,11 +265,19 @@ class FinishIngestionScreenViewModel @Inject constructor(
         selectedExperienceFlow.emit(closestExperience)
     }
 
+    private var isSaving = false
+
     fun createSaveAndDismissAfter(dismiss: () -> Unit) {
+        if (isSaving) return
+        isSaving = true
         viewModelScope.launch {
-            createAndSaveIngestion()
-            withContext(Dispatchers.Main) {
-                dismiss()
+            try {
+                createAndSaveIngestion()
+                withContext(Dispatchers.Main) {
+                    dismiss()
+                }
+            } finally {
+                isSaving = false
             }
         }
     }
