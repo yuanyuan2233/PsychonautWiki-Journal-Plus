@@ -38,9 +38,12 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -82,9 +85,12 @@ fun JournalScreen(
     navigateToExperiencePopNothing: (experienceId: Int) -> Unit,
     navigateToAddIngestion: () -> Unit,
     navigateToCalendar: () -> Unit,
+    navigateToRoutineRecords: () -> Unit = {},
+    navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
     viewModel: JournalViewModel = hiltViewModel()
 ) {
     val experiences = viewModel.experiences.collectAsState().value
+    val unconfirmedRoutineCount = viewModel.unconfirmedRoutineCountFlow.collectAsState().value
     LaunchedEffect(Unit) {
         viewModel.maybeMigrate()
     }
@@ -104,6 +110,11 @@ fun JournalScreen(
         isSearchEnabled = viewModel.isSearchEnabled.value,
         onChangeIsSearchEnabled = viewModel::onChangeOfIsSearchEnabled,
         experiences = experiences,
+        unconfirmedRoutineCount = unconfirmedRoutineCount,
+        navigateToRoutineRecords = navigateToRoutineRecords,
+        navigateToEditIngestion = navigateToEditIngestion,
+        onConfirmRoutineIngestion = viewModel::confirmRoutineIngestion,
+        onSkipRoutineIngestion = viewModel::skipRoutineIngestion,
     )
 }
 
@@ -147,12 +158,35 @@ fun JournalScreen(
     isSearchEnabled: Boolean,
     onChangeIsSearchEnabled: (Boolean) -> Unit,
     experiences: List<ExperienceWithIngestionsCompanionsAndRatings>,
+    unconfirmedRoutineCount: Int = 0,
+    navigateToRoutineRecords: () -> Unit = {},
+    navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
+    onConfirmRoutineIngestion: (Int) -> Unit = {},
+    onSkipRoutineIngestion: (Int) -> Unit = {},
 ) {
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.journal_title)) },
                 actions = {
+                    IconButton(onClick = navigateToRoutineRecords) {
+                        BadgedBox(
+                            badge = {
+                                if (unconfirmedRoutineCount > 0) {
+                                    Badge {
+                                        Text(
+                                            if (unconfirmedRoutineCount > 99) "99+" else unconfirmedRoutineCount.toString()
+                                        )
+                                    }
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Outlined.Alarm,
+                                contentDescription = stringResource(R.string.routine_journal_entry_cd)
+                            )
+                        }
+                    }
                     IconToggleButton(
                         checked = isTimeRelativeToNow,
                         onCheckedChange = onChangeIsRelative
@@ -302,7 +336,10 @@ fun JournalScreen(
                                 navigateToExperienceScreen = {
                                     navigateToExperiencePopNothing(experienceWithIngestions.experience.id)
                                 },
-                                isTimeRelativeToNow = isTimeRelativeToNow
+                                isTimeRelativeToNow = isTimeRelativeToNow,
+                                onConfirmRoutineIngestion = onConfirmRoutineIngestion,
+                                onSkipRoutineIngestion = onSkipRoutineIngestion,
+                                navigateToEditIngestion = navigateToEditIngestion
                             )
                             HorizontalDivider()
                         }

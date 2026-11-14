@@ -26,6 +26,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
+import com.isaakhanimann.journal.data.room.experiences.RoutineDao
+import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.data.substances.repositories.SearchRepository
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,7 +47,28 @@ class JournalViewModel @Inject constructor(
     searchRepository: SearchRepository,
     private val dataStore: DataStore<Preferences>,
     private val userPreferences: UserPreferences,
+    routineDao: RoutineDao,
+    private val routineSchedulerManager: RoutineSchedulerManager,
 ) : ViewModel() {
+
+    val unconfirmedRoutineCountFlow = routineDao.getUnconfirmedRoutineCountFlow()
+        .stateIn(
+            initialValue = 0,
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000)
+        )
+
+    fun confirmRoutineIngestion(ingestionId: Int) {
+        viewModelScope.launch {
+            routineSchedulerManager.confirmDose(ingestionId)
+        }
+    }
+
+    fun skipRoutineIngestion(ingestionId: Int) {
+        viewModelScope.launch {
+            routineSchedulerManager.skipOrDeleteRoutineIngestion(ingestionId)
+        }
+    }
 
 
     val isTimeRelativeToNow = mutableStateOf(false)
@@ -112,7 +135,7 @@ class JournalViewModel @Inject constructor(
                 Pair(first = pair, second = customSubstances)
             }
             .combine(isFavoriteEnabledFlow) { pair, isFavoriteEnabled ->
-                var experiencesWithIngestions = pair.first.first
+                var experiencesWithIngestions = pair.first.first.filter { !it.experience.isRoutineOnly }
                 val searchText = pair.first.second
                 val customSubstances = pair.second
 

@@ -126,4 +126,7 @@
     <string name="routine_weekday_fri">Fri</string>
     <string name="routine_weekday_sat">Sat</string>
     <string name="routine_weekday_sun">Sun</string>
+    <string name="routine_common_cancel">Cancel</string>
+    <string name="routine_common_close">Close</string>
+    <string name="routine_common_delete">Delete</string>
 </resources>

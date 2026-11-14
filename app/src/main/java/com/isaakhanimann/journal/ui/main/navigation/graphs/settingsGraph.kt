@@ -23,6 +23,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.navigation
 import com.isaakhanimann.journal.ui.main.navigation.composableWithTransitions
 import com.isaakhanimann.journal.ui.main.navigation.SettingsTopLevelRoute
+import com.isaakhanimann.journal.ui.tabs.journal.routine.EditRoutineScheduleScreen
+import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineSchedulesScreen
 import com.isaakhanimann.journal.ui.tabs.settings.DonateScreen
 import com.isaakhanimann.journal.ui.tabs.settings.FAQScreen
 import com.isaakhanimann.journal.ui.tabs.settings.SettingsScreen
@@ -54,6 +56,9 @@ fun NavGraphBuilder.settingsGraph(navController: NavHostController) {
                 navigateToDonate = {
                     navController.navigate(DonateRoute)
                 },
+                navigateToRoutineSchedules = {
+                    navController.navigate(RoutineSchedulesRoute)
+                },
             )
         }
         composableWithTransitions<FAQRoute> { FAQScreen(navigateBack = navController::popBackStack) }
@@ -84,7 +89,35 @@ fun NavGraphBuilder.settingsGraph(navController: NavHostController) {
             )
         }
         composableWithTransitions<EditCustomUnitRoute> {
-            EditCustomUnitScreen(navigateBack = navController::popBackStack)
+            EditCustomUnitScreen(
+                navigateBack = navController::popBackStack,
+                navigateToCreateRoutineSchedule = { substanceName, routeName, customUnitId ->
+                    navController.navigate(
+                        EditRoutineScheduleRoute(
+                            scheduleId = null,
+                            initialSubstanceName = substanceName,
+                            initialRouteName = routeName,
+                            initialCustomUnitId = customUnitId
+                        )
+                    )
+                }
+            )
+        }
+        composableWithTransitions<RoutineSchedulesRoute> {
+            RoutineSchedulesScreen(
+                navigateBack = navController::popBackStack,
+                navigateToCreateSchedule = {
+                    navController.navigate(EditRoutineScheduleRoute())
+                },
+                navigateToEditSchedule = { scheduleId ->
+                    navController.navigate(EditRoutineScheduleRoute(scheduleId = scheduleId))
+                }
+            )
+        }
+        composableWithTransitions<EditRoutineScheduleRoute> {
+            EditRoutineScheduleScreen(
+                navigateBack = navController::popBackStack
+            )
         }
     }
 }
@@ -112,3 +145,14 @@ object CustomUnitsRoute
 
 @Serializable
 data class EditCustomUnitRoute(val customUnitId: Int)
+
+@Serializable
+data object RoutineSchedulesRoute
+
+@Serializable
+data class EditRoutineScheduleRoute(
+    val scheduleId: Int? = null,
+    val initialSubstanceName: String? = null,
+    val initialRouteName: String? = null,
+    val initialCustomUnitId: Int? = null
+)

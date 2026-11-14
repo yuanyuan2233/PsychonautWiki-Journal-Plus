@@ -35,6 +35,7 @@ import com.isaakhanimann.journal.ui.tabs.journal.experience.timednote.add.AddTim
 import com.isaakhanimann.journal.ui.tabs.journal.experience.timednote.edit.EditTimedNoteScreen
 import com.isaakhanimann.journal.ui.tabs.journal.experience.timeline.ExplainTimelineScreen
 import com.isaakhanimann.journal.ui.tabs.journal.experience.timeline.screen.TimelineScreen
+import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineRecordsScreen
 import com.isaakhanimann.journal.ui.tabs.safer.VolumetricDosingScreen
 import com.isaakhanimann.journal.ui.tabs.search.substance.SaferSniffingScreen
 import kotlinx.serialization.Serializable
@@ -53,6 +54,12 @@ fun NavGraphBuilder.journalGraph(navController: NavHostController) {
                 },
                 navigateToCalendar = {
                     navController.navigate(CalendarRoute)
+                },
+                navigateToRoutineRecords = {
+                    navController.navigate(RoutineRecordsRoute)
+                },
+                navigateToEditIngestion = { ingestionId ->
+                    navController.navigate(EditIngestionRoute(ingestionId))
                 }
             )
         }
@@ -141,7 +148,24 @@ fun NavGraphBuilder.journalGraph(navController: NavHostController) {
                 navigateToExperiencePopNothing = { experienceId ->
                     navController.navigate(ExperienceRoute(experienceId))
                 },
-                navigateBack = navController::popBackStack
+                navigateBack = navController::popBackStack,
+                navigateToEditIngestion = { ingestionId ->
+                    navController.navigate(EditIngestionRoute(ingestionId))
+                }
+            )
+        }
+        composableWithTransitions<RoutineRecordsRoute> {
+            RoutineRecordsScreen(
+                navigateBack = navController::popBackStack,
+                navigateToManageSchedules = {
+                    navController.navigate(RoutineSchedulesRoute)
+                },
+                navigateToExperience = { experienceId ->
+                    navController.navigate(ExperienceRoute(experienceId))
+                },
+                navigateToEditIngestion = { ingestionId ->
+                    navController.navigate(EditIngestionRoute(ingestionId))
+                }
             )
         }
     }
@@ -176,6 +200,9 @@ data class ExperienceRoute(val experienceId: Int)
 
 @Serializable
 data class EditIngestionRoute(val ingestionId: Int)
+
+@Serializable
+data object RoutineRecordsRoute
 
 @Serializable
 object ExplainTimelineOnJournalTabRoute

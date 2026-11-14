@@ -97,6 +97,7 @@ fun CalendarJournalScreenPreview() {
 fun CalendarJournalScreen(
     navigateToExperiencePopNothing: (experienceId: Int) -> Unit,
     navigateBack: () -> Unit = {},
+    navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
 ) {
     BackHandler(onBack = navigateBack)
     val currentMonth = remember { YearMonth.now() }
@@ -151,6 +152,7 @@ fun CalendarJournalScreen(
                 SheetContent(
                     experienceIds = experienceIdsToShowInSheet,
                     navigateToExperiencePopNothing = navigateToExperiencePopNothing,
+                    navigateToEditIngestion = navigateToEditIngestion,
                     dismissSheet = {
                         scope.launch { sheetState.hide() }.invokeOnCompletion {
                             if (!sheetState.isVisible) {
@@ -192,14 +194,16 @@ fun CalendarJournalScreen(
 fun SheetContent(
     experienceIds: List<Int>,
     navigateToExperiencePopNothing: (experienceId: Int) -> Unit,
-    dismissSheet: () -> Unit
+    dismissSheet: () -> Unit,
+    navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
 ) {
     LazyColumn {
         items(experienceIds) { experienceId ->
             ExperienceRowWithFetch(
                 experienceId = experienceId,
-                navigateToExperiencePopNothing,
-                dismissSheet
+                navigateToExperiencePopNothing = navigateToExperiencePopNothing,
+                dismissSheet = dismissSheet,
+                navigateToEditIngestion = navigateToEditIngestion
             )
             HorizontalDivider()
         }
@@ -210,9 +214,11 @@ fun SheetContent(
 fun ExperienceRowWithFetch(
     experienceId: Int,
     navigateToExperiencePopNothing: (experienceId: Int) -> Unit,
-    dismissSheet: () -> Unit
+    dismissSheet: () -> Unit,
+    navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
 ) {
     val viewModel: ExperienceFetchViewModel = hiltViewModel()
+    val coroutineScope = rememberCoroutineScope()
     val experienceState: MutableState<ExperienceWithIngestionsCompanionsAndRatings?> = remember {
         mutableStateOf(
             null
@@ -228,7 +234,23 @@ fun ExperienceRowWithFetch(
                 dismissSheet()
                 navigateToExperiencePopNothing(experienceId)
             },
-            isTimeRelativeToNow = false
+            isTimeRelativeToNow = false,
+            onConfirmRoutineIngestion = { ingId ->
+                coroutineScope.launch {
+                    viewModel.confirmRoutineIngestion(ingId)
+                    experienceState.value = viewModel.getExperience(experienceId)
+                }
+            },
+            onSkipRoutineIngestion = { ingId ->
+                coroutineScope.launch {
+                    viewModel.skipRoutineIngestion(ingId)
+                    experienceState.value = viewModel.getExperience(experienceId)
+                }
+            },
+            navigateToEditIngestion = { ingId ->
+                dismissSheet()
+                navigateToEditIngestion(ingId)
+            }
         )
     }
 }

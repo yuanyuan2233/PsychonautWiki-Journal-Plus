@@ -19,6 +19,7 @@
 package com.isaakhanimann.journal.ui.tabs.journal.experience.components.ingestion
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -65,6 +66,7 @@ fun IngestionRow(
     ingestionElement: IngestionElement,
     areDosageDotsHidden: Boolean,
     modifier: Modifier = Modifier,
+    onUnconfirmedBadgeClick: (() -> Unit)? = null,
     time: @Composable () -> Unit,
 ) {
     val ingestionWithCompanionAndCustomUnit = ingestionElement.ingestionWithCompanionAndCustomUnit
@@ -77,7 +79,20 @@ fun IngestionRow(
     ) {
         VerticalLine(color = ingestionWithCompanionAndCustomUnit.substanceCompanion?.color ?: AppColor.RED)
         Column {
-            time()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(modifier = Modifier.weight(1f)) {
+                    time()
+                }
+                if (!ingestion.isConfirmed && onUnconfirmedBadgeClick != null) {
+                    com.isaakhanimann.journal.ui.tabs.journal.components.UnconfirmedMedicationBadge(
+                        onClick = onUnconfirmedBadgeClick
+                    )
+                }
+            }
             val localizedSubstanceName = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.getSubstanceDisplayName(ingestion.substanceName)
             val title = if (customUnit != null) {
                 "${localizedSubstanceName}, ${customUnit.name}"

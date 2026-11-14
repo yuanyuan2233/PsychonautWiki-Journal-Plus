@@ -70,6 +70,13 @@ fun NavGraphBuilder.searchGraph(navController: NavHostController) {
                 navigateToVolumetricDosingScreen = {
                     navController.navigate(VolumetricDosingOnSearchTabRoute)
                 },
+                navigateToCreateRoutineSchedule = { substanceName ->
+                    navController.navigate(
+                        EditRoutineScheduleRoute(
+                            initialSubstanceName = substanceName
+                        )
+                    )
+                },
                 navigateBack = navController::popBackStack
             )
         }
