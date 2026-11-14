@@ -36,7 +36,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -50,6 +52,7 @@ import com.isaakhanimann.journal.ui.theme.horizontalPadding
 @Composable
 fun VolumetricDosingScreen(navigateBack: (() -> Unit)? = null) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -66,7 +69,7 @@ fun VolumetricDosingScreen(navigateBack: (() -> Unit)? = null) {
                 },
                 actions = {
                     TextButton(
-                        onClick = { uriHandler.openUri(VOLUMETRIC_DOSE_ARTICLE_URL) },
+                        onClick = { openUriSafely(context, uriHandler, VOLUMETRIC_DOSE_ARTICLE_URL) },
                     ) {
                         Text(stringResource(R.string.safer_action_article))
                     }

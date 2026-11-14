@@ -35,7 +35,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +57,7 @@ import com.isaakhanimann.journal.ui.theme.horizontalPadding
 fun ReagentTestingScreen(navigateBack: () -> Unit = {}) {
     BackHandler(onBack = navigateBack)
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -69,7 +72,7 @@ fun ReagentTestingScreen(navigateBack: () -> Unit = {}) {
                 },
                 actions = {
                     TextButton(
-                        onClick = { uriHandler.openUri("https://psychonautwiki.org/wiki/Reagent_testing_kits") },
+                        onClick = { openUriSafely(context, uriHandler, "https://psychonautwiki.org/wiki/Reagent_testing_kits") },
                     ) {
                         Text(stringResource(R.string.safer_action_article))
                     }
@@ -103,11 +106,11 @@ fun ReagentTestingScreen(navigateBack: () -> Unit = {}) {
                     )
                     Spacer(modifier = Modifier.height(5.dp))
                     HorizontalDivider()
-                    TextButton(onClick = { uriHandler.openUri("https://dancesafe.org/testing-kit-instructions/") }) {
+                    TextButton(onClick = { openUriSafely(context, uriHandler, "https://dancesafe.org/testing-kit-instructions/") }) {
                         Text(text = "DanceSafe")
                     }
                     HorizontalDivider()
-                    TextButton(onClick = { uriHandler.openUri("https://bunkpolice.com") }) {
+                    TextButton(onClick = { openUriSafely(context, uriHandler, "https://bunkpolice.com") }) {
                         Text(text = "Bunk Police")
                     }
                 }

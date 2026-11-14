@@ -61,10 +61,11 @@ data class FullTimelines(
 
         fun heightAt(x: Float): Float {
             val divider = end.x - start.x
-            if (divider == 0f) return 0f
+            if (!divider.isFinite() || divider <= 0f) return 0f
             val m = (end.y - start.y) / divider
             val b = start.y - m * start.x
-            return m * x + b
+            val result = m * x + b
+            return if (result.isFinite()) result else 0f
         }
     }
 
@@ -88,17 +89,23 @@ data class FullTimelines(
     override val endOfLineRelativeToStartInSeconds: Float
 
     init {
-        val timeRangeLineSegments = weightedLines.flatMap {
+        val (rangeLines, pointLines) = weightedLines.partition { weightedLine ->
+            val endTime = weightedLine.endTime ?: return@partition false
+            val startX = Duration.between(startTimeGraph, weightedLine.startTime).seconds.toFloat()
+            val endX = Duration.between(startTimeGraph, endTime).seconds.toFloat()
+            startX.isFinite() && endX.isFinite() && startX < endX
+        }
+        val timeRangeLineSegments = rangeLines.flatMap {
             return@flatMap getLineSegments(weightedLine = it)
         }
-        val weightedRelatives = weightedLines.filter { it.endTime == null }.map {
+        val weightedRelatives = pointLines.map {
             WeightedLineRelativeToFirst(
                 startTimeRelativeToGroupInSeconds = Duration.between(
                     startTimeGraph,
                     it.startTime
                 ).seconds.toFloat(),
                 horizontalWeight = it.horizontalWeight,
-                height = it.height
+                height = if (it.height.isFinite()) it.height else 0f
             )
         }
         val lineSegments = weightedRelatives.flatMap { relative ->
@@ -151,23 +158,25 @@ data class FullTimelines(
         val pointsToConsider = ingestionPoints + linePoints
         val pointsWithHeight = pointsToConsider.map { finalPoint ->
             val x = finalPoint.x
-            val sumOfHeights = lineSegments.map { lineSegment ->
-                if (lineSegment.isInside(x)) {
-                    lineSegment.heightAt(x)
-                } else {
-                    0f
-                }
-            }.sum()
+            val sumOfHeights = lineSegments.sumOf { lineSegment ->
+                val height = if (lineSegment.isInside(x)) lineSegment.heightAt(x) else 0f
+                if (height.isFinite()) height.toDouble() else 0.0
+            }.toFloat()
             return@map FinalPoint(
                 x = x,
-                y = sumOfHeights,
+                y = if (sumOfHeights.isFinite()) sumOfHeights else 0f,
                 isIngestionPoint = finalPoint.isIngestionPoint
             )
-        }
+        }.filter { it.x.isFinite() && it.y.isFinite() }
         val sortedPoints = pointsWithHeight.sortedBy { it.x }
         this.finalPoints = sortedPoints
-        this.nonNormalisedHeight = sortedPoints.maxOfOrNull { it.y } ?: 0.01f
-        this.endOfLineRelativeToStartInSeconds = finalPoints.maxOfOrNull { it.x } ?: (onset.maxInSeconds + comeup.maxInSeconds + peak.maxInSeconds + offset.maxInSeconds)
+        this.nonNormalisedHeight = (sortedPoints.maxOfOrNull { it.y }?.takeIf { it.isFinite() } ?: 0.01f)
+            .coerceAtLeast(0.01f)
+        val fallbackEndOfLine =
+            onset.maxInSeconds + comeup.maxInSeconds + peak.maxInSeconds + offset.maxInSeconds
+        this.endOfLineRelativeToStartInSeconds =
+            finalPoints.maxOfOrNull { it.x }?.takeIf { it.isFinite() }
+                ?: if (fallbackEndOfLine.isFinite()) fallbackEndOfLine else 0f
     }
 
     private fun getLineSegments(weightedLine: WeightedLine): List<LineSegment> {
@@ -233,32 +242,57 @@ data class FullTimelines(
             peak: Float,
             offset: Float,
         ): List<Point> {
-            if (startX > endX) {
+            if (!startX.isFinite() || !endX.isFinite() || !hMax.isFinite() ||
+                !onset.isFinite() || !comeup.isFinite() || !peak.isFinite() || !offset.isFinite() ||
+                startX >= endX
+            ) {
                 return emptyList()
             }
+            val safeOnset = onset.coerceAtLeast(0f)
+            val safeComeup = comeup.coerceAtLeast(0f)
+            val safePeak = peak.coerceAtLeast(0f)
+            val safeOffset = offset.coerceAtLeast(0f)
+
             val numberOfSteps = 30
-            val startSampleRange = startX + onset
-            val endSampleRange = endX + onset + comeup + peak + offset
+            val startSampleRange = startX + safeOnset
+            val endSampleRange = endX + safeOnset + safeComeup + safePeak + safeOffset
             val stepSize = (endSampleRange - startSampleRange) / numberOfSteps
+            if (!stepSize.isFinite() || stepSize <= 0f) {
+                return emptyList()
+            }
 
             val points = (1..<numberOfSteps).map { step ->
                 val x = startSampleRange + step * stepSize
-                val height = calculateExpression(
-                    x = x,
-                    startX = startX,
-                    endX = endX,
-                    hMax = hMax,
-                    onset = onset,
-                    comeup = comeup,
-                    peak = peak,
-                    offset = offset
-                )
-                return@map Point(x = x, y = height)
+                val height = if (safeComeup > 0f && safeOffset > 0f) {
+                    calculateExpression(
+                        x = x,
+                        startX = startX,
+                        endX = endX,
+                        hMax = hMax,
+                        onset = safeOnset,
+                        comeup = safeComeup,
+                        peak = safePeak,
+                        offset = safeOffset
+                    )
+                } else {
+                    calculateStepOrTrapezoidAverage(
+                        x = x,
+                        startX = startX,
+                        endX = endX,
+                        hMax = hMax,
+                        onset = safeOnset,
+                        comeup = safeComeup,
+                        peak = safePeak,
+                        offset = safeOffset
+                    )
+                }
+                return@map Point(x = x, y = if (height.isFinite()) height else 0f)
             }
             val firstPoint = Point(x = startSampleRange, y = 0f)
             val lastPoint = Point(x = endSampleRange, y = 0f)
 
-            return listOf(firstPoint) + points + listOf(lastPoint)
+            return (listOf(firstPoint) + points + listOf(lastPoint))
+                .filter { it.x.isFinite() && it.y.isFinite() }
         }
 
         private fun calculateExpression(
@@ -298,8 +332,61 @@ data class FullTimelines(
 
             val numerator = 0.5f * hMax * (term1 + term2 + term3 + term4 + term5)
             val denominator = comeup * offset * (endX - startX)
+            if (!denominator.isFinite() || denominator <= 0f) {
+                return 0f
+            }
 
-            return numerator / denominator
+            val result = numerator / denominator
+            return if (result.isFinite()) result else 0f
+        }
+
+        private fun calculateStepOrTrapezoidAverage(
+            x: Float,
+            startX: Float,
+            endX: Float,
+            hMax: Float,
+            onset: Float,
+            comeup: Float,
+            peak: Float,
+            offset: Float,
+        ): Float {
+            val span = endX - startX
+            if (!span.isFinite() || span <= 0f) return 0f
+            val a = x - endX
+            val b = x - startX
+            val t0 = onset
+            val t1 = t0 + comeup
+            val t2 = t1 + peak
+            val t3 = t2 + offset
+
+            var area = 0.0
+            if (comeup > 0f) {
+                val l = max(a, t0)
+                val r = min(b, t1)
+                if (r > l) {
+                    val hl = hMax.toDouble() * ((l - t0) / comeup)
+                    val hr = hMax.toDouble() * ((r - t0) / comeup)
+                    area += 0.5 * (hl + hr) * (r - l)
+                }
+            }
+            if (peak > 0f) {
+                val l = max(a, t1)
+                val r = min(b, t2)
+                if (r > l) {
+                    area += hMax.toDouble() * (r - l)
+                }
+            }
+            if (offset > 0f) {
+                val l = max(a, t2)
+                val r = min(b, t3)
+                if (r > l) {
+                    val hl = hMax.toDouble() * (1.0 - (l - t2) / offset)
+                    val hr = hMax.toDouble() * (1.0 - (r - t2) / offset)
+                    area += 0.5 * (hl + hr) * (r - l)
+                }
+            }
+            val result = (area / span).toFloat()
+            return if (result.isFinite()) result else 0f
         }
     }
 
@@ -310,13 +397,25 @@ data class FullTimelines(
         color: Color,
         density: Density
     ) {
-        val finalPointsNormalised = finalPoints.map {
-            FinalPoint(
-                x = it.x,
-                y = it.y / referenceHeight,
-                isIngestionPoint = it.isIngestionPoint
-            )
+        if (!canvasHeight.isFinite() || canvasHeight <= 0f ||
+            !pixelsPerSec.isFinite() || pixelsPerSec <= 0f
+        ) {
+            return
         }
+        val safeReferenceHeight = if (referenceHeight.isFinite() && referenceHeight > 0f) {
+            referenceHeight
+        } else {
+            1f
+        }
+        val finalPointsNormalised = finalPoints
+            .filter { it.x.isFinite() && it.y.isFinite() }
+            .map {
+                FinalPoint(
+                    x = it.x,
+                    y = it.y / safeReferenceHeight,
+                    isIngestionPoint = it.isIngestionPoint
+                )
+            }
         val firstPoint = finalPointsNormalised.firstOrNull() ?: return
         val lastPoint = finalPointsNormalised.lastOrNull() ?: return
         val path = Path().apply {
