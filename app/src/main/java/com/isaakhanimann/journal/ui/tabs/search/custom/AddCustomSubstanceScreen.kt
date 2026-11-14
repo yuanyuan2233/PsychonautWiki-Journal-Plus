@@ -41,8 +41,10 @@ fun AddCustomSubstanceScreen(
     initialName: String = "",
     viewModel: AddCustomSubstanceViewModel = hiltViewModel()
 ) {
-    LaunchedEffect(Unit) {
-        viewModel.name = initialName
+    LaunchedEffect(initialName) {
+        if (viewModel.name.isEmpty() && initialName.isNotEmpty()) {
+            viewModel.name = initialName
+        }
     }
     Scaffold(
         topBar = {

@@ -85,7 +85,7 @@ fun ToleranceChart(
     val headerHeightDp = 36.dp
     val totalHeightDp = headerHeightDp + (rowHeightDp * substances.size)
 
-    val now = remember { Instant.now() }
+    val now = remember(toleranceWindows, timeRange) { Instant.now() }
     val rangeStart = remember(timeRange, now) {
         now.minus(timeRange.days, ChronoUnit.DAYS)
     }
@@ -98,9 +98,17 @@ fun ToleranceChart(
 
     val zoneId = remember { ZoneId.systemDefault() }
     val isZh = SubstanceLocalizationHelper.isChinese()
+    val spansMultipleYears = remember(rangeStart, rangeEnd, zoneId) {
+        rangeStart.atZone(zoneId).year != rangeEnd.atZone(zoneId).year
+    }
     val beyondViewText = stringResource(R.string.tolerance_chart_beyond_view)
-    val dateFormatter = remember(isZh) {
-        val pattern = if (isZh) "M月d日" else "MMM d"
+    val dateFormatter = remember(isZh, zoneId, spansMultipleYears) {
+        val pattern = when {
+            isZh && spansMultipleYears -> "yy/M/d"
+            isZh -> "M月d日"
+            spansMultipleYears -> "yy/MM/dd"
+            else -> "MMM d"
+        }
         val locale = if (isZh) java.util.Locale.CHINA else java.util.Locale.US
         DateTimeFormatter.ofPattern(pattern, locale).withZone(zoneId)
     }
@@ -284,7 +292,7 @@ fun ToleranceChart(
                 }
             }
 
-            // 绘制“结束耐药 / 归零”醒目标记线与日期标签；若归零晚于视图右界，则在右边界绘制向右延续标识
+            // 绘制“结束耐受 / 归零”醒目标记线与日期标签；若归零晚于视图右界，则在右边界绘制向右延续标识
             val maxEndInstant = windowsForSubstance.map { it.end }.maxOrNull()
             if (maxEndInstant != null) {
                 val endRawRatio = instantToRawRatio(maxEndInstant)

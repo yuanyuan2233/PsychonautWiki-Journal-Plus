@@ -238,7 +238,7 @@ internal fun validateToleranceInputs(
         }
         null
     } else {
-        val parsed = fullTrimmed.toDoubleOrNull()
+        val parsed = fullTrimmed.replace(',', '.').toDoubleOrNull()
         if (parsed == null || !parsed.isFinite() || parsed !in 0.0..MAX_CUSTOM_TOLERANCE_DAYS) {
             fullDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
             null
@@ -255,7 +255,7 @@ internal fun validateToleranceInputs(
         }
         null
     } else {
-        val parsed = zeroTrimmed.toDoubleOrNull()
+        val parsed = zeroTrimmed.replace(',', '.').toDoubleOrNull()
         if (parsed == null || !parsed.isFinite() || parsed !in 0.0..MAX_CUSTOM_TOLERANCE_DAYS) {
             zeroDaysErrorRes = R.string.tolerance_sheet_error_invalid_days
             null

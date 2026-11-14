@@ -340,7 +340,7 @@ private fun ShadesView(
     onSelectShade: (AppColor) -> Unit
 ) {
     // 初始明度：优先从当前已选颜色提取，否则默认中等明度 0.5f
-    val initialLightness = remember(family, selectedColor) {
+    val initialLightness = remember(family, selectedColor, isDarkTheme) {
         if (selectedColor != null) {
             val c = selectedColor.getComposeColor(isDarkTheme)
             val max = maxOf(c.red, c.green, c.blue)
@@ -350,7 +350,7 @@ private fun ShadesView(
             0.50f
         }
     }
-    var sliderLightness by remember(family) { mutableFloatStateOf(initialLightness) }
+    var sliderLightness by remember(family, selectedColor) { mutableFloatStateOf(initialLightness) }
     val customSliderColor = remember(family, sliderLightness) {
         hslToColor(family.hue, family.saturation, sliderLightness)
     }

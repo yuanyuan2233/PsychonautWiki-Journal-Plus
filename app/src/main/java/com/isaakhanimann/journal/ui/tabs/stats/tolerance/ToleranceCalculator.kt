@@ -295,7 +295,13 @@ object ToleranceCalculator {
                 toleranceType = interval.toleranceType,
                 adaptiveColor = color,
                 isUserCustomized = isCustom,
-                customNote = if (isCustom) "用户体感自适应" else null
+                customNote = if (isCustom) {
+                    if (com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.isChinese()) {
+                        "用户体感自适应"
+                    } else {
+                        "Subjective adaptation"
+                    }
+                } else null
             )
         }
     }
