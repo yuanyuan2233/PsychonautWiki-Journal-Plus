@@ -43,6 +43,7 @@ class EditCustomSubstanceViewModel @Inject constructor(
     var name by mutableStateOf("")
     var units by mutableStateOf("")
     var description by mutableStateOf("")
+    private var originalName = ""
 
     val isValid get() = name.isNotBlank() && units.isNotBlank()
 
@@ -53,6 +54,7 @@ class EditCustomSubstanceViewModel @Inject constructor(
             val customSubstance =
                 experienceRepo.getCustomSubstanceFlow(customSubstanceId).firstOrNull() ?: return@launch
             id = customSubstanceId
+            originalName = customSubstance.name
             name = customSubstance.name
             units = customSubstance.units
             description = customSubstance.description
@@ -61,19 +63,32 @@ class EditCustomSubstanceViewModel @Inject constructor(
 
     fun onDoneTap() {
         viewModelScope.launch {
+            val cleanName = name.trim()
+            if (cleanName.isBlank()) return@launch
+            val existing = experienceRepo.getCustomSubstance(cleanName)
+            if (existing != null && existing.id != id) return@launch
             val customSubstance = CustomSubstance(
-                id,
-                name,
-                units,
-                description
+                id = id,
+                name = cleanName,
+                units = units.trim(),
+                description = description
             )
-            experienceRepo.insert(customSubstance)
+            if (id > 0) {
+                experienceRepo.renameCustomSubstanceAndReferences(
+                    customSubstance = customSubstance,
+                    oldName = originalName
+                )
+            } else {
+                experienceRepo.insert(customSubstance)
+            }
         }
     }
 
     fun deleteCustomSubstance() {
         viewModelScope.launch {
-            experienceRepo.delete(CustomSubstance(id, name, units, description))
+            if (id > 0) {
+                experienceRepo.delete(CustomSubstance(id, originalName.ifBlank { name }, units, description))
+            }
         }
     }
 }

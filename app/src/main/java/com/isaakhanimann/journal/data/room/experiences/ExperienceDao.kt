@@ -49,6 +49,7 @@ import com.isaakhanimann.journal.ui.tabs.settings.JournalExport
 import com.isaakhanimann.journal.ui.tabs.settings.MedicationScheduleSerializable
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
+import kotlin.math.sqrt
 
 @Dao
 interface ExperienceDao {
@@ -61,9 +62,13 @@ interface ExperienceDao {
 
     @Query(
         "SELECT * FROM ingestion as i" +
-                " INNER JOIN (SELECT id, MAX(time) AS time FROM ingestion WHERE time > :instant GROUP BY substanceName) as sub" +
-                " ON i.id = sub.id AND i.time = sub.time" +
-                " ORDER BY time DESC"
+                " WHERE i.time >= :instant" +
+                " AND NOT EXISTS (" +
+                "   SELECT 1 FROM ingestion as i2" +
+                "   WHERE i2.substanceName = i.substanceName" +
+                "   AND (i2.time > i.time OR (i2.time = i.time AND i2.id > i.id))" +
+                " )" +
+                " ORDER BY i.time DESC"
     )
     suspend fun getLatestIngestionOfEverySubstanceSinceDate(instant: Instant): List<Ingestion>
 
@@ -81,7 +86,7 @@ interface ExperienceDao {
     suspend fun getAllSubstanceCompanions(): List<SubstanceCompanion>
 
     @Transaction
-    @Query("SELECT * FROM experience WHERE sortDate > :fromInstant AND sortDate < :toInstant ORDER BY sortDate DESC")
+    @Query("SELECT * FROM experience WHERE sortDate >= :fromInstant AND sortDate < :toInstant ORDER BY sortDate DESC")
     suspend fun getSortedExperiencesWithIngestionsWithSortDateBetween(fromInstant: Instant, toInstant: Instant): List<ExperienceWithIngestions>
 
     @Query("SELECT substanceName FROM ingestion ORDER BY time DESC LIMIT :limit")
@@ -172,14 +177,14 @@ interface ExperienceDao {
     fun getIngestionWithExperienceFlow(id: Int): Flow<IngestionWithExperienceAndCustomUnit?>
 
     @Transaction
-    @Query("SELECT * FROM ingestion WHERE time > :fromInstant AND time < :toInstant")
+    @Query("SELECT * FROM ingestion WHERE time >= :fromInstant AND time < :toInstant")
     fun getIngestionWithExperiencesFlow(
         fromInstant: Instant,
         toInstant: Instant
     ): Flow<List<IngestionWithExperienceAndCustomUnit>>
 
     @Transaction
-    @Query("SELECT * FROM ingestion WHERE time > :fromInstant AND time < :toInstant")
+    @Query("SELECT * FROM ingestion WHERE time >= :fromInstant AND time < :toInstant")
     suspend fun getIngestionsWithCompanions(
         fromInstant: Instant,
         toInstant: Instant
@@ -237,24 +242,19 @@ interface ExperienceDao {
     suspend fun update(timedNote: TimedNote)
 
     @Delete
-    suspend fun delete(experience: Experience)
-
-    @Delete
     suspend fun delete(rating: ShulginRating)
 
     @Delete
     suspend fun delete(timedNote: TimedNote)
 
     @Transaction
-    suspend fun deleteExperienceWithIngestions(experienceWithIngestions: ExperienceWithIngestions) {
-        delete(experience = experienceWithIngestions.experience)
-        experienceWithIngestions.ingestions.forEach {
-            delete(it)
-        }
-    }
-
-    @Transaction
-    @Query("DELETE FROM substancecompanion WHERE substanceName NOT IN (SELECT substanceName FROM ingestion)")
+    @Query(
+        "DELETE FROM substancecompanion WHERE substanceName NOT IN (" +
+                "SELECT substanceName FROM ingestion " +
+                "UNION SELECT substanceName FROM customunit " +
+                "UNION SELECT substanceName FROM medicationschedule" +
+                ")"
+    )
     suspend fun deleteUnusedSubstanceCompanions()
 
     @Delete
@@ -263,17 +263,28 @@ interface ExperienceDao {
     @Delete
     suspend fun delete(customUnit: CustomUnit)
 
+    @Query("SELECT * FROM ingestion WHERE customUnitId = :customUnitId")
+    suspend fun getIngestionsForCustomUnit(customUnitId: Int): List<Ingestion>
+
+    @Transaction
+    suspend fun deleteCustomUnitAndFlattenIngestions(customUnit: CustomUnit) {
+        getIngestionsForCustomUnit(customUnit.id).forEach { ingestion ->
+            update(flattenIngestionForDeletedUnit(ingestion = ingestion, customUnit = customUnit))
+        }
+        delete(customUnit)
+    }
+
     @Transaction
     suspend fun deleteEverything() {
+        deleteAllRoutineOccurrences()
         deleteAllIngestions()
         deleteAllTimedNotes()
+        deleteAllRatings()
         deleteAllExperiences()
+        deleteAllMedicationSchedules()
+        deleteAllCustomUnits()
         deleteAllSubstanceCompanions()
         deleteAllCustomSubstances()
-        deleteAllRatings()
-        deleteAllCustomUnits()
-        deleteAllRoutineOccurrences()
-        deleteAllMedicationSchedules()
     }
 
     @Transaction
@@ -314,6 +325,7 @@ interface ExperienceDao {
         }
 
         val scheduleIdMap = mutableMapOf<Int, Int>()
+        val insertedScheduleIds = mutableSetOf<Int>()
         val seenOldScheduleIds = mutableSetOf<Int>()
         val deferredSchedules = mutableListOf<MedicationScheduleSerializable>()
         journalExport.medicationSchedules.forEach { scheduleSerializable ->
@@ -328,6 +340,7 @@ interface ExperienceDao {
                 val newId = insertedRowId.toInt()
                 if (newId > 0) {
                     scheduleIdMap[scheduleSerializable.id] = newId
+                    insertedScheduleIds.add(newId)
                 }
             } else {
                 deferredSchedules.add(scheduleSerializable)
@@ -342,12 +355,15 @@ interface ExperienceDao {
                 )
             )
             val newId = insertedRowId.toInt()
-            if (scheduleSerializable.id > 0 && newId > 0) {
-                scheduleIdMap.putIfAbsent(scheduleSerializable.id, newId)
+            if (newId > 0) {
+                insertedScheduleIds.add(newId)
+                if (scheduleSerializable.id > 0) {
+                    scheduleIdMap.putIfAbsent(scheduleSerializable.id, newId)
+                }
             }
         }
 
-        val importedIngestionIdsByKey = mutableMapOf<Pair<Int, Long>, Int>()
+        val importedIngestionIdsByKey = mutableMapOf<Pair<Int, Long>, ArrayDeque<Int>>()
         journalExport.experiences.forEachIndexed { indexExperience, experienceSerializable ->
             val experienceID = indexExperience + 1
             val newExperience = Experience(
@@ -374,7 +390,7 @@ interface ExperienceDao {
                     customUnitIdMap[oldUnitId]
                 }
                 val mappedScheduleId = ingestionSerializable.routineScheduleId?.let { oldScheduleId ->
-                    scheduleIdMap[oldScheduleId] ?: oldScheduleId
+                    scheduleIdMap[oldScheduleId]?.takeIf { it in insertedScheduleIds }
                 }
                 val newIngestion = Ingestion(
                     substanceName = ingestionSerializable.substanceName,
@@ -398,7 +414,9 @@ interface ExperienceDao {
                 val insertedIngestionId = insertIngestionReturningId(newIngestion).toInt()
                 val scheduledMillis = ingestionSerializable.scheduledEpochMillis
                 if (mappedScheduleId != null && scheduledMillis != null && insertedIngestionId > 0) {
-                    importedIngestionIdsByKey[mappedScheduleId to scheduledMillis] = insertedIngestionId
+                    importedIngestionIdsByKey
+                        .getOrPut(mappedScheduleId to scheduledMillis) { ArrayDeque() }
+                        .addLast(insertedIngestionId)
                 }
             }
             experienceSerializable.timedNotes.forEach { timedNoteSerializable ->
@@ -425,10 +443,12 @@ interface ExperienceDao {
         journalExport.substanceCompanions.forEach { insert(it) }
         journalExport.customSubstances.forEach { insert(it) }
         journalExport.routineOccurrences.forEach { occSerializable ->
-            val mappedScheduleId = scheduleIdMap[occSerializable.scheduleId] ?: occSerializable.scheduleId
+            val mappedScheduleId = scheduleIdMap[occSerializable.scheduleId]
+                ?.takeIf { it in insertedScheduleIds }
+                ?: return@forEach
             val remappedIngestionId = importedIngestionIdsByKey[
                 mappedScheduleId to occSerializable.scheduledEpochMillis
-            ]
+            ]?.removeFirstOrNull()
             insert(
                 RoutineOccurrence(
                     scheduleId = mappedScheduleId,
@@ -571,6 +591,35 @@ interface ExperienceDao {
     @Update(onConflict = OnConflictStrategy.REPLACE)
     suspend fun update(customSubstance: CustomSubstance)
 
+    @Query("UPDATE ingestion SET substanceName = :newName WHERE substanceName = :oldName")
+    suspend fun updateIngestionSubstanceName(oldName: String, newName: String)
+
+    @Query("UPDATE customunit SET substanceName = :newName WHERE substanceName = :oldName")
+    suspend fun updateCustomUnitSubstanceName(oldName: String, newName: String)
+
+    @Query("UPDATE medicationschedule SET substanceName = :newName WHERE substanceName = :oldName")
+    suspend fun updateScheduleSubstanceName(oldName: String, newName: String)
+
+    @Query("INSERT OR IGNORE INTO substancecompanion (substanceName, color) SELECT :newName, color FROM substancecompanion WHERE substanceName = :oldName")
+    suspend fun copySubstanceCompanion(oldName: String, newName: String)
+
+    @Query("DELETE FROM substancecompanion WHERE substanceName = :substanceName")
+    suspend fun deleteSubstanceCompanionByName(substanceName: String)
+
+    @Transaction
+    suspend fun renameCustomSubstanceAndReferences(customSubstance: CustomSubstance, oldName: String) {
+        val cleanName = customSubstance.name.trim()
+        val updated = customSubstance.copy(name = cleanName)
+        if (oldName.isNotBlank() && oldName != cleanName) {
+            updateIngestionSubstanceName(oldName = oldName, newName = cleanName)
+            updateCustomUnitSubstanceName(oldName = oldName, newName = cleanName)
+            updateScheduleSubstanceName(oldName = oldName, newName = cleanName)
+            copySubstanceCompanion(oldName = oldName, newName = cleanName)
+            deleteSubstanceCompanionByName(substanceName = oldName)
+        }
+        update(updated)
+    }
+
     @Delete
     suspend fun delete(substanceCompanion: SubstanceCompanion)
 
@@ -645,4 +694,29 @@ private fun MedicationScheduleSerializable.toMedicationSchedule(
         createdAt = createdAt,
         updatedAt = updatedAt
     )
+}
+
+private fun flattenIngestionForDeletedUnit(ingestion: Ingestion, customUnit: CustomUnit): Ingestion {
+    val dosePerUnit = customUnit.dose
+    val originalDose = ingestion.dose
+    return if (dosePerUnit != null && originalDose != null) {
+        val sdX = if (ingestion.isDoseAnEstimate) (ingestion.estimatedDoseStandardDeviation ?: 0.0) else 0.0
+        val sdY = if (customUnit.isEstimate) (customUnit.estimatedDoseStandardDeviation ?: 0.0) else 0.0
+        val productVariance = (sdX * sdX + originalDose * originalDose) *
+            (sdY * sdY + dosePerUnit * dosePerUnit) -
+            (originalDose * originalDose * dosePerUnit * dosePerUnit)
+        val newSd = if (productVariance > 0.0000001) sqrt(productVariance) else null
+        ingestion.copy(
+            dose = originalDose * dosePerUnit,
+            isDoseAnEstimate = ingestion.isDoseAnEstimate || customUnit.isEstimate,
+            estimatedDoseStandardDeviation = newSd,
+            units = customUnit.originalUnit,
+            customUnitId = null
+        )
+    } else {
+        ingestion.copy(
+            units = ingestion.units ?: customUnit.unit,
+            customUnitId = null
+        )
+    }
 }

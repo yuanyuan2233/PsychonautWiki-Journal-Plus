@@ -20,11 +20,41 @@ package com.isaakhanimann.journal.data.room.experiences.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import java.time.Instant
 
-@Entity
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Experience::class,
+            parentColumns = ["id"],
+            childColumns = ["experienceId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = CustomUnit::class,
+            parentColumns = ["id"],
+            childColumns = ["customUnitId"],
+            onDelete = ForeignKey.SET_NULL
+        ),
+        ForeignKey(
+            entity = MedicationSchedule::class,
+            parentColumns = ["id"],
+            childColumns = ["routineScheduleId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        Index(value = ["experienceId"]),
+        Index(value = ["customUnitId"]),
+        Index(value = ["routineScheduleId"]),
+        Index(value = ["substanceName", "time"]),
+        Index(value = ["time"])
+    ]
+)
 data class Ingestion(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
