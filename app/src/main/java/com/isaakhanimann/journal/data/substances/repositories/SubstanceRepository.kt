@@ -33,6 +33,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -88,12 +89,14 @@ class SubstanceRepository @Inject constructor(
 
     override fun getAllSubstancesWithCategories(): List<SubstanceWithCategories> {
         val file = getSubstanceFile()
+        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
         return file.substances.map { substance ->
+            val matchedCategories = substance.categories.mapNotNull { catName ->
+                categoriesByKey[normalizeCategoryKey(catName)]
+            }.distinctBy { it.name }
             SubstanceWithCategories(
                 substance = substance,
-                categories = file.categories.filter { category ->
-                    substance.categories.contains(category.name)
-                }
+                categories = matchedCategories
             )
         }
     }
@@ -103,20 +106,40 @@ class SubstanceRepository @Inject constructor(
     }
 
     override fun getSubstance(substanceName: String): Substance? {
-        return getSubstanceFile().substancesMap.getOrDefault(key = substanceName, defaultValue = null)
+        val file = getSubstanceFile()
+        return findSubstance(file, substanceName)
     }
 
     override fun getCategory(categoryName: String): Category? {
-        return getSubstanceFile().categories.firstOrNull { it.name == categoryName }
+        val normalized = normalizeCategoryKey(categoryName)
+        return getSubstanceFile().categories.firstOrNull {
+            normalizeCategoryKey(it.name) == normalized
+        }
     }
 
     override fun getSubstanceWithCategories(substanceName: String): SubstanceWithCategories? {
         val file = getSubstanceFile()
-        val substance = file.substancesMap[substanceName] ?: return null
+        val substance = findSubstance(file, substanceName) ?: return null
+        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
+        val matchedCategories = substance.categories.mapNotNull { catName ->
+            categoriesByKey[normalizeCategoryKey(catName)]
+        }.distinctBy { it.name }
         return SubstanceWithCategories(
             substance = substance,
-            categories = file.categories.filter { substance.categories.contains(it.name) }
+            categories = matchedCategories
         )
+    }
+
+    private fun findSubstance(file: SubstanceFile, rawName: String): Substance? {
+        file.substancesMap[rawName]?.let { return it }
+        val trimmed = rawName.trim()
+        if (trimmed.isEmpty()) return null
+        file.substancesMap[trimmed]?.let { return it }
+        return file.substances.firstOrNull { it.name.equals(trimmed, ignoreCase = true) }
+    }
+
+    private fun normalizeCategoryKey(name: String): String {
+        return name.trim().lowercase(Locale.ROOT).replace('-', ' ')
     }
 
     private fun logError(message: String, throwable: Throwable) {

@@ -58,7 +58,7 @@ data class CustomUnit(
         val plural = unitPlural
         if (plural == null) {
             val calculatedPlural =
-                if (unit != "mg" && unit != "g" && unit.lowercase() != "ml" && unit.lastOrNull() != 's') {
+                if (unit != "mg" && unit != "g" && unit.lowercase(java.util.Locale.ROOT) != "ml" && unit.lastOrNull() != 's') {
                     unit + "s"
                 } else {
                     unit

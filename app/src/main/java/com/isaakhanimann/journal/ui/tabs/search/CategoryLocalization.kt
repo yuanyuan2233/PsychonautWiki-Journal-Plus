@@ -20,12 +20,51 @@ package com.isaakhanimann.journal.ui.tabs.search
 
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.isaakhanimann.journal.R
+import java.util.Locale
+
+private val EXTRA_CATEGORY_ZH_NAMES = mapOf(
+    "hrt" to "激素替代疗法 (HRT)",
+    "estrogen" to "雌激素",
+    "antiandrogen" to "抗雄激素",
+    "progestin" to "孕激素",
+    "androgen" to "雄激素",
+    "ssri" to "SSRI 类抗抑郁药",
+    "snri" to "SNRI 类抗抑郁药",
+    "mood-stabilizer" to "心境稳定剂",
+    "mood stabilizer" to "心境稳定剂",
+    "adhd" to "ADHD 治疗药物",
+    "analgesic" to "镇痛药",
+    "anticonvulsant" to "抗惊厥药",
+    "antidiarrheal" to "止泻药",
+    "antidote" to "解毒剂",
+    "antiepileptic" to "抗癫痫药",
+    "antihistamine" to "抗组胺药",
+    "antihypertensive" to "降压药",
+    "antiparkinsonian" to "抗帕金森病药",
+    "antiviral" to "抗病毒药",
+    "anxiolytic" to "抗焦虑药",
+    "atypical antipsychotic" to "非典型抗精神病药",
+    "typical antipsychotic" to "典型抗精神病药",
+    "gnrh agonist" to "GnRH 激动剂",
+    "hormone" to "激素类药物",
+    "maoi" to "单胺氧化酶抑制剂 (MAOI)",
+    "melatonergic" to "褪黑素能药物",
+    "multimodal" to "多模式抗抑郁药",
+    "nassa" to "NaSSA 类抗抑郁药",
+    "ndri" to "NDRI 类药物",
+    "sari" to "SARI 类药物",
+    "sedative" to "镇静剂",
+    "tca" to "三环类抗抑郁药 (TCA)",
+    "wakefulness" to "促觉醒剂",
+    "z-drug" to "Z 类催眠药"
+)
 
 @StringRes
 fun getCategoryStringRes(categoryName: String): Int? {
-    return when (categoryName.lowercase()) {
+    return when (categoryName.lowercase(Locale.ROOT)) {
         "common" -> R.string.drugs_category_common
         "psychedelic" -> R.string.drugs_category_psychedelic
         "stimulant" -> R.string.drugs_category_stimulant
@@ -55,8 +94,13 @@ fun getCategoryStringRes(categoryName: String): Int? {
 @Composable
 fun getCategoryDisplayName(categoryName: String): String {
     val resId = getCategoryStringRes(categoryName)
-    return if (resId != null) {
-        stringResource(resId)
+    if (resId != null) {
+        return stringResource(resId)
+    }
+    val locales = LocalConfiguration.current.locales
+    val isZh = !locales.isEmpty && locales[0].language.startsWith("zh")
+    return if (isZh) {
+        EXTRA_CATEGORY_ZH_NAMES[categoryName.lowercase(Locale.ROOT)] ?: categoryName
     } else {
         categoryName
     }
