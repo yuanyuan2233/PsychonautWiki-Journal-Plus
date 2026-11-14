@@ -195,7 +195,7 @@
     <string name="tolerance_range_1y">近1年</string>
     <string name="tolerance_previewing_simulations">正在预览 %1$d 条推演摄入</string>
     <string name="tolerance_clear_simulation">清除推演</string>
-    <string name="tolerance_gantt_hint">耐药恢复甘特矩阵 (滑动界面无冲突，调节请在下方列表操作)</string>
+    <string name="tolerance_gantt_hint">耐受恢复甘特矩阵 (滑动界面无冲突，调节请在下方列表操作)</string>
     <string name="tolerance_tracked_substances_title">已追踪物质 · 主观体感自适应调节：</string>
     <string name="tolerance_customized_badge">✓ 已自适应</string>
     <string name="tolerance_missing_full_chip">完全耐受缺失</string>
@@ -207,7 +207,7 @@
     <string name="tolerance_legend_full">完全耐受 (脱敏期)</string>
     <string name="tolerance_legend_half">半耐受 (衰减中)</string>
     <string name="tolerance_legend_today">今日 (Now)</string>
-    <string name="tolerance_legend_recovered">结束耐药 (归零)</string>
+    <string name="tolerance_legend_recovered">结束耐受 (归零)</string>
     <string name="tolerance_legend_custom_dot">黄色小圆点：已融入您个人的主观耐受体感修正</string>
     <string name="tolerance_recovery_expected">预计耐受归零：%1$s (还剩 %2$d 天)</string>
     <string name="tolerance_recovery_completed">耐受已完全归零 (已恢复基线)</string>
@@ -227,7 +227,7 @@
     <string name="tolerance_chart_empty">所选周期内暂无包含耐受药理数据的服药记录</string>
 
     <!-- Tolerance Bottom Sheet -->
-    <string name="tolerance_sheet_description">主观体感自适应：由于个体生理代谢及用药剂量差异，您可以自由修正您感受到的真实耐药恢复周期，无需受限于标准药代理论均值。</string>
+    <string name="tolerance_sheet_description">主观体感自适应：由于个体生理代谢及用药剂量差异，您可以自由修正您感受到的真实耐受恢复周期，无需受限于标准药代理论均值。</string>
     <string name="tolerance_sheet_mark_today">⚡ 标记为今天已完全归零 (感知已恢复基线)</string>
     <string name="tolerance_sheet_full_days_label">完全耐受体感天数 (Full Tolerance)</string>
     <string name="tolerance_sheet_full_days_placeholder">例如: 2.0 (留空遵循药代基准)</string>

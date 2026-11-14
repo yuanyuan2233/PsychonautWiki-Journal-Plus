@@ -50,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -66,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.entities.MedicationSchedule
 import com.isaakhanimann.journal.ui.tabs.journal.getLocalizedNameRes
@@ -79,10 +79,10 @@ fun RoutineSchedulesScreen(
     navigateToEditSchedule: (Int) -> Unit,
     viewModel: RoutineSchedulesViewModel = hiltViewModel()
 ) {
-    val schedules by viewModel.schedulesFlow.collectAsState()
-    val catchUpDays by viewModel.catchUpDaysFlow.collectAsState()
-    val hasNotificationPermission by viewModel.hasNotificationPermission.collectAsState()
-    val canScheduleExactAlarms by viewModel.canScheduleExactAlarms.collectAsState()
+    val schedules by viewModel.schedulesFlow.collectAsStateWithLifecycle()
+    val catchUpDays by viewModel.catchUpDaysFlow.collectAsStateWithLifecycle()
+    val hasNotificationPermission by viewModel.hasNotificationPermission.collectAsStateWithLifecycle()
+    val canScheduleExactAlarms by viewModel.canScheduleExactAlarms.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

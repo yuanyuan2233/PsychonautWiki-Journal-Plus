@@ -82,6 +82,13 @@ android {
             ndk.debugSymbolLevel = "FULL"
         }
     }
+    androidResources {
+        ignoreAssetsPatterns += listOf(
+            "Substances.original.json",
+            "substances_zh_dict.json"
+        )
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

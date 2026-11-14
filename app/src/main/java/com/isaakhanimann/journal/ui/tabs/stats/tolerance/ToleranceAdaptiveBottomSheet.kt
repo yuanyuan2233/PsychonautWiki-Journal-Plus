@@ -44,7 +44,7 @@ import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 
 /**
- * 允许用户自由调整主观耐药体感、覆盖算法并自适应的底部抽屉面板。
+ * 允许用户自由调整主观耐受体感、覆盖算法并自适应的底部抽屉面板。
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

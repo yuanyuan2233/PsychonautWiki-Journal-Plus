@@ -92,8 +92,8 @@ object ToleranceTimeParser {
             .getCanonicalEnglishName(trimmedInput)
             ?.trim()
             ?: trimmedInput
-        standardToleranceHours.entries.firstOrNull { (key, pair) ->
-            pair.second != null && (key.equals(canonical, ignoreCase = true) || key.equals(trimmedInput, ignoreCase = true))
+        standardToleranceHours.entries.firstOrNull { (key, _) ->
+            key.equals(canonical, ignoreCase = true) || key.equals(trimmedInput, ignoreCase = true)
         }?.value?.second?.let { return it }
 
         return null

@@ -127,6 +127,10 @@ fun Color.toHex(includeAlpha: Boolean = false): String {
  */
 fun parseHexColor(hexString: String): Color {
     val clean = hexString.trim().removePrefix("#")
+    val fallback = Color(red = 0, green = 122, blue = 255)
+    if (!clean.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }) {
+        return fallback
+    }
     return try {
         when (clean.length) {
             6 -> Color((0xFF000000L or clean.toLong(16)))
@@ -137,10 +141,10 @@ fun parseHexColor(hexString: String): Color {
                 val b = clean[2]
                 Color((0xFF000000L or "$r$r$g$g$b$b".toLong(16)))
             }
-            else -> Color(red = 0, green = 122, blue = 255)
+            else -> fallback
         }
     } catch (_: Exception) {
-        Color(red = 0, green = 122, blue = 255)
+        fallback
     }
 }
 

@@ -57,9 +57,18 @@ data class CustomUnit(
     fun getPluralizableUnit(): PluralizableUnit {
         val plural = unitPlural
         if (plural == null) {
+            val trimmed = unit.trim()
+            val normalized = trimmed.lowercase(java.util.Locale.ROOT)
+            val lastChar = trimmed.lastOrNull()
+            val isAsciiWordEndingInOtherThanS = lastChar != null &&
+                (lastChar in 'a'..'z' || lastChar in 'A'..'Z') &&
+                lastChar.lowercaseChar() != 's'
+            val isInvariantUnit = normalized in setOf(
+                "µg", "ug", "mcg", "mg", "g", "kg", "ml", "l", "iu", "%"
+            )
             val calculatedPlural =
-                if (unit != "mg" && unit != "g" && unit.lowercase(java.util.Locale.ROOT) != "ml" && unit.lastOrNull() != 's') {
-                    unit + "s"
+                if (!isInvariantUnit && isAsciiWordEndingInOtherThanS) {
+                    "$unit" + "s"
                 } else {
                     unit
                 }

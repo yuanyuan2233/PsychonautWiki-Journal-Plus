@@ -70,7 +70,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,6 +85,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.ui.VERSION_NAME
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CardWithTitle
@@ -149,13 +149,13 @@ fun SettingsScreen(
         importFile = viewModel::importFile,
         exportFile = viewModel::exportFile,
         snackbarHostState = viewModel.snackbarHostState,
-        areDosageDotsHidden = viewModel.areDosageDotsHiddenFlow.collectAsState().value,
+        areDosageDotsHidden = viewModel.areDosageDotsHiddenFlow.collectAsStateWithLifecycle().value,
         saveDosageDotsAreHidden = viewModel::saveDosageDotsAreHidden,
-        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsState().value,
+        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsStateWithLifecycle().value,
         saveIsTimelineHidden = viewModel::saveIsTimelineHidden,
-        areSubstanceHeightsIndependent = viewModel.areSubstanceHeightsIndependentFlow.collectAsState().value,
+        areSubstanceHeightsIndependent = viewModel.areSubstanceHeightsIndependentFlow.collectAsStateWithLifecycle().value,
         saveAreSubstanceHeightsIndependent = viewModel::saveAreSubstanceHeightsIndependent,
-        appLanguage = viewModel.appLanguageFlow.collectAsState().value,
+        appLanguage = viewModel.appLanguageFlow.collectAsStateWithLifecycle().value,
         saveAppLanguage = viewModel::saveAppLanguage,
     )
 }

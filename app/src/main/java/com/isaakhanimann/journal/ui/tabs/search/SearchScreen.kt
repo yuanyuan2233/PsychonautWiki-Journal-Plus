@@ -39,7 +39,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,11 +49,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.ui.tabs.search.substancerow.SubstanceRow
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
@@ -79,28 +78,27 @@ fun SearchScreen(
         },
     ) { padding ->
         Column(modifier = Modifier.padding(padding)) {
+            val searchText by searchViewModel.searchTextFlow.collectAsStateWithLifecycle()
+            val categories by searchViewModel.chipCategoriesFlow.collectAsStateWithLifecycle()
+            val activeFilters = remember(categories) { categories.filter { it.isActive } }
+            val onFilterTapped = searchViewModel::onFilterTapped
+            val filteredSubstances by searchViewModel.filteredSubstancesFlow.collectAsStateWithLifecycle()
+            val filteredCustomSubstances by searchViewModel.filteredCustomSubstancesFlow.collectAsStateWithLifecycle()
             SearchField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
-                    }
-                    .clearAndSetSemantics { },
-                searchText = searchViewModel.searchTextFlow.collectAsState().value,
+                    },
+                searchText = searchText,
                 onChange = {
                     searchViewModel.filterSubstances(searchText = it)
                 },
-                categories = searchViewModel.chipCategoriesFlow.collectAsState().value,
-                onFilterTapped = searchViewModel::onFilterTapped,
+                categories = categories,
+                onFilterTapped = onFilterTapped,
                 isShowingFilter = true
             )
-            val activeFilters =
-                searchViewModel.chipCategoriesFlow.collectAsState().value.filter { it.isActive }
-            val onFilterTapped = searchViewModel::onFilterTapped
-            val filteredSubstances = searchViewModel.filteredSubstancesFlow.collectAsState().value
-            val filteredCustomSubstances =
-                searchViewModel.filteredCustomSubstancesFlow.collectAsState().value
             if (activeFilters.isNotEmpty()) {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -109,8 +107,10 @@ fun SearchScreen(
                     item {
                         Spacer(modifier = Modifier.width(4.dp))
                     }
-                    items(activeFilters.size) {
-                        val categoryChipModel = activeFilters[it]
+                    items(
+                        items = activeFilters,
+                        key = { it.chipName }
+                    ) { categoryChipModel ->
                         CategoryChipDelete(categoryChipModel = categoryChipModel) {
                             onFilterTapped(categoryChipModel.chipName)
                         }
@@ -151,7 +151,10 @@ fun SearchScreen(
                 }
             } else {
                 LazyColumn {
-                    items(filteredCustomSubstances) { customSubstance ->
+                    items(
+                        items = filteredCustomSubstances,
+                        key = { "cs_${it.id}" }
+                    ) { customSubstance ->
                         SubstanceRow(substanceModel = SubstanceModel(
                             name = customSubstance.name,
                             commonNames = emptyList(),
@@ -167,7 +170,10 @@ fun SearchScreen(
                         })
                         HorizontalDivider()
                     }
-                    items(filteredSubstances) { substance ->
+                    items(
+                        items = filteredSubstances,
+                        key = { "sub_${it.name}" }
+                    ) { substance ->
                         SubstanceRow(substanceModel = substance, onTap = {
                             onSubstanceTap(substance)
                         })

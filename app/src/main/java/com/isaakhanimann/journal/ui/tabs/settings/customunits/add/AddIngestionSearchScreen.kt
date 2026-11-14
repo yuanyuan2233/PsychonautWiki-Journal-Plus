@@ -42,7 +42,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,11 +52,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.entities.CustomSubstance
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.search.AddIngestionSearchViewModel
@@ -78,12 +77,12 @@ fun AddIngestionSearchScreen(
         navigateToChooseRoute = navigateToChooseRoute,
         navigateToCustomSubstanceChooseRoute = navigateToCustomSubstanceChooseRoute,
         navigateBack = navigateBack,
-        searchText = viewModel.searchTextFlow.collectAsState().value,
+        searchText = viewModel.searchTextFlow.collectAsStateWithLifecycle().value,
         onChangeSearchText = {
             viewModel.updateSearchText(it)
         },
-        filteredSubstances = viewModel.filteredSubstancesFlow.collectAsState().value,
-        filteredCustomSubstances = viewModel.filteredCustomSubstancesFlow.collectAsState().value
+        filteredSubstances = viewModel.filteredSubstancesFlow.collectAsStateWithLifecycle().value,
+        filteredCustomSubstances = viewModel.filteredCustomSubstancesFlow.collectAsStateWithLifecycle().value
     )
 }
 
@@ -113,9 +112,7 @@ private fun AddIngestionSearchScreen(
         Column(modifier = Modifier.padding(padding)) {
             LinearProgressIndicator(
                 progress = { 0.17f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clearAndSetSemantics { },
+                modifier = Modifier.fillMaxWidth(),
             )
             TextField(
                 value = searchText,
@@ -127,8 +124,7 @@ private fun AddIngestionSearchScreen(
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
-                    }
-                    .clearAndSetSemantics { },
+                    },
                 placeholder = { Text(text = stringResource(R.string.settings_search_substances)) },
                 leadingIcon = {
                     IconButton(onClick = navigateBack) {
@@ -161,13 +157,19 @@ private fun AddIngestionSearchScreen(
                 singleLine = true
             )
             LazyColumn {
-                items(filteredSubstances) { substance ->
+                items(
+                    items = filteredSubstances,
+                    key = { "sub_${it.name}" }
+                ) { substance ->
                     SubstanceRowAddIngestion(substanceModel = substance, onTap = {
                         navigateToChooseRoute(substance.name)
                     })
                     HorizontalDivider()
                 }
-                items(filteredCustomSubstances) { customSubstance ->
+                items(
+                    items = filteredCustomSubstances,
+                    key = { "cs_${it.id}" }
+                ) { customSubstance ->
                     SubstanceRow(substanceModel = SubstanceModel(
                         name = customSubstance.name,
                         commonNames = emptyList(),

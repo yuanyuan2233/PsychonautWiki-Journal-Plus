@@ -199,7 +199,7 @@ interface ExperienceDao {
     fun getIngestionWithCompanionFlow(id: Int): Flow<IngestionWithCompanionAndCustomUnit?>
 
     @Transaction
-    @Query("UPDATE ingestion SET units = 'mg', dose = dose * 1000 WHERE substanceName = 'Benzydamine' AND units = 'g'")
+    @Query("UPDATE ingestion SET units = 'mg', dose = dose * 1000, estimatedDoseStandardDeviation = CASE WHEN estimatedDoseStandardDeviation IS NOT NULL THEN estimatedDoseStandardDeviation * 1000 ELSE NULL END WHERE substanceName = 'Benzydamine' AND units = 'g'")
     suspend fun migrateBenzydamine()
 
 

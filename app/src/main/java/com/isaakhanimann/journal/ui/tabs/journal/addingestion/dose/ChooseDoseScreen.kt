@@ -83,7 +83,6 @@ import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.ui.tabs.journal.getLocalizedNameRes
 import com.isaakhanimann.journal.data.substances.classes.roa.DoseClass
 import com.isaakhanimann.journal.data.substances.classes.roa.RoaDose
-import com.isaakhanimann.journal.ui.DOSE_DISCLAIMER
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.dose.RoaDosePreviewProvider
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.dose.RoaDoseView
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
@@ -294,8 +293,9 @@ fun ChooseDoseScreen(
                     Row(modifier = Modifier.clickable {
                         isDoseRemarkExpanded = !isDoseRemarkExpanded
                     }, verticalAlignment = Alignment.CenterVertically) {
+                        val defaultDisclaimer = stringResource(R.string.drugs_dose_disclaimer)
                         val finalDoseInfoText =
-                            if (doseRemark.isNullOrBlank()) DOSE_DISCLAIMER else "$doseRemark\n\n$DOSE_DISCLAIMER"
+                            if (doseRemark.isNullOrBlank()) defaultDisclaimer else "$doseRemark\n\n$defaultDisclaimer"
                         Text(
                             modifier = Modifier.weight(1f),
                             text = finalDoseInfoText,

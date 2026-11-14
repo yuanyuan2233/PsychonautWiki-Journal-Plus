@@ -614,7 +614,10 @@ fun EditIngestionScreen(
                         }
                     )
                 }
-                items(consumerNamesSorted) { consumerName ->
+                items(
+                    items = consumerNamesSorted.distinct(),
+                    key = { it }
+                ) { consumerName ->
                     ListItem(
                         headlineContent = { Text(consumerName) },
                         leadingContent = {
