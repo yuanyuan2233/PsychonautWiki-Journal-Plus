@@ -51,24 +51,59 @@ class RoutineSchedulerManager @Inject constructor(
 
     suspend fun reconcileAndRescheduleAll(now: Instant = Instant.now()) {
         syncMutex.withLock {
-            val localizedContext = notificationHelper.getLocalizedContext()
-            notificationHelper.ensureNotificationChannel(localizedContext)
-            val allSchedules = routineDao.getAllSchedulesSorted()
-            val catchUpDays = userPreferences.routineCatchUpDaysFlow.first()
-            val zoneId = ZoneId.systemDefault()
-            for (schedule in allSchedules) {
-                if (schedule.isEnabled) {
-                    reconcileSingleScheduleLocked(
-                        schedule = schedule,
-                        now = now,
-                        catchUpDays = catchUpDays,
-                        notifyLiveTargetMillis = null,
-                        localizedContext = localizedContext,
-                        zoneId = zoneId
-                    )
-                } else {
-                    cancelAlarmForSchedule(schedule.id)
+            reconcileAndRescheduleAllLocked(now)
+        }
+    }
+
+    /**
+     * Runs [block] exclusively under [syncMutex] so lifecycle reconciliation or alarm triggers
+     * cannot interleave with full-database import, export snapshots, or deletion.
+     *
+     * Note: [syncMutex] is non-reentrant; callers must not invoke public [RoutineSchedulerManager]
+     * methods inside [block].
+     */
+    suspend fun <T> runWithSyncLock(
+        cancelAlarmsFirst: Boolean = false,
+        reconcileAfter: Boolean = false,
+        block: suspend () -> T
+    ): T {
+        return syncMutex.withLock {
+            if (cancelAlarmsFirst) {
+                cancelAllAlarmsLocked()
+            }
+            try {
+                val result = block()
+                if (reconcileAfter) {
+                    reconcileAndRescheduleAllLocked()
                 }
+                result
+            } catch (e: Throwable) {
+                if (reconcileAfter) {
+                    runCatching { reconcileAndRescheduleAllLocked() }
+                }
+                throw e
+            }
+        }
+    }
+
+    private suspend fun reconcileAndRescheduleAllLocked(now: Instant = Instant.now()) {
+        val localizedContext = notificationHelper.getLocalizedContext()
+        notificationHelper.ensureNotificationChannel(localizedContext)
+        val allSchedules = routineDao.getAllSchedulesSorted()
+        val catchUpDays = userPreferences.routineCatchUpDaysFlow.first()
+        val zoneId = ZoneId.systemDefault()
+        for (schedule in allSchedules) {
+            if (schedule.isEnabled) {
+                reconcileSingleScheduleLocked(
+                    schedule = schedule,
+                    now = now,
+                    catchUpDays = catchUpDays,
+                    notifyLiveTargetMillis = null,
+                    localizedContext = localizedContext,
+                    zoneId = zoneId
+                )
+            } else {
+                cancelAlarmForSchedule(schedule.id)
             }
         }
     }
@@ -273,10 +308,14 @@ class RoutineSchedulerManager @Inject constructor(
 
     suspend fun cancelAllAlarms() {
         syncMutex.withLock {
-            val allSchedules = routineDao.getAllSchedulesSorted()
-            for (schedule in allSchedules) {
-                cancelAlarmForSchedule(schedule.id)
-            }
+            cancelAllAlarmsLocked()
+        }
+    }
+
+    private suspend fun cancelAllAlarmsLocked() {
+        val allSchedules = routineDao.getAllSchedulesSorted()
+        for (schedule in allSchedules) {
+            cancelAlarmForSchedule(schedule.id)
         }
     }
 

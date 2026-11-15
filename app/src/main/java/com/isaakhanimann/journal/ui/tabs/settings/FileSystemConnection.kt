@@ -33,6 +33,20 @@ class FileSystemConnection @Inject constructor(
 ) {
     @Throws(IOException::class, SecurityException::class)
     fun getTextFromUri(uri: Uri): String {
+        return try {
+            readTextFromUriOnce(uri)
+        } catch (e: IOException) {
+            try {
+                Thread.sleep(150)
+            } catch (_: InterruptedException) {
+                Thread.currentThread().interrupt()
+                throw e
+            }
+            readTextFromUriOnce(uri)
+        }
+    }
+
+    private fun readTextFromUriOnce(uri: Uri): String {
         val input = context.contentResolver.openInputStream(uri)
             ?: throw FileNotFoundException("Unable to open input stream for URI: $uri")
         return input.bufferedReader().use { it.readText() }

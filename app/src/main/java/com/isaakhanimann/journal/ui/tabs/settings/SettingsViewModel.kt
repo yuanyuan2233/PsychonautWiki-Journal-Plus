@@ -19,6 +19,7 @@
 package com.isaakhanimann.journal.ui.tabs.settings
 
 import android.net.Uri
+import android.util.Log
 import androidx.annotation.StringRes
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -123,16 +124,20 @@ class SettingsViewModel @Inject constructor(
                     withContext(Dispatchers.IO) {
                         fileSystemConnection.getTextFromUri(uri)
                     }
-                } catch (_: SecurityException) {
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Failed to read import URI: $uri", e)
                     emitSnackbar(R.string.settings_import_permission_denied)
                     return@withLock
-                } catch (_: FileNotFoundException) {
+                } catch (e: FileNotFoundException) {
+                    Log.w(TAG, "Failed to read import URI: $uri", e)
                     emitSnackbar(R.string.settings_file_not_found)
                     return@withLock
-                } catch (_: IOException) {
+                } catch (e: IOException) {
+                    Log.w(TAG, "Failed to read import URI: $uri", e)
                     emitSnackbar(R.string.settings_import_read_failed)
                     return@withLock
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to read import URI: $uri", e)
                     emitSnackbar(R.string.settings_import_read_failed)
                     return@withLock
                 }
@@ -152,7 +157,7 @@ class SettingsViewModel @Inject constructor(
                         json.decodeFromString<JournalExport>(text)
                     }
                 } catch (e: Exception) {
-                    println("Error when decoding: ${e.message}")
+                    Log.e(TAG, "Error when decoding backup JSON", e)
                     emitSnackbar(R.string.settings_decoding_file_failed)
                     return@withLock
                 }
@@ -164,31 +169,29 @@ class SettingsViewModel @Inject constructor(
 
                 try {
                     withContext(Dispatchers.IO) {
-                        routineSchedulerManager.cancelAllAlarms()
-                        experienceRepository.replaceEverything(journalExport)
-                        val customizations = journalExport.toleranceCustomizations
-                            .filter { it.substanceName.isNotBlank() }
-                            .map { exportItem ->
-                                SubstanceToleranceCustomization(
-                                    substanceName = exportItem.substanceName,
-                                    customFullDays = exportItem.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
-                                    customZeroDays = exportItem.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
-                                    manualResetInstant = exportItem.manualResetInstant
-                                )
+                        routineSchedulerManager.runWithSyncLock(
+                            cancelAlarmsFirst = true,
+                            reconcileAfter = true
+                        ) {
+                            experienceRepository.replaceEverything(journalExport)
+                            val customizations = journalExport.toleranceCustomizations
+                                .filter { it.substanceName.isNotBlank() }
+                                .map { exportItem ->
+                                    SubstanceToleranceCustomization(
+                                        substanceName = exportItem.substanceName,
+                                        customFullDays = exportItem.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                        customZeroDays = exportItem.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                        manualResetInstant = exportItem.manualResetInstant
+                                    )
+                                }
+                            if (!toleranceCustomizationStore.replaceAllCustomizations(customizations)) {
+                                throw IOException("Failed to restore tolerance customizations")
                             }
-                        if (!toleranceCustomizationStore.replaceAllCustomizations(customizations)) {
-                            throw IOException("Failed to restore tolerance customizations")
                         }
-                        routineSchedulerManager.reconcileAndRescheduleAll()
                     }
                     emitSnackbar(R.string.settings_import_successful)
                 } catch (e: Exception) {
-                    runCatching {
-                        withContext(Dispatchers.IO) {
-                            routineSchedulerManager.reconcileAndRescheduleAll()
-                        }
-                    }
-                    println("Error when importing: ${e.message}")
+                    Log.e(TAG, "Error when importing backup JSON", e)
                     emitSnackbar(R.string.settings_import_failed)
                 }
             }
@@ -200,136 +203,138 @@ class SettingsViewModel @Inject constructor(
             dataOperationMutex.withLock {
                 try {
                     val journalExport = withContext(Dispatchers.IO) {
-                        val experiencesWithIngestionsAndRatings =
-                            experienceRepository.getAllExperiencesWithIngestionsTimedNotesAndRatingsSorted()
-                        val experiencesSerializable = experiencesWithIngestionsAndRatings.map {
-                            val location = it.experience.location
-                            ExperienceSerializable(
-                                title = it.experience.title,
-                                text = it.experience.text,
-                                creationDate = it.experience.creationDate,
-                                sortDate = it.experience.sortDate,
-                                isFavorite = it.experience.isFavorite,
-                                ingestions = it.ingestions.map { ingestion ->
-                                    IngestionSerializable(
-                                        substanceName = ingestion.substanceName,
-                                        time = ingestion.time,
-                                        endTime = ingestion.endTime,
-                                        creationDate = ingestion.creationDate,
-                                        administrationRoute = ingestion.administrationRoute,
-                                        dose = ingestion.dose,
-                                        estimatedDoseStandardDeviation = ingestion.estimatedDoseStandardDeviation,
-                                        isDoseAnEstimate = ingestion.isDoseAnEstimate,
-                                        units = ingestion.units,
-                                        notes = ingestion.notes,
-                                        stomachFullness = ingestion.stomachFullness,
-                                        consumerName = ingestion.consumerName,
-                                        customUnitId = ingestion.customUnitId,
-                                        isConfirmed = ingestion.isConfirmed,
-                                        routineScheduleId = ingestion.routineScheduleId,
-                                        scheduledEpochMillis = ingestion.scheduledEpochMillis
-                                    )
-                                },
-                                location = if (location != null) {
-                                    LocationSerializable(
-                                        name = location.name,
-                                        latitude = location.latitude,
-                                        longitude = location.longitude
-                                    )
-                                } else {
-                                    null
-                                },
-                                ratings = it.ratings.map { rating ->
-                                    RatingSerializable(
-                                        option = rating.option,
-                                        time = rating.time,
-                                        creationDate = rating.creationDate
-                                    )
-                                },
-                                timedNotes = it.timedNotes.map { timedNote ->
-                                    TimedNoteSerializable(
-                                        creationDate = timedNote.creationDate,
-                                        time = timedNote.time,
-                                        note = timedNote.note,
-                                        color = timedNote.color,
-                                        isPartOfTimeline = timedNote.isPartOfTimeline
-                                    )
-                                },
-                                isRoutineOnly = it.experience.isRoutineOnly
-                            )
-                        }
-                        val customUnitsSerializable = experienceRepository.getAllCustomUnitsSorted().map {
-                            CustomUnitSerializable(
-                                id = it.id,
-                                substanceName = it.substanceName,
-                                name = it.name,
-                                creationDate = it.creationDate,
-                                administrationRoute = it.administrationRoute,
-                                dose = it.dose,
-                                estimatedDoseStandardDeviation = it.estimatedDoseStandardDeviation,
-                                isEstimate = it.isEstimate,
-                                isArchived = it.isArchived,
-                                unit = it.unit,
-                                unitPlural = it.unitPlural,
-                                originalUnit = it.originalUnit,
-                                note = it.note
-                            )
-                        }
-                        val toleranceCustomizationsSerializable = toleranceCustomizationStore
-                            .getAllCustomizationsForExport()
-                            .map { customization ->
-                                ToleranceCustomizationExport(
-                                    substanceName = customization.substanceName,
-                                    customFullDays = customization.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
-                                    customZeroDays = customization.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
-                                    manualResetInstant = customization.manualResetInstant
+                        routineSchedulerManager.runWithSyncLock {
+                            val experiencesWithIngestionsAndRatings =
+                                experienceRepository.getAllExperiencesWithIngestionsTimedNotesAndRatingsSorted()
+                            val experiencesSerializable = experiencesWithIngestionsAndRatings.map {
+                                val location = it.experience.location
+                                ExperienceSerializable(
+                                    title = it.experience.title,
+                                    text = it.experience.text,
+                                    creationDate = it.experience.creationDate,
+                                    sortDate = it.experience.sortDate,
+                                    isFavorite = it.experience.isFavorite,
+                                    ingestions = it.ingestions.map { ingestion ->
+                                        IngestionSerializable(
+                                            substanceName = ingestion.substanceName,
+                                            time = ingestion.time,
+                                            endTime = ingestion.endTime,
+                                            creationDate = ingestion.creationDate,
+                                            administrationRoute = ingestion.administrationRoute,
+                                            dose = ingestion.dose,
+                                            estimatedDoseStandardDeviation = ingestion.estimatedDoseStandardDeviation,
+                                            isDoseAnEstimate = ingestion.isDoseAnEstimate,
+                                            units = ingestion.units,
+                                            notes = ingestion.notes,
+                                            stomachFullness = ingestion.stomachFullness,
+                                            consumerName = ingestion.consumerName,
+                                            customUnitId = ingestion.customUnitId,
+                                            isConfirmed = ingestion.isConfirmed,
+                                            routineScheduleId = ingestion.routineScheduleId,
+                                            scheduledEpochMillis = ingestion.scheduledEpochMillis
+                                        )
+                                    },
+                                    location = if (location != null) {
+                                        LocationSerializable(
+                                            name = location.name,
+                                            latitude = location.latitude,
+                                            longitude = location.longitude
+                                        )
+                                    } else {
+                                        null
+                                    },
+                                    ratings = it.ratings.map { rating ->
+                                        RatingSerializable(
+                                            option = rating.option,
+                                            time = rating.time,
+                                            creationDate = rating.creationDate
+                                        )
+                                    },
+                                    timedNotes = it.timedNotes.map { timedNote ->
+                                        TimedNoteSerializable(
+                                            creationDate = timedNote.creationDate,
+                                            time = timedNote.time,
+                                            note = timedNote.note,
+                                            color = timedNote.color,
+                                            isPartOfTimeline = timedNote.isPartOfTimeline
+                                        )
+                                    },
+                                    isRoutineOnly = it.experience.isRoutineOnly
                                 )
                             }
-                        val schedulesSerializable = routineDao.getAllSchedulesSorted().map {
-                            MedicationScheduleSerializable(
-                                id = it.id,
-                                substanceName = it.substanceName,
-                                administrationRoute = it.administrationRoute,
-                                customUnitId = it.customUnitId,
-                                consumerName = it.consumerName,
-                                isEnabled = it.isEnabled,
-                                notifyOnTrigger = it.notifyOnTrigger,
-                                recurrenceType = it.recurrenceType,
-                                daysOfWeekMask = it.daysOfWeekMask,
-                                intervalDays = it.intervalDays,
-                                intervalMinutes = it.intervalMinutes,
-                                cycleOnDays = it.cycleOnDays,
-                                cycleOffDays = it.cycleOffDays,
-                                timeSlots = it.decodedSlots(),
-                                anchorEpochMillis = it.anchorEpochMillis,
-                                startEpochDay = it.startEpochDay,
-                                endEpochDay = it.endEpochDay,
-                                maxOccurrences = it.maxOccurrences,
-                                customHalfLifeHours = it.customHalfLifeHours,
-                                note = it.note,
-                                createdAt = it.createdAt,
-                                updatedAt = it.updatedAt
+                            val customUnitsSerializable = experienceRepository.getAllCustomUnitsSorted().map {
+                                CustomUnitSerializable(
+                                    id = it.id,
+                                    substanceName = it.substanceName,
+                                    name = it.name,
+                                    creationDate = it.creationDate,
+                                    administrationRoute = it.administrationRoute,
+                                    dose = it.dose,
+                                    estimatedDoseStandardDeviation = it.estimatedDoseStandardDeviation,
+                                    isEstimate = it.isEstimate,
+                                    isArchived = it.isArchived,
+                                    unit = it.unit,
+                                    unitPlural = it.unitPlural,
+                                    originalUnit = it.originalUnit,
+                                    note = it.note
+                                )
+                            }
+                            val toleranceCustomizationsSerializable = toleranceCustomizationStore
+                                .getAllCustomizationsForExport()
+                                .map { customization ->
+                                    ToleranceCustomizationExport(
+                                        substanceName = customization.substanceName,
+                                        customFullDays = customization.customFullDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                        customZeroDays = customization.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 },
+                                        manualResetInstant = customization.manualResetInstant
+                                    )
+                                }
+                            val schedulesSerializable = routineDao.getAllSchedulesSorted().map {
+                                MedicationScheduleSerializable(
+                                    id = it.id,
+                                    substanceName = it.substanceName,
+                                    administrationRoute = it.administrationRoute,
+                                    customUnitId = it.customUnitId,
+                                    consumerName = it.consumerName,
+                                    isEnabled = it.isEnabled,
+                                    notifyOnTrigger = it.notifyOnTrigger,
+                                    recurrenceType = it.recurrenceType,
+                                    daysOfWeekMask = it.daysOfWeekMask,
+                                    intervalDays = it.intervalDays,
+                                    intervalMinutes = it.intervalMinutes,
+                                    cycleOnDays = it.cycleOnDays,
+                                    cycleOffDays = it.cycleOffDays,
+                                    timeSlots = it.decodedSlots(),
+                                    anchorEpochMillis = it.anchorEpochMillis,
+                                    startEpochDay = it.startEpochDay,
+                                    endEpochDay = it.endEpochDay,
+                                    maxOccurrences = it.maxOccurrences,
+                                    customHalfLifeHours = it.customHalfLifeHours,
+                                    note = it.note,
+                                    createdAt = it.createdAt,
+                                    updatedAt = it.updatedAt
+                                )
+                            }
+                            val occurrencesSerializable = routineDao.getAllOccurrencesSorted().map {
+                                RoutineOccurrenceSerializable(
+                                    scheduleId = it.scheduleId,
+                                    slotId = it.slotId,
+                                    scheduledEpochMillis = it.scheduledEpochMillis,
+                                    status = it.status,
+                                    ingestionId = it.ingestionId,
+                                    handledAt = it.handledAt
+                                )
+                            }
+                            JournalExport(
+                                experiences = experiencesSerializable,
+                                substanceCompanions = experienceRepository.getAllSubstanceCompanions(),
+                                customSubstances = experienceRepository.getAllCustomSubstances(),
+                                customUnits = customUnitsSerializable,
+                                toleranceCustomizations = toleranceCustomizationsSerializable,
+                                medicationSchedules = schedulesSerializable,
+                                routineOccurrences = occurrencesSerializable
                             )
                         }
-                        val occurrencesSerializable = routineDao.getAllOccurrencesSorted().map {
-                            RoutineOccurrenceSerializable(
-                                scheduleId = it.scheduleId,
-                                slotId = it.slotId,
-                                scheduledEpochMillis = it.scheduledEpochMillis,
-                                status = it.status,
-                                ingestionId = it.ingestionId,
-                                handledAt = it.handledAt
-                            )
-                        }
-                        JournalExport(
-                            experiences = experiencesSerializable,
-                            substanceCompanions = experienceRepository.getAllSubstanceCompanions(),
-                            customSubstances = experienceRepository.getAllCustomSubstances(),
-                            customUnits = customUnitsSerializable,
-                            toleranceCustomizations = toleranceCustomizationsSerializable,
-                            medicationSchedules = schedulesSerializable,
-                            routineOccurrences = occurrencesSerializable
-                        )
                     }
                     val jsonText = withContext(Dispatchers.Default) {
                         Json.encodeToString(journalExport)
@@ -338,7 +343,8 @@ class SettingsViewModel @Inject constructor(
                         fileSystemConnection.saveTextInUri(uri, text = jsonText)
                     }
                     emitSnackbar(R.string.settings_export_successful)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error when exporting backup JSON", e)
                     emitSnackbar(R.string.settings_export_failed)
                 }
             }
@@ -350,17 +356,26 @@ class SettingsViewModel @Inject constructor(
             dataOperationMutex.withLock {
                 try {
                     withContext(Dispatchers.IO) {
-                        routineSchedulerManager.cancelAllAlarms()
-                        experienceRepository.deleteEverything()
-                        if (!toleranceCustomizationStore.clearAllCustomizations()) {
-                            throw IOException("Failed to clear tolerance customizations")
+                        routineSchedulerManager.runWithSyncLock(
+                            cancelAlarmsFirst = true,
+                            reconcileAfter = false
+                        ) {
+                            experienceRepository.deleteEverything()
+                            if (!toleranceCustomizationStore.clearAllCustomizations()) {
+                                throw IOException("Failed to clear tolerance customizations")
+                            }
                         }
                     }
                     emitSnackbar(R.string.settings_deleted_everything_snackbar)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error when deleting everything", e)
                     emitSnackbar(R.string.settings_delete_everything_failed)
                 }
             }
         }
+    }
+
+    companion object {
+        private const val TAG = "SettingsViewModel"
     }
 }
