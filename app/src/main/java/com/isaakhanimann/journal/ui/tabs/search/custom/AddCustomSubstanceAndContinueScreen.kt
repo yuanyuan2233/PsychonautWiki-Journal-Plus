@@ -78,6 +78,7 @@ fun AddCustomSubstanceAndContinueScreen(
             onNameChange = { viewModel.name = it },
             onUnitsChange = { viewModel.units = it },
             onDescriptionChange = { viewModel.description = it },
+            pkState = viewModel.pkFormState,
         )
     }
 }

@@ -79,6 +79,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.Dp
@@ -88,6 +89,7 @@ import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
+import com.isaakhanimann.journal.data.substances.CypInteractionEffectType
 import com.isaakhanimann.journal.ui.YOU
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions.Interaction
 import com.isaakhanimann.journal.ui.tabs.journal.components.UnconfirmedDoseActionDialog
@@ -117,6 +119,8 @@ import com.isaakhanimann.journal.ui.utils.getDateWithWeekdayText
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.temporal.ChronoUnit
+import java.util.Locale
+import kotlin.math.abs
 
 @Composable
 fun ExperienceScreen(
@@ -152,6 +156,8 @@ fun ExperienceScreen(
         consumersWithIngestions = viewModel.consumersWithIngestionsFlow.collectAsState().value,
         dataForEffectLines = viewModel.dataForEffectTimelinesFlow.collectAsState().value,
         livePkSimulation = viewModel.livePkSimulationFlow.collectAsState().value,
+        includePkCarryover = viewModel.includePkCarryoverFlow.collectAsState().value,
+        enzymaticDdiFindings = viewModel.enzymaticDdiFindingsFlow.collectAsState().value,
     )
     ExperienceScreen(
         oneExperienceScreenModel = oneExperienceScreenModel,
@@ -182,6 +188,7 @@ fun ExperienceScreen(
         isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsState().value,
         onConfirmRoutineIngestion = viewModel::confirmRoutineIngestion,
         onSkipRoutineIngestion = viewModel::skipRoutineIngestion,
+        onToggleIncludePkCarryover = viewModel::setIncludePkCarryover,
     )
 }
 
@@ -245,6 +252,7 @@ fun ExperienceScreen(
     isTimelineHidden: Boolean,
     onConfirmRoutineIngestion: (Int) -> Unit = {},
     onSkipRoutineIngestion: (Int) -> Unit = {},
+    onToggleIncludePkCarryover: (Boolean) -> Unit = {},
 ) {
     var pendingUnconfirmedIngestion by remember { mutableStateOf<Ingestion?>(null) }
 
@@ -304,6 +312,7 @@ fun ExperienceScreen(
                 timeDisplayOption = timeDisplayOption,
                 isOralDisclaimerHidden = isOralDisclaimerHidden,
                 onChangeIsOralDisclaimerHidden = onChangeIsOralDisclaimerHidden,
+                onToggleIncludePkCarryover = onToggleIncludePkCarryover,
             )
             if (oneExperienceScreenModel.ingestionElements.isNotEmpty()) {
                 MyIngestionList(
@@ -362,7 +371,8 @@ fun ExperienceScreen(
                 )
             }
             val interactions = oneExperienceScreenModel.interactions
-            AnimatedVisibility(visible = interactions.isNotEmpty()) {
+            val enzymaticDdiFindings = oneExperienceScreenModel.enzymaticDdiFindings
+            AnimatedVisibility(visible = interactions.isNotEmpty() || enzymaticDdiFindings.isNotEmpty()) {
                 ExperienceInteractionsSection(
                     verticalCardPadding = verticalCardPadding,
                     interactions = interactions,
@@ -381,6 +391,8 @@ private fun ExperienceInteractionsSection(
     interactions: List<Interaction>,
     oneExperienceScreenModel: OneExperienceScreenModel
 ) {
+    val isZh = SubstanceLocalizationHelper.isChinese()
+    val ddiFindings = oneExperienceScreenModel.enzymaticDdiFindings
     ElevatedCard(
         modifier = Modifier
             .padding(vertical = verticalCardPadding)
@@ -392,25 +404,84 @@ private fun ExperienceInteractionsSection(
                 HorizontalDivider()
             }
         }
-        Spacer(modifier = Modifier.height(5.dp))
-        Text(
-            text = stringResource(R.string.journal_explanations),
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = horizontalPadding)
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-            modifier = Modifier.padding(horizontal = horizontalPadding)
-        ) {
-            oneExperienceScreenModel.interactionExplanations.forEach {
-                val uriHandler = LocalUriHandler.current
-                val context = LocalContext.current
-                SuggestionChip(
-                    onClick = {
-                        openUriSafely(context, uriHandler, it.url)
-                    },
-                    label = { Text(SubstanceLocalizationHelper.getLocalizedName(it.name)) }
+        if (ddiFindings.isNotEmpty()) {
+            if (interactions.isNotEmpty()) {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+            }
+            Column(
+                modifier = Modifier.padding(horizontal = horizontalPadding, vertical = 6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.journal_cyp_ddi_section_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.error
                 )
+                ddiFindings.forEach { finding ->
+                    val effectLabel = when (finding.effectType) {
+                        CypInteractionEffectType.INHIBITION -> if (isZh) "${finding.enzyme} 抑制" else "${finding.enzyme} inhibition"
+                        CypInteractionEffectType.INDUCTION -> if (isZh) "${finding.enzyme} 诱导" else "${finding.enzyme} induction"
+                    }
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text(
+                            text = "[$effectLabel] ${if (isZh) finding.summaryZh else finding.summaryEn}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        val detailBadges = buildList {
+                            if (abs(finding.halfLifeMultiplier - 1.0) >= 0.05) {
+                                val mult = if (finding.halfLifeMultiplier >= 10.0) {
+                                    String.format(Locale.ROOT, "%.1f", finding.halfLifeMultiplier)
+                                } else {
+                                    String.format(Locale.ROOT, "%.2f", finding.halfLifeMultiplier)
+                                }
+                                add(stringResource(R.string.journal_pk_ddi_halflife_multiplier, mult))
+                            }
+                            if (abs(finding.activeMetaboliteMultiplier - 1.0) >= 0.05) {
+                                val mult = if (finding.activeMetaboliteMultiplier >= 10.0) {
+                                    String.format(Locale.ROOT, "%.1f", finding.activeMetaboliteMultiplier)
+                                } else {
+                                    String.format(Locale.ROOT, "%.2f", finding.activeMetaboliteMultiplier)
+                                }
+                                add(stringResource(R.string.journal_pk_ddi_metabolite_multiplier, mult))
+                            }
+                            if (finding.isProdrugActivationBlocked) {
+                                add(stringResource(R.string.journal_pk_ddi_prodrug_blocked))
+                            }
+                        }
+                        if (detailBadges.isNotEmpty()) {
+                            Text(
+                                text = detailBadges.joinToString(" · "),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        if (oneExperienceScreenModel.interactionExplanations.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(5.dp))
+            Text(
+                text = stringResource(R.string.journal_explanations),
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.padding(horizontal = horizontalPadding)
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                modifier = Modifier.padding(horizontal = horizontalPadding)
+            ) {
+                oneExperienceScreenModel.interactionExplanations.forEach {
+                    val uriHandler = LocalUriHandler.current
+                    val context = LocalContext.current
+                    SuggestionChip(
+                        onClick = {
+                            openUriSafely(context, uriHandler, it.url)
+                        },
+                        label = { Text(SubstanceLocalizationHelper.getLocalizedName(it.name)) }
+                    )
+                }
             }
         }
     }
@@ -716,9 +787,11 @@ private fun MyTimelineSection(
     timeDisplayOption: TimeDisplayOption,
     isOralDisclaimerHidden: Boolean,
     onChangeIsOralDisclaimerHidden: (Boolean) -> Unit,
+    onToggleIncludePkCarryover: (Boolean) -> Unit = {},
 ) {
     val livePkSim = oneExperienceScreenModel.livePkSimulation
-    val hasLivePk = livePkSim != null && livePkSim.profiles.isNotEmpty()
+    val includeCarryover = oneExperienceScreenModel.includePkCarryover
+    val hasLivePk = livePkSim != null && (livePkSim.profiles.isNotEmpty() || !includeCarryover)
     val isZh = SubstanceLocalizationHelper.isChinese()
 
     when (timelineDisplayOption) {
@@ -730,7 +803,9 @@ private fun MyTimelineSection(
                     simulation = livePkSim!!,
                     firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
                     timeDisplayOption = timeDisplayOption,
-                    verticalCardPadding = verticalCardPadding
+                    verticalCardPadding = verticalCardPadding,
+                    includeCarryover = includeCarryover,
+                    onToggleIncludeCarryover = onToggleIncludePkCarryover,
                 )
             }
         }
@@ -740,7 +815,9 @@ private fun MyTimelineSection(
                     simulation = livePkSim!!,
                     firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
                     timeDisplayOption = timeDisplayOption,
-                    verticalCardPadding = verticalCardPadding
+                    verticalCardPadding = verticalCardPadding,
+                    includeCarryover = includeCarryover,
+                    onToggleIncludeCarryover = onToggleIncludePkCarryover,
                 )
             }
         }
@@ -843,7 +920,9 @@ private fun MyTimelineSection(
                             simulation = livePkSim!!,
                             firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
                             timeDisplayOption = timeDisplayOption,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            includeCarryover = includeCarryover,
+                            onToggleIncludeCarryover = onToggleIncludePkCarryover,
                         )
                     }
                 }

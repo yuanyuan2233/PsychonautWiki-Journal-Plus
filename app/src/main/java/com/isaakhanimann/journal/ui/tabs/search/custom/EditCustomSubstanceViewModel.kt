@@ -26,7 +26,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
-import com.isaakhanimann.journal.data.room.experiences.entities.CustomSubstance
 import com.isaakhanimann.journal.ui.main.navigation.graphs.EditCustomSubstanceRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.firstOrNull
@@ -43,9 +42,10 @@ class EditCustomSubstanceViewModel @Inject constructor(
     var name by mutableStateOf("")
     var units by mutableStateOf("")
     var description by mutableStateOf("")
+    val pkFormState = CustomSubstancePkFormState()
     private var originalName = ""
 
-    val isValid get() = name.isNotBlank() && units.isNotBlank()
+    val isValid get() = name.isNotBlank() && units.isNotBlank() && pkFormState.isValid
 
     init {
         val editCustomSubstanceRoute = state.toRoute<EditCustomSubstanceRoute>()
@@ -58,19 +58,21 @@ class EditCustomSubstanceViewModel @Inject constructor(
             name = customSubstance.name
             units = customSubstance.units
             description = customSubstance.description
+            pkFormState.populateFrom(customSubstance)
         }
     }
 
     fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val cleanName = name.trim()
-            if (cleanName.isBlank()) return@launch
+            val cleanUnits = units.trim()
+            if (cleanName.isBlank() || cleanUnits.isBlank() || !pkFormState.isValid) return@launch
             val existing = experienceRepo.getCustomSubstance(cleanName)
             if (existing != null && existing.id != id) return@launch
-            val customSubstance = CustomSubstance(
+            val customSubstance = pkFormState.buildCustomSubstance(
                 id = id,
                 name = cleanName,
-                units = units.trim(),
+                units = cleanUnits,
                 description = description
             )
             if (id > 0) {
@@ -90,7 +92,14 @@ class EditCustomSubstanceViewModel @Inject constructor(
     fun deleteCustomSubstance(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             if (id > 0) {
-                experienceRepo.delete(CustomSubstance(id, originalName.ifBlank { name }, units, description))
+                experienceRepo.delete(
+                    pkFormState.buildCustomSubstance(
+                        id = id,
+                        name = originalName.ifBlank { name },
+                        units = units,
+                        description = description
+                    )
+                )
             }
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 onDone()

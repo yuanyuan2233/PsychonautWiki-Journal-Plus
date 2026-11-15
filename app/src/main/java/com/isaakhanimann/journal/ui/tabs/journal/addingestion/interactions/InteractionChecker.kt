@@ -18,8 +18,11 @@
 
 package com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions
 
+import com.isaakhanimann.journal.data.substances.EnzymaticDdiFinding
+import com.isaakhanimann.journal.data.substances.EnzymaticDdiModifier
 import com.isaakhanimann.journal.data.substances.classes.InteractionType
 import com.isaakhanimann.journal.data.substances.classes.Interactions
+import com.isaakhanimann.journal.data.substances.classes.Substance
 import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepositoryInterface
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import java.util.Locale
@@ -32,11 +35,23 @@ class InteractionChecker @Inject constructor(
     private val substanceRepo: SubstanceRepositoryInterface,
 ) {
     fun getInteractionBetween(aName: String, bName: String): Interaction? {
+        return getInteractionBetween(
+            aName = aName,
+            bName = bName,
+            additionalSubstances = emptyList()
+        )
+    }
+
+    fun getInteractionBetween(
+        aName: String,
+        bName: String,
+        additionalSubstances: Collection<Substance>,
+    ): Interaction? {
         if (aName.equals(bName, ignoreCase = true)) {
             return null
         }
-        val interactionFromAToB = getInteractionFromAToB(aName, bName)
-        val interactionFromBToA = getInteractionFromAToB(bName, aName)
+        val interactionFromAToB = getInteractionFromAToB(aName, bName, additionalSubstances)
+        val interactionFromBToA = getInteractionFromAToB(bName, aName, additionalSubstances)
         if (interactionFromAToB != null && interactionFromBToA != null) {
             val isAtoB = interactionFromAToB.dangerCount >= interactionFromBToA.dangerCount
             val interactionType = if (isAtoB) interactionFromAToB else interactionFromBToA
@@ -62,11 +77,44 @@ class InteractionChecker @Inject constructor(
         }
     }
 
+    fun getEnzymaticDdiBetween(
+        targetSubstance: Substance,
+        coAdministeredSubstances: Collection<Substance>,
+    ): List<EnzymaticDdiFinding> {
+        val uniqueSubstances = linkedMapOf<String, Substance>()
+        uniqueSubstances[targetSubstance.name.lowercase(Locale.ROOT)] = targetSubstance
+        coAdministeredSubstances.forEach { candidate ->
+            val key = candidate.name.lowercase(Locale.ROOT)
+            if (!uniqueSubstances.containsKey(key)) {
+                uniqueSubstances[key] = candidate
+            }
+        }
+        if (uniqueSubstances.size < 2) {
+            return emptyList()
+        }
+        return EnzymaticDdiModifier.analyzeCoAdministeredSubstances(uniqueSubstances.values.toList())
+            .filter { finding ->
+                finding.victimName.equals(targetSubstance.name, ignoreCase = true) ||
+                    finding.perpetratorName.equals(targetSubstance.name, ignoreCase = true)
+            }
+    }
+
+    private fun resolveSubstanceForCheck(
+        name: String,
+        additionalSubstances: Collection<Substance>,
+    ): Substance? {
+        return additionalSubstances.firstOrNull { candidate ->
+            candidate.name.equals(name, ignoreCase = true) ||
+                candidate.commonNames.any { it.equals(name, ignoreCase = true) }
+        } ?: substanceRepo.getSubstance(name)
+    }
+
     private fun getInteractionFromAToB(
         aName: String,
         bName: String,
+        additionalSubstances: Collection<Substance>,
     ): InteractionType? {
-        val substanceA = substanceRepo.getSubstance(aName)
+        val substanceA = resolveSubstanceForCheck(aName, additionalSubstances)
         if (substanceA != null) {
             val directInteraction = getDirectInteraction(interactions = substanceA.interactions, substanceName = bName)
             if (directInteraction != null) {
@@ -76,7 +124,7 @@ class InteractionChecker @Inject constructor(
             if (wildcardInteraction != null) {
                 return wildcardInteraction
             }
-            val substanceB = substanceRepo.getSubstance(bName)
+            val substanceB = resolveSubstanceForCheck(bName, additionalSubstances)
             if (substanceB != null) {
                 val classInteraction = getClassInteraction(interactions = substanceA.interactions, categories = substanceB.categories)
                 if (classInteraction != null) {

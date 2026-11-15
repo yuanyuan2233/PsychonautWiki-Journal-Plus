@@ -1,0 +1,937 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 11,
+    "identityHash": "0c576225eb27a239351a7c3f4c724c44",
+    "entities": [
+      {
+        "tableName": "Experience",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `text` TEXT NOT NULL, `creationDate` INTEGER NOT NULL, `sortDate` INTEGER NOT NULL, `isFavorite` INTEGER NOT NULL, `isRoutineOnly` INTEGER NOT NULL DEFAULT 0, `name` TEXT, `longitude` REAL, `latitude` REAL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "title",
+            "columnName": "title",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationDate",
+            "columnName": "creationDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortDate",
+            "columnName": "sortDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isFavorite",
+            "columnName": "isFavorite",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isRoutineOnly",
+            "columnName": "isRoutineOnly",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "location.name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "location.longitude",
+            "columnName": "longitude",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "location.latitude",
+            "columnName": "latitude",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "Ingestion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `substanceName` TEXT NOT NULL, `time` INTEGER NOT NULL, `endTime` INTEGER, `creationDate` INTEGER, `administrationRoute` TEXT NOT NULL, `dose` REAL, `isDoseAnEstimate` INTEGER NOT NULL, `estimatedDoseStandardDeviation` REAL, `units` TEXT, `experienceId` INTEGER NOT NULL, `notes` TEXT, `stomachFullness` TEXT, `consumerName` TEXT, `customUnitId` INTEGER, `isConfirmed` INTEGER NOT NULL DEFAULT 1, `routineScheduleId` INTEGER, `scheduledEpochMillis` INTEGER, FOREIGN KEY(`experienceId`) REFERENCES `Experience`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`customUnitId`) REFERENCES `CustomUnit`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`routineScheduleId`) REFERENCES `MedicationSchedule`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "substanceName",
+            "columnName": "substanceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endTime",
+            "columnName": "endTime",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "creationDate",
+            "columnName": "creationDate",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "administrationRoute",
+            "columnName": "administrationRoute",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dose",
+            "columnName": "dose",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isDoseAnEstimate",
+            "columnName": "isDoseAnEstimate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "estimatedDoseStandardDeviation",
+            "columnName": "estimatedDoseStandardDeviation",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "units",
+            "columnName": "units",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "experienceId",
+            "columnName": "experienceId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "stomachFullness",
+            "columnName": "stomachFullness",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "consumerName",
+            "columnName": "consumerName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "customUnitId",
+            "columnName": "customUnitId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isConfirmed",
+            "columnName": "isConfirmed",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "routineScheduleId",
+            "columnName": "routineScheduleId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "scheduledEpochMillis",
+            "columnName": "scheduledEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_Ingestion_experienceId",
+            "unique": false,
+            "columnNames": [
+              "experienceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Ingestion_experienceId` ON `${TABLE_NAME}` (`experienceId`)"
+          },
+          {
+            "name": "index_Ingestion_customUnitId",
+            "unique": false,
+            "columnNames": [
+              "customUnitId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Ingestion_customUnitId` ON `${TABLE_NAME}` (`customUnitId`)"
+          },
+          {
+            "name": "index_Ingestion_routineScheduleId",
+            "unique": false,
+            "columnNames": [
+              "routineScheduleId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Ingestion_routineScheduleId` ON `${TABLE_NAME}` (`routineScheduleId`)"
+          },
+          {
+            "name": "index_Ingestion_substanceName_time",
+            "unique": false,
+            "columnNames": [
+              "substanceName",
+              "time"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Ingestion_substanceName_time` ON `${TABLE_NAME}` (`substanceName`, `time`)"
+          },
+          {
+            "name": "index_Ingestion_time",
+            "unique": false,
+            "columnNames": [
+              "time"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_Ingestion_time` ON `${TABLE_NAME}` (`time`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Experience",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "experienceId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "CustomUnit",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "customUnitId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "MedicationSchedule",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "routineScheduleId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "SubstanceCompanion",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`substanceName` TEXT NOT NULL, `color` TEXT NOT NULL, PRIMARY KEY(`substanceName`))",
+        "fields": [
+          {
+            "fieldPath": "substanceName",
+            "columnName": "substanceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "substanceName"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "CustomSubstance",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `units` TEXT NOT NULL, `description` TEXT NOT NULL, `halfLifeHours` REAL, `tMaxHours` REAL, `washoutHours` REAL, `bioavailabilityFraction` REAL, `pkRole` TEXT, `commonDose` REAL, `activeMetaboliteName` TEXT, `activeMetaboliteHalfLifeHours` REAL, `onsetHours` REAL, `peakHours` REAL, `totalDurationHours` REAL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "units",
+            "columnName": "units",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "halfLifeHours",
+            "columnName": "halfLifeHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "tMaxHours",
+            "columnName": "tMaxHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "washoutHours",
+            "columnName": "washoutHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "bioavailabilityFraction",
+            "columnName": "bioavailabilityFraction",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "pkRole",
+            "columnName": "pkRole",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "commonDose",
+            "columnName": "commonDose",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "activeMetaboliteName",
+            "columnName": "activeMetaboliteName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "activeMetaboliteHalfLifeHours",
+            "columnName": "activeMetaboliteHalfLifeHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "onsetHours",
+            "columnName": "onsetHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "peakHours",
+            "columnName": "peakHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "totalDurationHours",
+            "columnName": "totalDurationHours",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_CustomSubstance_name",
+            "unique": true,
+            "columnNames": [
+              "name"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_CustomSubstance_name` ON `${TABLE_NAME}` (`name`)"
+          }
+        ],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "ShulginRating",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `time` INTEGER, `creationDate` INTEGER, `option` TEXT NOT NULL, `experienceId` INTEGER NOT NULL, FOREIGN KEY(`experienceId`) REFERENCES `Experience`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "creationDate",
+            "columnName": "creationDate",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "option",
+            "columnName": "option",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "experienceId",
+            "columnName": "experienceId",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ShulginRating_experienceId",
+            "unique": false,
+            "columnNames": [
+              "experienceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ShulginRating_experienceId` ON `${TABLE_NAME}` (`experienceId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Experience",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "experienceId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "TimedNote",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `creationDate` INTEGER NOT NULL, `time` INTEGER NOT NULL, `note` TEXT NOT NULL, `color` TEXT NOT NULL, `experienceId` INTEGER NOT NULL, `isPartOfTimeline` INTEGER NOT NULL, FOREIGN KEY(`experienceId`) REFERENCES `Experience`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationDate",
+            "columnName": "creationDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "time",
+            "columnName": "time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "experienceId",
+            "columnName": "experienceId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isPartOfTimeline",
+            "columnName": "isPartOfTimeline",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_TimedNote_experienceId",
+            "unique": false,
+            "columnNames": [
+              "experienceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_TimedNote_experienceId` ON `${TABLE_NAME}` (`experienceId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "Experience",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "experienceId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "CustomUnit",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `substanceName` TEXT NOT NULL, `name` TEXT NOT NULL, `creationDate` INTEGER NOT NULL, `administrationRoute` TEXT NOT NULL, `dose` REAL, `estimatedDoseStandardDeviation` REAL, `isEstimate` INTEGER NOT NULL, `isArchived` INTEGER NOT NULL, `unit` TEXT NOT NULL, `unitPlural` TEXT, `originalUnit` TEXT NOT NULL, `note` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "substanceName",
+            "columnName": "substanceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creationDate",
+            "columnName": "creationDate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "administrationRoute",
+            "columnName": "administrationRoute",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dose",
+            "columnName": "dose",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "estimatedDoseStandardDeviation",
+            "columnName": "estimatedDoseStandardDeviation",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isEstimate",
+            "columnName": "isEstimate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "isArchived",
+            "columnName": "isArchived",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unit",
+            "columnName": "unit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unitPlural",
+            "columnName": "unitPlural",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "originalUnit",
+            "columnName": "originalUnit",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "MedicationSchedule",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `substanceName` TEXT NOT NULL, `administrationRoute` TEXT NOT NULL, `customUnitId` INTEGER, `consumerName` TEXT, `isEnabled` INTEGER NOT NULL, `notifyOnTrigger` INTEGER NOT NULL, `recurrenceType` TEXT NOT NULL, `daysOfWeekMask` INTEGER NOT NULL, `intervalDays` INTEGER NOT NULL, `intervalMinutes` INTEGER NOT NULL, `cycleOnDays` INTEGER NOT NULL, `cycleOffDays` INTEGER NOT NULL, `timeSlotsJson` TEXT NOT NULL, `anchorEpochMillis` INTEGER NOT NULL, `startEpochDay` INTEGER, `endEpochDay` INTEGER, `maxOccurrences` INTEGER, `customHalfLifeHours` REAL, `note` TEXT, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, FOREIGN KEY(`customUnitId`) REFERENCES `CustomUnit`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "substanceName",
+            "columnName": "substanceName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "administrationRoute",
+            "columnName": "administrationRoute",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "customUnitId",
+            "columnName": "customUnitId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "consumerName",
+            "columnName": "consumerName",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "isEnabled",
+            "columnName": "isEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notifyOnTrigger",
+            "columnName": "notifyOnTrigger",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recurrenceType",
+            "columnName": "recurrenceType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "daysOfWeekMask",
+            "columnName": "daysOfWeekMask",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intervalDays",
+            "columnName": "intervalDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "intervalMinutes",
+            "columnName": "intervalMinutes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cycleOnDays",
+            "columnName": "cycleOnDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cycleOffDays",
+            "columnName": "cycleOffDays",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "timeSlotsJson",
+            "columnName": "timeSlotsJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "anchorEpochMillis",
+            "columnName": "anchorEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startEpochDay",
+            "columnName": "startEpochDay",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "endEpochDay",
+            "columnName": "endEpochDay",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "maxOccurrences",
+            "columnName": "maxOccurrences",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "customHalfLifeHours",
+            "columnName": "customHalfLifeHours",
+            "affinity": "REAL",
+            "notNull": false
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_MedicationSchedule_customUnitId",
+            "unique": false,
+            "columnNames": [
+              "customUnitId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_MedicationSchedule_customUnitId` ON `${TABLE_NAME}` (`customUnitId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "CustomUnit",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "customUnitId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "RoutineOccurrence",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `scheduleId` INTEGER NOT NULL, `slotId` TEXT NOT NULL, `scheduledEpochMillis` INTEGER NOT NULL, `status` TEXT NOT NULL, `ingestionId` INTEGER, `handledAt` INTEGER NOT NULL, FOREIGN KEY(`scheduleId`) REFERENCES `MedicationSchedule`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`ingestionId`) REFERENCES `Ingestion`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduleId",
+            "columnName": "scheduleId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "slotId",
+            "columnName": "slotId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduledEpochMillis",
+            "columnName": "scheduledEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ingestionId",
+            "columnName": "ingestionId",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "handledAt",
+            "columnName": "handledAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_RoutineOccurrence_scheduleId_scheduledEpochMillis_slotId",
+            "unique": true,
+            "columnNames": [
+              "scheduleId",
+              "scheduledEpochMillis",
+              "slotId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_RoutineOccurrence_scheduleId_scheduledEpochMillis_slotId` ON `${TABLE_NAME}` (`scheduleId`, `scheduledEpochMillis`, `slotId`)"
+          },
+          {
+            "name": "index_RoutineOccurrence_ingestionId",
+            "unique": false,
+            "columnNames": [
+              "ingestionId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_RoutineOccurrence_ingestionId` ON `${TABLE_NAME}` (`ingestionId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "MedicationSchedule",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "scheduleId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "Ingestion",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "ingestionId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0c576225eb27a239351a7c3f4c724c44')"
+    ]
+  }
+}

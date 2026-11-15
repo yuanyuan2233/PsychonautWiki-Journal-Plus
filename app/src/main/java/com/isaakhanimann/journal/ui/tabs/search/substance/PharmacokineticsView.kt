@@ -342,6 +342,16 @@ private fun PkRoleBadge(pkRole: String, isZh: Boolean) {
             MaterialTheme.colorScheme.secondaryContainer,
             MaterialTheme.colorScheme.onSecondaryContainer
         )
+        "EXTENDED_RELEASE" -> Triple(
+            if (isZh) "动力学特征：双相缓释平顶（速释启动 + 持续平顶释放）" else "Kinetic Profile: Biphasic Extended-Release (Plateau)",
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer
+        )
+        "ZERO_ORDER" -> Triple(
+            if (isZh) "动力学特征：零级饱和消除（高浓度呈近似线性下降）" else "Kinetic Profile: Zero-Order / Saturable Elimination",
+            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.65f),
+            MaterialTheme.colorScheme.onErrorContainer
+        )
         else -> Triple(
             if (isZh) "动力学特征：原型药物直接主导" else "Kinetic Profile: Parent-Dominant",
             MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
@@ -586,6 +596,8 @@ private fun ActiveMetaboliteChainSection(
                 Text(
                     text = when (pk.pkRole) {
                         "PRODRUG" -> if (isZh) "前药原型（需经体内代谢转化为活性分子）" else "Prodrug (requires metabolic bioactivation)"
+                        "EXTENDED_RELEASE" -> if (isZh) "双相缓释母体（30% 速释相 + 70% 持续缓释相）" else "Extended-release parent (30% IR + 70% ER)"
+                        "ZERO_ORDER" -> if (isZh) "零级饱和消除母体（酶饱和时呈线性恒速清除）" else "Saturable-clearance parent (zero-order at high levels)"
                         else -> if (isZh) "母体活性原型" else "Parent active compound"
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -956,10 +968,22 @@ private fun DualTrackPkChartSection(
 
             // 动力学说明脚注
             val caption = when (mode) {
-                PkChartMode.SINGLE_DOSE -> if (isZh) {
-                    "单次给药相对 AUC 暴露模拟（覆盖 5× 终末半衰期，完整体现代谢物接力与长尾效应）"
-                } else {
-                    "Single-dose relative AUC trajectory over 5× terminal t½"
+                PkChartMode.SINGLE_DOSE -> when (pk.pkRole) {
+                    "ZERO_ORDER" -> if (isZh) {
+                        "单次给药米氏饱和消除模拟（高浓度近似直线下降，低浓度平滑过渡为一级尾段）"
+                    } else {
+                        "Single-dose Michaelis-Menten trajectory (quasi-linear high-level clearance with 1st-order tail)"
+                    }
+                    "EXTENDED_RELEASE" -> if (isZh) {
+                        "单次给药双相缓释平顶模拟（30% 速释启动 + 70% 持续释放维持平稳血药平台）"
+                    } else {
+                        "Single-dose biphasic extended-release trajectory (30% IR + 70% sustained-release plateau)"
+                    }
+                    else -> if (isZh) {
+                        "单次给药相对 AUC 暴露模拟（覆盖 5× 终末半衰期，完整体现代谢物接力与长尾效应）"
+                    } else {
+                        "Single-dose relative AUC trajectory over 5× terminal t½"
+                    }
                 }
                 PkChartMode.STEADY_STATE -> {
                     val tauStr = sim.dosingIntervalHours?.let { formatHours(it, isZh) } ?: "24h"
@@ -1022,7 +1046,11 @@ private fun PkEliminationSection(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = if (isZh) "消除阶段 (一级动力学)" else "Elimination Stage (1st-Order)",
+                        text = if (pk.pkRole == "ZERO_ORDER") {
+                            if (isZh) "消除参考阶段 (米氏饱和→一级尾段)" else "Elimination Reference (Zero→1st-Order)"
+                        } else {
+                            if (isZh) "消除阶段 (一级动力学)" else "Elimination Stage (1st-Order)"
+                        },
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

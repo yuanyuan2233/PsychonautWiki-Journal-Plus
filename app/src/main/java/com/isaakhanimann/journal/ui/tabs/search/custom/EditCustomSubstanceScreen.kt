@@ -112,7 +112,8 @@ fun EditCustomSubstanceScreen(
             description = viewModel.description,
             onNameChange = { viewModel.name = it },
             onUnitsChange = { viewModel.units = it },
-            onDescriptionChange = { viewModel.description = it }
+            onDescriptionChange = { viewModel.description = it },
+            pkState = viewModel.pkFormState,
         )
     }
 }

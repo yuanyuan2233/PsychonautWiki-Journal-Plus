@@ -29,6 +29,8 @@ import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.data.room.experiences.RoutineDao
 import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
+import com.isaakhanimann.journal.data.substances.PkCustomizationStore
+import com.isaakhanimann.journal.data.substances.SubstancePkCustomization
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import com.isaakhanimann.journal.ui.tabs.stats.tolerance.SubstanceToleranceCustomization
 import com.isaakhanimann.journal.ui.tabs.stats.tolerance.ToleranceCustomizationStore
@@ -61,6 +63,7 @@ class SettingsViewModel @Inject constructor(
     private val fileSystemConnection: FileSystemConnection,
     private val userPreferences: UserPreferences,
     private val toleranceCustomizationStore: ToleranceCustomizationStore,
+    private val pkCustomizationStore: PkCustomizationStore,
 ) : ViewModel() {
 
     fun saveDosageDotsAreHidden(value: Boolean) = viewModelScope.launch {
@@ -187,6 +190,12 @@ class SettingsViewModel @Inject constructor(
                             if (!toleranceCustomizationStore.replaceAllCustomizations(customizations)) {
                                 throw IOException("Failed to restore tolerance customizations")
                             }
+                            val pkCustomizations = journalExport.pkCustomizations
+                                .filter { it.substanceName.isNotBlank() }
+                                .map { it.toDomain() }
+                            if (!pkCustomizationStore.replaceAllCustomizations(pkCustomizations)) {
+                                throw IOException("Failed to restore PK customizations")
+                            }
                         }
                     }
                     emitSnackbar(R.string.settings_import_successful)
@@ -289,6 +298,9 @@ class SettingsViewModel @Inject constructor(
                                         manualResetInstant = customization.manualResetInstant
                                     )
                                 }
+                            val pkCustomizationsSerializable = pkCustomizationStore
+                                .getAllCustomizationsForExport()
+                                .map { it.toExport() }
                             val schedulesSerializable = routineDao.getAllSchedulesSorted().map {
                                 MedicationScheduleSerializable(
                                     id = it.id,
@@ -332,7 +344,8 @@ class SettingsViewModel @Inject constructor(
                                 customUnits = customUnitsSerializable,
                                 toleranceCustomizations = toleranceCustomizationsSerializable,
                                 medicationSchedules = schedulesSerializable,
-                                routineOccurrences = occurrencesSerializable
+                                routineOccurrences = occurrencesSerializable,
+                                pkCustomizations = pkCustomizationsSerializable
                             )
                         }
                     }
@@ -364,6 +377,9 @@ class SettingsViewModel @Inject constructor(
                             if (!toleranceCustomizationStore.clearAllCustomizations()) {
                                 throw IOException("Failed to clear tolerance customizations")
                             }
+                            if (!pkCustomizationStore.clearAllCustomizations()) {
+                                throw IOException("Failed to clear PK customizations")
+                            }
                         }
                     }
                     emitSnackbar(R.string.settings_deleted_everything_snackbar)
@@ -378,4 +394,35 @@ class SettingsViewModel @Inject constructor(
     companion object {
         private const val TAG = "SettingsViewModel"
     }
+}
+
+private fun Double?.positiveFiniteOrNull(): Double? =
+    this?.takeIf { it.isFinite() && it > 0.0 }
+
+private fun Double?.fractionOrNull(): Double? =
+    this?.takeIf { it.isFinite() && it > 0.0 && it <= 1.0 }
+
+private fun String?.nonBlankOrNull(): String? =
+    this?.trim()?.takeIf { it.isNotEmpty() }
+
+private fun PkCustomizationExport.toDomain(): SubstancePkCustomization {
+    return SubstancePkCustomization(
+        substanceName = substanceName.trim(),
+        customHalfLifeHours = customHalfLifeHours.positiveFiniteOrNull(),
+        customTMaxHours = customTMaxHours.positiveFiniteOrNull(),
+        customWashoutHours = customWashoutHours.positiveFiniteOrNull(),
+        customPkRole = customPkRole.nonBlankOrNull(),
+        customBioavailabilityFraction = customBioavailabilityFraction.fractionOrNull(),
+    )
+}
+
+private fun SubstancePkCustomization.toExport(): PkCustomizationExport {
+    return PkCustomizationExport(
+        substanceName = substanceName,
+        customHalfLifeHours = customHalfLifeHours.positiveFiniteOrNull(),
+        customTMaxHours = customTMaxHours.positiveFiniteOrNull(),
+        customWashoutHours = customWashoutHours.positiveFiniteOrNull(),
+        customPkRole = customPkRole.nonBlankOrNull(),
+        customBioavailabilityFraction = customBioavailabilityFraction.fractionOrNull(),
+    )
 }

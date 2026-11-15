@@ -20,6 +20,7 @@ package com.isaakhanimann.journal.ui.tabs.journal.experience.models
 
 import com.isaakhanimann.journal.data.room.experiences.entities.ShulginRating
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
+import com.isaakhanimann.journal.data.substances.EnzymaticDdiFinding
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions.Interaction
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.DataForOneEffectLine
 import com.isaakhanimann.journal.ui.tabs.search.substance.ExperienceLivePkSimulation
@@ -41,4 +42,6 @@ data class OneExperienceScreenModel(
     val consumersWithIngestions: List<ConsumerWithIngestions>,
     val dataForEffectLines: List<DataForOneEffectLine>,
     val livePkSimulation: ExperienceLivePkSimulation? = null,
+    val includePkCarryover: Boolean = true,
+    val enzymaticDdiFindings: List<EnzymaticDdiFinding> = emptyList(),
 )

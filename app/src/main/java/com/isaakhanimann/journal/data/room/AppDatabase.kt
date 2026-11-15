@@ -40,7 +40,7 @@ import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
 
 @TypeConverters(InstantConverter::class, ColorConverter::class, RoutineTypeConverters::class)
 @Database(
-    version = 10,
+    version = 11,
     entities = [
         Experience::class,
         Ingestion::class,
@@ -175,6 +175,22 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL(
                     "CREATE INDEX IF NOT EXISTS `index_RoutineOccurrence_ingestionId` ON `RoutineOccurrence` (`ingestionId`)"
                 )
+            }
+        }
+
+        val MIGRATION_10_11 = object : Migration(10, 11) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `halfLifeHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `tMaxHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `washoutHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `bioavailabilityFraction` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `pkRole` TEXT")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `commonDose` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `activeMetaboliteName` TEXT")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `activeMetaboliteHalfLifeHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `onsetHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `peakHours` REAL")
+                db.execSQL("ALTER TABLE `CustomSubstance` ADD COLUMN `totalDurationHours` REAL")
             }
         }
     }

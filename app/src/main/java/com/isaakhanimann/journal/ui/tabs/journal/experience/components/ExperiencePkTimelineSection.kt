@@ -4,6 +4,7 @@
 
 package com.isaakhanimann.journal.ui.tabs.journal.experience.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
@@ -49,10 +50,14 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.isaakhanimann.journal.R
+import com.isaakhanimann.journal.data.substances.CypInteractionEffectType
+import com.isaakhanimann.journal.data.substances.EnzymaticDdiFinding
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import com.isaakhanimann.journal.ui.tabs.search.substance.ExperienceLivePkSimulation
 import com.isaakhanimann.journal.ui.tabs.search.substance.PkPoint
@@ -71,11 +76,17 @@ fun ExperiencePkTimelineCard(
     firstIngestionTime: Instant,
     timeDisplayOption: TimeDisplayOption,
     verticalCardPadding: Dp,
+    includeCarryover: Boolean = true,
+    onToggleIncludeCarryover: (Boolean) -> Unit = {},
 ) {
     val isZh = SubstanceLocalizationHelper.isChinese()
     ElevatedCard(modifier = Modifier.padding(vertical = verticalCardPadding)) {
         CardTitle(
-            title = if (isZh) "血药与活性代谢物实况 (跨日卷积)" else "Live Plasma & Active Metabolites (42d)"
+            title = if (includeCarryover) {
+                if (isZh) "血药与活性代谢物实况 (跨日卷积)" else "Live Plasma & Active Metabolites (42d)"
+            } else {
+                if (isZh) "血药与活性代谢物实况 (仅本次体验)" else "Live Plasma & Active Metabolites (Current)"
+            }
         )
         HorizontalDivider()
         ExperiencePkTimelineContent(
@@ -84,7 +95,9 @@ fun ExperiencePkTimelineCard(
             timeDisplayOption = timeDisplayOption,
             modifier = Modifier
                 .padding(horizontal = horizontalPadding, vertical = 10.dp)
-                .fillMaxWidth()
+                .fillMaxWidth(),
+            includeCarryover = includeCarryover,
+            onToggleIncludeCarryover = onToggleIncludeCarryover
         )
     }
 }
@@ -96,9 +109,11 @@ fun ExperiencePkTimelineContent(
     firstIngestionTime: Instant,
     timeDisplayOption: TimeDisplayOption,
     modifier: Modifier = Modifier,
+    includeCarryover: Boolean = true,
+    onToggleIncludeCarryover: (Boolean) -> Unit = {},
 ) {
     val profiles = simulation.profiles
-    if (profiles.isEmpty()) return
+    if (profiles.isEmpty() && includeCarryover) return
 
     val isZh = SubstanceLocalizationHelper.isChinese()
     val isDarkTheme = isSystemInDarkTheme()
@@ -116,7 +131,6 @@ fun ExperiencePkTimelineContent(
 
     val selectedProfile = profiles.firstOrNull { it.canonicalName == selectedCanonical }
 
-    val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryColor = MaterialTheme.colorScheme.secondary
     val tertiaryColor = MaterialTheme.colorScheme.tertiary
     val metPalette = remember(tertiaryColor) {
@@ -128,6 +142,7 @@ fun ExperiencePkTimelineContent(
     }
     val gridColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.55f)
     val nowLineColor = MaterialTheme.colorScheme.error.copy(alpha = 0.78f)
+    val baselineCurveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.72f)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // 顶部引导行
@@ -145,12 +160,62 @@ fun ExperiencePkTimelineContent(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = if (isZh) "跨日血药与活性代谢物实况 (42天回溯)" else "Cross-Day Plasma & Active Metabolites (42d)",
+                    text = if (includeCarryover) {
+                        if (isZh) "跨日血药与活性代谢物实况 (42天回溯)" else "Cross-Day Plasma & Active Metabolites (42d)"
+                    } else {
+                        if (isZh) "本次体验实时血药与代谢物实况" else "Current Experience Plasma & Metabolites"
+                    },
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
             }
+        }
+
+        // 一键切换：含 42 天历史残留 / 仅看本次体验
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FilterChip(
+                selected = includeCarryover,
+                onClick = { if (!includeCarryover) onToggleIncludeCarryover(true) },
+                label = {
+                    Text(
+                        text = stringResource(R.string.journal_pk_carryover_included),
+                        maxLines = 1
+                    )
+                }
+            )
+            FilterChip(
+                selected = !includeCarryover,
+                onClick = { if (includeCarryover) onToggleIncludeCarryover(false) },
+                label = {
+                    Text(
+                        text = stringResource(R.string.journal_pk_current_only),
+                        maxLines = 1
+                    )
+                }
+            )
+        }
+
+        if (profiles.isEmpty()) {
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = stringResource(R.string.journal_pk_current_only_empty),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)
+                )
+            }
+            return
         }
 
         // 物质切换 Chips
@@ -203,7 +268,7 @@ fun ExperiencePkTimelineContent(
             }
         }
 
-        // 选中单物质的跨日蓄积状态卡
+        // 选中单物质的跨日蓄积状态与双量纲胶囊
         if (selectedProfile != null) {
             ProfileCarryoverBanner(profile = selectedProfile, isZh = isZh)
         } else {
@@ -230,6 +295,19 @@ fun ExperiencePkTimelineContent(
                     )
                 }
             }
+            OverlayDualScaleBanner(profiles = profiles)
+        }
+
+        // CYP450 酶动力学 DDI 修正对比提示条
+        val visibleFindings = if (selectedProfile != null) {
+            selectedProfile.ddiFindings
+        } else {
+            profiles.flatMap { it.ddiFindings }
+        }.distinctBy {
+            "${it.perpetratorName.lowercase(Locale.ROOT)}|${it.victimName.lowercase(Locale.ROOT)}|${it.enzyme.lowercase(Locale.ROOT)}"
+        }
+        if (visibleFindings.isNotEmpty()) {
+            EnzymaticDdiFindingsBanner(findings = visibleFindings, isZh = isZh)
         }
 
         // 实时卷积曲线画布
@@ -278,10 +356,26 @@ fun ExperiencePkTimelineContent(
                     }
 
                     // 绘制曲线
+                    val baselineDashPattern = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 3.dp.toPx()))
                     if (selectedProfile != null) {
                         val baseColor = selectedProfile.color.getComposeColor(isDarkTheme)
                         val hasMetabolites = selectedProfile.metaboliteSeries.isNotEmpty()
                         val dashPattern = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 4.dp.toPx()))
+
+                        if (selectedProfile.unadjustedTotalActivePoints.size >= 2) {
+                            drawPkSeriesPath(
+                                points = selectedProfile.unadjustedTotalActivePoints,
+                                horizonHours = totalHorizon,
+                                padLeft = padLeft,
+                                padTop = padTop,
+                                plotW = plotW,
+                                plotH = plotH,
+                                color = baselineCurveColor,
+                                strokeWidth = 1.7.dp.toPx(),
+                                withGradientFill = false,
+                                pathEffect = baselineDashPattern
+                            )
+                        }
 
                         if (hasMetabolites) {
                             drawPkSeriesPath(
@@ -342,6 +436,20 @@ fun ExperiencePkTimelineContent(
                         val dashPattern = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))
                         profiles.forEach { profile ->
                             val subColor = profile.color.getComposeColor(isDarkTheme)
+                            if (profile.unadjustedTotalActivePoints.size >= 2) {
+                                drawPkSeriesPath(
+                                    points = profile.unadjustedTotalActivePoints,
+                                    horizonHours = totalHorizon,
+                                    padLeft = padLeft,
+                                    padTop = padTop,
+                                    plotW = plotW,
+                                    plotH = plotH,
+                                    color = baselineCurveColor,
+                                    strokeWidth = 1.5.dp.toPx(),
+                                    withGradientFill = false,
+                                    pathEffect = baselineDashPattern
+                                )
+                            }
                             drawPkSeriesPath(
                                 points = profile.totalActivePoints,
                                 horizonHours = totalHorizon,
@@ -452,25 +560,32 @@ fun ExperiencePkTimelineContent(
                     if (selectedProfile != null) {
                         val baseColor = selectedProfile.color.getComposeColor(isDarkTheme)
                         val hasMetabolites = selectedProfile.metaboliteSeries.isNotEmpty()
+                        val eqHint = selectedProfile.currentActiveEquivalentMg?.let { " · ≈ ${formatEquivalentDoseMg(it)}" } ?: ""
                         if (hasMetabolites) {
                             PkLegendChip(
                                 color = baseColor,
                                 isDashed = false,
                                 text = if (isZh) {
-                                    "总活性暴露${selectedProfile.currentRelativeActiveLevel?.let { " · 现在 ${(it * 100).roundToInt()}%" } ?: ""}"
+                                    "总活性暴露${selectedProfile.currentRelativeActiveLevel?.let { " · 现在 ${(it * 100).roundToInt()}%" } ?: ""}$eqHint"
                                 } else {
-                                    "Total Active${selectedProfile.currentRelativeActiveLevel?.let { " · Now ${(it * 100).roundToInt()}%" } ?: ""}"
+                                    "Total Active${selectedProfile.currentRelativeActiveLevel?.let { " · Now ${(it * 100).roundToInt()}%" } ?: ""}$eqHint"
                                 }
                             )
                         }
                         val pColor = if (hasMetabolites) secondaryColor else baseColor
+                        val parentNowHint = if (!hasMetabolites) {
+                            selectedProfile.currentRelativeActiveLevel?.let { " · ${(it * 100).roundToInt()}%" } ?: ""
+                        } else {
+                            ""
+                        }
+                        val parentEqHint = if (!hasMetabolites) eqHint else ""
                         PkLegendChip(
                             color = pColor,
                             isDashed = selectedProfile.pk.pkRole == "PRODRUG",
                             text = if (isZh) {
-                                "${selectedProfile.displayName}(母体)"
+                                "${selectedProfile.displayName}(母体)$parentNowHint$parentEqHint"
                             } else {
-                                "${selectedProfile.displayName} (Parent)"
+                                "${selectedProfile.displayName} (Parent)$parentNowHint$parentEqHint"
                             }
                         )
                         selectedProfile.metaboliteSeries.forEachIndexed { idx, met ->
@@ -483,16 +598,31 @@ fun ExperiencePkTimelineContent(
                                 text = "${met.name} (t½ $hlText)$nowText"
                             )
                         }
+                        if (selectedProfile.unadjustedTotalActivePoints.size >= 2) {
+                            PkLegendChip(
+                                color = baselineCurveColor,
+                                isDashed = true,
+                                text = stringResource(R.string.journal_pk_unadjusted_baseline)
+                            )
+                        }
                     } else {
                         profiles.forEach { profile ->
                             val subColor = profile.color.getComposeColor(isDarkTheme)
                             val primaryMet = profile.metaboliteSeries.maxByOrNull { it.halfLifeHours * it.exposureRatio }
                             val metHint = primaryMet?.let { " + ${it.name}" } ?: ""
                             val nowHint = profile.currentRelativeActiveLevel?.let { " (${(it * 100).roundToInt()}%)" } ?: ""
+                            val eqHint = profile.currentActiveEquivalentMg?.let { " · ${formatEquivalentDoseMg(it)}" } ?: ""
                             PkLegendChip(
                                 color = subColor,
                                 isDashed = false,
-                                text = "${profile.displayName}$metHint$nowHint"
+                                text = "${profile.displayName}$metHint$nowHint$eqHint"
+                            )
+                        }
+                        if (profiles.any { it.unadjustedTotalActivePoints.size >= 2 }) {
+                            PkLegendChip(
+                                color = baselineCurveColor,
+                                isDashed = true,
+                                text = stringResource(R.string.journal_pk_unadjusted_baseline)
                             )
                         }
                     }
@@ -508,11 +638,25 @@ fun ExperiencePkTimelineContent(
             }
         }
 
+        val hasDdiBaseline = profiles.any { it.unadjustedTotalActivePoints.size >= 2 }
         Text(
-            text = if (isZh) {
-                "注：按实际服药时间自动追溯过去42天内未排空剂量卷积推算（实线=总活性，虚线=活性代谢物）；仅供参考，个体代谢存在差异。"
-            } else {
-                "Note: Multi-dose Bateman convolution across the past 42 days (solid = total active, dashed = active metabolites). Individual clearance varies."
+            text = when {
+                includeCarryover && isZh -> {
+                    val baselineNote = if (hasDdiBaseline) "，灰细虚线=未受联用影响标准曲线" else ""
+                    "注：按实际服药时间自动追溯过去42天内未排空剂量卷积推算（实线=总活性，虚线=活性代谢物$baselineNote）；仅供参考，个体代谢存在差异。"
+                }
+                includeCarryover -> {
+                    val baselineNote = if (hasDdiBaseline) ", fine dashed = unadjusted DDI baseline" else ""
+                    "Note: Multi-dose Bateman convolution across the past 42 days (solid = total active, dashed = active metabolites$baselineNote). Individual clearance varies."
+                }
+                isZh -> {
+                    val baselineNote = if (hasDdiBaseline) "，灰细虚线=未受联用影响标准曲线" else ""
+                    "注：当前仅基于本次体验给药记录推算（已排除跨日历史残留；实线=总活性，虚线=活性代谢物$baselineNote），仅供参考。"
+                }
+                else -> {
+                    val baselineNote = if (hasDdiBaseline) ", fine dashed = unadjusted DDI baseline" else ""
+                    "Note: Simulated from doses in this experience only (42d carryover excluded; solid = total active, dashed = active metabolites$baselineNote)."
+                }
             },
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -529,8 +673,15 @@ private fun ProfileCarryoverBanner(
     val startPct = (profile.carryoverBaselineFractionAtStart * 100f).roundToInt()
     val nowPct = profile.currentRelativeActiveLevel?.let { (it * 100f).roundToInt() }
     val showSteadyGain = profile.windowPeakRelativeToSingleDose >= 1.25f
+    val currentEq = profile.currentActiveEquivalentMg
+    val peakEq = profile.peakActiveEquivalentMg
 
-    if (profile.carryoverIngestionCount == 0 && nowPct == null && !showSteadyGain) return
+    if (profile.carryoverIngestionCount == 0 &&
+        nowPct == null &&
+        !showSteadyGain &&
+        currentEq == null &&
+        peakEq == null
+    ) return
 
     Surface(
         shape = RoundedCornerShape(10.dp),
@@ -579,6 +730,146 @@ private fun ProfileCarryoverBanner(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.tertiary
                 )
+            }
+            if (currentEq != null) {
+                Text(
+                    text = stringResource(
+                        R.string.journal_pk_active_equivalent_now,
+                        formatEquivalentDoseMg(currentEq)
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (peakEq != null) {
+                Text(
+                    text = stringResource(
+                        R.string.journal_pk_active_equivalent_peak,
+                        formatEquivalentDoseMg(peakEq)
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun OverlayDualScaleBanner(
+    profiles: List<SubstanceLivePkProfile>,
+) {
+    val dualScaleProfiles = profiles.filter {
+        it.currentActiveEquivalentMg != null || it.peakActiveEquivalentMg != null
+    }
+    if (dualScaleProfiles.isEmpty()) return
+
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        FlowRow(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            dualScaleProfiles.forEach { profile ->
+                val nowStr = profile.currentActiveEquivalentMg?.let {
+                    stringResource(R.string.journal_pk_active_equivalent_now, formatEquivalentDoseMg(it))
+                }
+                val peakStr = profile.peakActiveEquivalentMg?.let {
+                    stringResource(R.string.journal_pk_active_equivalent_peak, formatEquivalentDoseMg(it))
+                }
+                val combined = listOfNotNull(nowStr, peakStr).joinToString(" · ")
+                Text(
+                    text = "${profile.displayName}: $combined",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EnzymaticDdiFindingsBanner(
+    findings: List<EnzymaticDdiFinding>,
+    isZh: Boolean,
+) {
+    if (findings.isEmpty()) return
+    Surface(
+        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.42f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.journal_cyp_ddi_section_title),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            findings.forEach { finding ->
+                Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    Text(
+                        text = if (isZh) finding.summaryZh else finding.summaryEn,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                    ) {
+                        val effectLabel = when (finding.effectType) {
+                            CypInteractionEffectType.INHIBITION -> if (isZh) "${finding.enzyme} 抑制" else "${finding.enzyme} inhibition"
+                            CypInteractionEffectType.INDUCTION -> if (isZh) "${finding.enzyme} 诱导" else "${finding.enzyme} induction"
+                        }
+                        Text(
+                            text = effectLabel,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        if (abs(finding.halfLifeMultiplier - 1.0) >= 0.05) {
+                            Text(
+                                text = stringResource(
+                                    R.string.journal_pk_ddi_halflife_multiplier,
+                                    formatMultiplier(finding.halfLifeMultiplier)
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                        if (abs(finding.activeMetaboliteMultiplier - 1.0) >= 0.05) {
+                            Text(
+                                text = stringResource(
+                                    R.string.journal_pk_ddi_metabolite_multiplier,
+                                    formatMultiplier(finding.activeMetaboliteMultiplier)
+                                ),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer
+                            )
+                        }
+                        if (finding.isProdrugActivationBlocked) {
+                            Text(
+                                text = stringResource(R.string.journal_pk_ddi_prodrug_blocked),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -721,5 +1012,24 @@ private fun formatCompactHours(hours: Double, isZh: Boolean): String {
         if (isZh) String.format(Locale.ROOT, "%.1f天", days) else String.format(Locale.ROOT, "%.1fd", days)
     } else {
         String.format(Locale.ROOT, "%.1fh", hours)
+    }
+}
+
+private fun formatEquivalentDoseMg(mg: Double): String {
+    return when {
+        mg <= 1e-6 -> "0 mg"
+        mg < 0.001 -> String.format(Locale.ROOT, "%.2f µg", mg * 1000.0)
+        mg < 0.1 -> String.format(Locale.ROOT, "%.1f µg", mg * 1000.0)
+        mg < 1.0 -> String.format(Locale.ROOT, "%.0f µg", mg * 1000.0)
+        mg < 1000.0 -> String.format(Locale.ROOT, "%.1f mg", mg)
+        else -> String.format(Locale.ROOT, "%.0f mg", mg)
+    }
+}
+
+private fun formatMultiplier(multiplier: Double): String {
+    return if (multiplier >= 10.0) {
+        String.format(Locale.ROOT, "%.1f", multiplier)
+    } else {
+        String.format(Locale.ROOT, "%.2f", multiplier)
     }
 }

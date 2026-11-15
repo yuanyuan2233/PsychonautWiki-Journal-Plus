@@ -24,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
-import com.isaakhanimann.journal.data.room.experiences.entities.CustomSubstance
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -37,17 +36,18 @@ class AddCustomSubstanceViewModel @Inject constructor(
     var name by mutableStateOf("")
     var units by mutableStateOf("")
     var description by mutableStateOf("")
+    val pkFormState = CustomSubstancePkFormState()
 
-    val isValid get() = name.isNotBlank() && units.isNotBlank()
+    val isValid get() = name.isNotBlank() && units.isNotBlank() && pkFormState.isValid
 
     fun addCustomSubstance(onDone: (customSubstanceName: String) -> Unit) {
         val cleanName = name.trim()
         val cleanUnits = units.trim()
-        if (cleanName.isBlank() || cleanUnits.isBlank()) return
+        if (cleanName.isBlank() || cleanUnits.isBlank() || !pkFormState.isValid) return
         viewModelScope.launch {
             val existing = experienceRepo.getCustomSubstance(cleanName)
             if (existing == null) {
-                val customSubstance = CustomSubstance(
+                val customSubstance = pkFormState.buildCustomSubstance(
                     name = cleanName,
                     units = cleanUnits,
                     description = description

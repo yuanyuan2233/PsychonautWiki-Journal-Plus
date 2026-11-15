@@ -39,7 +39,8 @@ data class JournalExport(
     val customUnits: List<CustomUnitSerializable> = emptyList(),
     val toleranceCustomizations: List<ToleranceCustomizationExport> = emptyList(),
     val medicationSchedules: List<MedicationScheduleSerializable> = emptyList(),
-    val routineOccurrences: List<RoutineOccurrenceSerializable> = emptyList()
+    val routineOccurrences: List<RoutineOccurrenceSerializable> = emptyList(),
+    val pkCustomizations: List<PkCustomizationExport> = emptyList()
 ) {
     fun isEmpty(): Boolean {
         return experiences.isEmpty() &&
@@ -48,7 +49,8 @@ data class JournalExport(
             customUnits.isEmpty() &&
             toleranceCustomizations.isEmpty() &&
             medicationSchedules.isEmpty() &&
-            routineOccurrences.isEmpty()
+            routineOccurrences.isEmpty() &&
+            pkCustomizations.isEmpty()
     }
 }
 
@@ -58,6 +60,16 @@ data class ToleranceCustomizationExport(
     val customFullDays: Double? = null,
     val customZeroDays: Double? = null,
     @Serializable(with = InstantSerializer::class) val manualResetInstant: Instant? = null
+)
+
+@Serializable
+data class PkCustomizationExport(
+    val substanceName: String,
+    val customHalfLifeHours: Double? = null,
+    val customTMaxHours: Double? = null,
+    val customWashoutHours: Double? = null,
+    val customPkRole: String? = null,
+    val customBioavailabilityFraction: Double? = null
 )
 
 @Serializable

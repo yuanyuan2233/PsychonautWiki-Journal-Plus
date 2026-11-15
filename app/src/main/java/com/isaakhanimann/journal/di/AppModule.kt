@@ -58,7 +58,7 @@ object AppModule {
             AppDatabase::class.java,
             "experiences_db"
         )
-            .addMigrations(AppDatabase.MIGRATION_9_10)
+            .addMigrations(AppDatabase.MIGRATION_9_10, AppDatabase.MIGRATION_10_11)
             .build()
 
     @Singleton
