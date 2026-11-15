@@ -15830,6 +15830,338 @@
         "常见物质"
       ],
       "url": "https://en.wikipedia.org/wiki/Desvenlafaxine"
+    },
+    "Propranolol": {
+      "name_en": "Propranolol",
+      "name_zh": "普萘洛尔",
+      "zh_aliases": [
+        "普萘洛尔",
+        "心得安",
+        "盐酸普萘洛尔",
+        "Inderal",
+        "InnoPran XL"
+      ],
+      "pinyin": [
+        "pu'nai'luo'er",
+        "punailuoer",
+        "xin'de'an",
+        "xindean",
+        "yan'suan'pu'nai'luo'er",
+        "yansuanpunailuoer"
+      ],
+      "pinyin_abbr": [
+        "pnle",
+        "xda",
+        "yspnle"
+      ],
+      "categories": [
+        "antihypertensive",
+        "anxiolytic",
+        "common"
+      ],
+      "categories_zh": [
+        "降压药",
+        "抗焦虑药",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00571"
+    },
+    "Metoprolol": {
+      "name_en": "Metoprolol",
+      "name_zh": "美托洛尔",
+      "zh_aliases": [
+        "美托洛尔",
+        "倍他乐克",
+        "酒石酸美托洛尔",
+        "琥珀酸美托洛尔",
+        "Lopressor",
+        "Toprol-XL"
+      ],
+      "pinyin": [
+        "mei'tuo'luo'er",
+        "meituoluoer",
+        "bei'ta'le'ke",
+        "beitaleke",
+        "jiu'shi'suan'mei'tuo'luo'er",
+        "jiushisuanmeituoluoer",
+        "hu'po'suan'mei'tuo'luo'er",
+        "huposuanmeituoluoer"
+      ],
+      "pinyin_abbr": [
+        "mtle",
+        "btlk",
+        "jssmtle",
+        "hpsmtle"
+      ],
+      "categories": [
+        "antihypertensive",
+        "anxiolytic",
+        "common"
+      ],
+      "categories_zh": [
+        "降压药",
+        "抗焦虑药",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00264"
+    },
+    "Lemborexant": {
+      "name_en": "Lemborexant",
+      "name_zh": "莱博雷生",
+      "zh_aliases": [
+        "莱博雷生",
+        "达卫可",
+        "Dayvigo",
+        "E-2006"
+      ],
+      "pinyin": [
+        "lai'bo'lei'sheng",
+        "laiboleisheng",
+        "da'wei'ke",
+        "daweike"
+      ],
+      "pinyin_abbr": [
+        "lbls",
+        "dwk"
+      ],
+      "categories": [
+        "hypnotic",
+        "sedative",
+        "depressant"
+      ],
+      "categories_zh": [
+        "镇静催眠药",
+        "镇静剂",
+        "中枢抑制剂"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB14904"
+    },
+    "Suvorexant": {
+      "name_en": "Suvorexant",
+      "name_zh": "苏沃雷生",
+      "zh_aliases": [
+        "苏沃雷生",
+        "Belsomra",
+        "MK-4305"
+      ],
+      "pinyin": [
+        "su'wo'lei'sheng",
+        "suwoleisheng"
+      ],
+      "pinyin_abbr": [
+        "swls"
+      ],
+      "categories": [
+        "hypnotic",
+        "sedative",
+        "depressant"
+      ],
+      "categories_zh": [
+        "镇静催眠药",
+        "镇静剂",
+        "中枢抑制剂"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB09034"
+    },
+    "Ramelteon": {
+      "name_en": "Ramelteon",
+      "name_zh": "雷美替胺",
+      "zh_aliases": [
+        "雷美替胺",
+        "Rozerem",
+        "TAK-375"
+      ],
+      "pinyin": [
+        "lei'mei'ti'an",
+        "leimeitian"
+      ],
+      "pinyin_abbr": [
+        "lmta"
+      ],
+      "categories": [
+        "melatonergic",
+        "hypnotic",
+        "oneirogen",
+        "sedative"
+      ],
+      "categories_zh": [
+        "褪黑素受体激动剂",
+        "镇静催眠药",
+        "催梦剂",
+        "镇静剂"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00980"
+    },
+    "Milnacipran": {
+      "name_en": "Milnacipran",
+      "name_zh": "米那普仑",
+      "zh_aliases": [
+        "米那普仑",
+        "盐酸米那普仑",
+        "思美",
+        "Savella",
+        "Ixel"
+      ],
+      "pinyin": [
+        "mi'na'pu'lun",
+        "minapulun",
+        "yan'suan'mi'na'pu'lun",
+        "yansuanminapulun",
+        "si'mei",
+        "simei"
+      ],
+      "pinyin_abbr": [
+        "mnpl",
+        "ysmnpl",
+        "sm"
+      ],
+      "categories": [
+        "antidepressant",
+        "snri",
+        "analgesic"
+      ],
+      "categories_zh": [
+        "抗抑郁药",
+        "SNRI",
+        "镇痛药"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB04896"
+    },
+    "Cetirizine": {
+      "name_en": "Cetirizine",
+      "name_zh": "西替利嗪",
+      "zh_aliases": [
+        "西替利嗪",
+        "仙特明",
+        "盐酸西替利嗪",
+        "Zyrtec",
+        "Reactine"
+      ],
+      "pinyin": [
+        "xi'ti'li'qin",
+        "xitiliqin",
+        "xian'te'ming",
+        "xianteming",
+        "yan'suan'xi'ti'li'qin",
+        "yansuanxitiliqin"
+      ],
+      "pinyin_abbr": [
+        "xtlq",
+        "xtm",
+        "ysxtlq"
+      ],
+      "categories": [
+        "antihistamine",
+        "common"
+      ],
+      "categories_zh": [
+        "抗组胺药",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00341"
+    },
+    "Naltrexone": {
+      "name_en": "Naltrexone",
+      "name_zh": "纳曲酮",
+      "zh_aliases": [
+        "纳曲酮",
+        "盐酸纳曲酮",
+        "ReVia",
+        "Vivitrol",
+        "Depade"
+      ],
+      "pinyin": [
+        "na'qu'tong",
+        "naqutong",
+        "yan'suan'na'qu'tong",
+        "yansuannaqutong"
+      ],
+      "pinyin_abbr": [
+        "nqt",
+        "ysnqt"
+      ],
+      "categories": [
+        "antidote",
+        "opioid",
+        "common"
+      ],
+      "categories_zh": [
+        "解毒剂/拮抗剂",
+        "阿片类",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00704"
+    },
+    "Pramipexole": {
+      "name_en": "Pramipexole",
+      "name_zh": "普拉克索",
+      "zh_aliases": [
+        "普拉克索",
+        "森福罗",
+        "盐酸普拉克索",
+        "Mirapex",
+        "Sifrol"
+      ],
+      "pinyin": [
+        "pu'la'ke'suo",
+        "pulakesuo",
+        "sen'fu'luo",
+        "senfuluo",
+        "yan'suan'pu'la'ke'suo",
+        "yansuanpulakesuo"
+      ],
+      "pinyin_abbr": [
+        "plks",
+        "sfl",
+        "ysplks"
+      ],
+      "categories": [
+        "antiparkinsonian",
+        "common"
+      ],
+      "categories_zh": [
+        "抗帕金森病药",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00413"
+    },
+    "Levodopa": {
+      "name_en": "Levodopa",
+      "name_zh": "左旋多巴",
+      "zh_aliases": [
+        "左旋多巴",
+        "美多芭",
+        "息宁",
+        "卡左双多巴",
+        "L-DOPA",
+        "Sinemet",
+        "Madopar"
+      ],
+      "pinyin": [
+        "zuo'xuan'duo'ba",
+        "zuoxuanduoba",
+        "mei'duo'ba",
+        "meiduoba",
+        "xi'ning",
+        "xining",
+        "ka'zuo'shuang'duo'ba",
+        "kazuoshuangduoba"
+      ],
+      "pinyin_abbr": [
+        "zxdb",
+        "mdb",
+        "xn",
+        "kzsdb"
+      ],
+      "categories": [
+        "antiparkinsonian",
+        "common"
+      ],
+      "categories_zh": [
+        "抗帕金森病药",
+        "常见物质"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB01235"
     }
   }
 }

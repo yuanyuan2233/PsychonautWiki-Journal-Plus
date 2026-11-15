@@ -318,4 +318,131 @@ class TestParse {
             assertTrue("Expected non-null fallback RoaDuration for $zhName", fallbackDuration?.total?.maxInSec != null)
         }
     }
+
+    @Test
+    fun parseBundledSubstancesAsset_includesPhase5EnrichedAndNewClinicalDrugs() {
+        assumeTrue(
+            "Requires real org.json implementation",
+            isRealOrgJsonAvailable()
+        )
+        val candidates = listOf(
+            java.io.File("src/main/assets/Substances.json"),
+            java.io.File("app/src/main/assets/Substances.json")
+        )
+        val assetFile = candidates.firstOrNull { it.isFile }
+            ?: throw AssertionError("Substances.json not found")
+        val result = SubstanceParser().parseSubstanceFile(assetFile.readText(Charsets.UTF_8))
+
+        assertTrue(
+            "Expected at least 464 parsed substances, got ${result.substances.size}",
+            result.substances.size >= 464
+        )
+        val withPkCount = result.substances.count { it.pharmacokinetics != null }
+        assertTrue(
+            "Expected at least 219 substances with pharmacokinetics, got $withPkCount",
+            withPkCount >= 219
+        )
+
+        fun findSub(name: String) = result.substances.firstOrNull { it.name.equals(name, ignoreCase = true) }
+
+        val enrichedExpected = listOf(
+            "Alcohol" to "ZERO_ORDER",
+            "Dextromethorphan" to "ACTIVE_METABOLITE",
+            "Ketamine" to "ACTIVE_METABOLITE",
+            "Caffeine" to "ACTIVE_METABOLITE",
+            "Heroin" to "PRODRUG",
+            "Adrafinil" to "PRODRUG",
+            "Carisoprodol" to "PRODRUG",
+            "Phenibut" to "PARENT_DOMINANT"
+        )
+        for ((name, expectedRole) in enrichedExpected) {
+            val sub = findSub(name)
+            assertTrue("Expected enriched substance $name", sub != null)
+            val pk = sub!!.pharmacokinetics
+            assertTrue("Expected non-null pharmacokinetics for $name", pk != null)
+            assertEquals("Unexpected pkRole for $name", expectedRole, pk!!.pkRole)
+            assertTrue("Expected positive halfLifeHours for $name", (pk.halfLifeHours ?: 0.0) > 0.0)
+            assertTrue("Expected positive tMaxHours for $name", (pk.tMaxHours ?: 0.0) > 0.0)
+        }
+
+        val metaboliteChecks = listOf(
+            "Dextromethorphan" to "Dextrorphan",
+            "Ketamine" to "Norketamine",
+            "Caffeine" to "Paraxanthine",
+            "Heroin" to "Morphine",
+            "Adrafinil" to "Modafinil",
+            "Carisoprodol" to "Meprobamate",
+            "Ramelteon" to "M-II",
+            "Naltrexone" to "Naltrexol",
+            "Levodopa" to "Dopamine",
+            "Propranolol" to "4-Hydroxypropranolol"
+        )
+        for ((parentName, metaboliteKeyword) in metaboliteChecks) {
+            val pk = findSub(parentName)?.pharmacokinetics
+            assertTrue("Expected pharmacokinetics for $parentName", pk != null)
+            assertTrue(
+                "Expected active metabolite containing '$metaboliteKeyword' on $parentName",
+                pk!!.activeMetabolites.any { it.name.contains(metaboliteKeyword, ignoreCase = true) }
+            )
+        }
+
+        val newClinicalDrugs = listOf(
+            "Propranolol" to "普萘洛尔",
+            "Metoprolol" to "美托洛尔",
+            "Lemborexant" to "莱博雷生",
+            "Suvorexant" to "苏沃雷生",
+            "Ramelteon" to "雷美替胺",
+            "Milnacipran" to "米那普仑",
+            "Cetirizine" to "西替利嗪",
+            "Naltrexone" to "纳曲酮",
+            "Pramipexole" to "普拉克索",
+            "Levodopa" to "左旋多巴"
+        )
+        for ((enName, zhName) in newClinicalDrugs) {
+            assertEquals(
+                "Canonical lookup mismatch for $zhName",
+                enName,
+                SubstanceLocalizationHelper.getCanonicalEnglishName(zhName)
+            )
+            val sub = findSub(enName)
+            assertTrue("Expected new clinical drug $enName", sub != null)
+            assertTrue("Expected non-empty categories for $enName", sub!!.categories.isNotEmpty())
+            assertTrue("Expected non-empty roas for $enName", sub.roas.isNotEmpty())
+            assertTrue(
+                "Expected at least one ROA with dose and duration for $enName",
+                sub.roas.any { it.roaDose != null && it.roaDuration != null }
+            )
+            val pk = sub.pharmacokinetics
+            assertTrue("Expected pharmacokinetics for $enName", pk != null)
+            assertTrue("Expected positive halfLifeHours for $enName", (pk!!.halfLifeHours ?: 0.0) > 0.0)
+            assertTrue("Expected positive tMaxHours for $enName", (pk.tMaxHours ?: 0.0) > 0.0)
+            assertTrue("Expected non-empty cypEnzymes for $enName", pk.cypEnzymes.isNotEmpty())
+            assertTrue("Expected non-empty receptorTargets for $enName", pk.receptorTargets.isNotEmpty())
+            assertTrue(
+                "Expected non-null fallback RoaDuration for $enName",
+                pk.toFallbackRoaDuration()?.total?.maxInSec != null
+            )
+        }
+
+        val intentionallyOmittedNoHumanPk = listOf(
+            "Ethylphenidate",
+            "4F-MPH",
+            "Isopropylphenidate",
+            "1cP-MiPLA",
+            "3-Me-PCPy",
+            "25N-NBOMe",
+            "MXiPr",
+            "RGPU-95",
+            "Omberacetam",
+            "Meclofenoxate",
+            "Alpha-GPC",
+            "Poppers",
+            "Fenethylline"
+        )
+        for (name in intentionallyOmittedNoHumanPk) {
+            val sub = findSub(name)
+            assertTrue("Expected substance $name to remain in Substances.json", sub != null)
+            assertNull("Expected null pharmacokinetics for unverified substance $name", sub?.pharmacokinetics)
+        }
+    }
 }
