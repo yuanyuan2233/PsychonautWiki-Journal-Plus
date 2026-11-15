@@ -68,9 +68,9 @@ PsychonautWiki Journal 原由 Isaak Hanimann 开源维护（至 v11.11 版本）
 
 - **系统要求**：Android 8.0 (API 26) 及以上（`targetSdk = 35`）
 - **共存包名与桌面名称**：
-  - 正式发布版：`com.isaakhanimann.journal.zh`
-  - 本地调试版：`com.isaakhanimann.journal.zh.debug`（可与正式版及原版 Journal 同时共存安装）
-  - 桌面图标名称沿用低调的 `Journal`，避免在设备桌面直接暴露敏感字样。
+  - 正式发布版：`com.isaakhanimann.journal.zh.plus`（可与旧版汉化版 `com.isaakhanimann.journal.zh` 及原版 Journal 同时共存安装）
+  - 本地调试版：`com.isaakhanimann.journal.zh.plus.debug`（可与正式版、旧版汉化版及原版 Journal 同时共存安装）
+  - 桌面图标名称为 `Journal+`，便于在设备桌面区分新旧版本的同时保持低调命名。
 - **权限说明**（所有权限均仅在本地运行，绝不联网传输）：
   - `POST_NOTIFICATIONS`：用于规律服药到点弹窗提醒及通知栏快捷确认/跳过；
   - `SCHEDULE_EXACT_ALARM`：用于保障规律服药按设定时间准时触发，降低系统省电延迟；
@@ -93,10 +93,10 @@ cd PsychonautWiki-Journal-Plus
 # 运行本地 JVM 单元测试
 ./gradlew testDebugUnitTest
 
-# 本地调试构建（包名为 com.isaakhanimann.journal.zh.debug，可与正式版共存）
+# 本地调试构建（包名为 com.isaakhanimann.journal.zh.plus.debug，可与正式版及旧版共存）
 ./gradlew assembleDebug
 
-# 生产环境 Release 构建（启用 R8 混淆、资源压缩与独立包名 .zh）
+# 生产环境 Release 构建（启用 R8 混淆、资源压缩与独立包名 .zh.plus）
 ./gradlew assembleRelease
 ```
 - **签名配置**：本地执行 `assembleRelease` 时可通过 Gradle 属性或环境变量提供 `KEYSTORE_FILE`、`KEYSTORE_PASSWORD`、`KEY_ALIAS`、`KEY_PASSWORD`（未提供时将输出未签名安装包 `app/build/outputs/apk/release/app-release-unsigned.apk`；GitHub Actions 打 tag 发布流水线会强制校验签名与 `SHA256SUMS.txt`）。

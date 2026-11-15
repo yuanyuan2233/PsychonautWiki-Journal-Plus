@@ -66,12 +66,12 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".zh.debug"
-            versionNameSuffix = "-zh-debug"
+            applicationIdSuffix = ".zh.plus.debug"
+            versionNameSuffix = "-zh-plus-debug"
         }
         release {
-            applicationIdSuffix = ".zh"
-            versionNameSuffix = "-zh"
+            applicationIdSuffix = ".zh.plus"
+            versionNameSuffix = "-zh-plus"
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

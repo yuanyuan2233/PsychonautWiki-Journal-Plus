@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Journal</string>
+    <string name="app_name">Journal+</string>
 
     <!-- Navigation -->
     <string name="nav_stats">统计</string>

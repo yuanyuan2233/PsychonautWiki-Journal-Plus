@@ -80,8 +80,8 @@ jobs:
           fi
 
           # 断言包名独立性
-          "${ANDROID_HOME}/build-tools/35.0.0/aapt2" dump badging "$APK_FILE" | grep -q "package: name='com.isaakhanimann.journal.zh'" || {
-            echo "ERROR: Package name must be com.isaakhanimann.journal.zh!"
+          "${ANDROID_HOME}/build-tools/35.0.0/aapt2" dump badging "$APK_FILE" | grep -q "package: name='com.isaakhanimann.journal.zh.plus'" || {
+            echo "ERROR: Package name must be com.isaakhanimann.journal.zh.plus!"
             exit 1
           }
 
