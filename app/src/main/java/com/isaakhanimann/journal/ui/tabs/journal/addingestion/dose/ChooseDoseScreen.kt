@@ -68,7 +68,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -81,7 +83,6 @@ import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.ui.tabs.journal.getLocalizedNameRes
 import com.isaakhanimann.journal.data.substances.classes.roa.DoseClass
 import com.isaakhanimann.journal.data.substances.classes.roa.RoaDose
-import com.isaakhanimann.journal.ui.DOSE_DISCLAIMER
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.dose.RoaDosePreviewProvider
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.dose.RoaDoseView
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
@@ -292,8 +293,9 @@ fun ChooseDoseScreen(
                     Row(modifier = Modifier.clickable {
                         isDoseRemarkExpanded = !isDoseRemarkExpanded
                     }, verticalAlignment = Alignment.CenterVertically) {
+                        val defaultDisclaimer = stringResource(R.string.drugs_dose_disclaimer)
                         val finalDoseInfoText =
-                            if (doseRemark.isNullOrBlank()) DOSE_DISCLAIMER else "$doseRemark\n\n$DOSE_DISCLAIMER"
+                            if (doseRemark.isNullOrBlank()) defaultDisclaimer else "$doseRemark\n\n$defaultDisclaimer"
                         Text(
                             modifier = Modifier.weight(1f),
                             text = finalDoseInfoText,
@@ -544,7 +546,8 @@ fun ChooseDoseScreen(
                 }
             } else if (administrationRoute == AdministrationRoute.RECTAL) {
                 val uriHandler = LocalUriHandler.current
-                TextButton(onClick = { uriHandler.openUri(AdministrationRoute.SAFER_PLUGGING_ARTICLE_URL) }) {
+                val context = LocalContext.current
+                TextButton(onClick = { openUriSafely(context, uriHandler, AdministrationRoute.SAFER_PLUGGING_ARTICLE_URL) }) {
                     Icon(
                         Icons.Outlined.OpenInBrowser,
                         contentDescription = stringResource(R.string.journal_action_open_link)

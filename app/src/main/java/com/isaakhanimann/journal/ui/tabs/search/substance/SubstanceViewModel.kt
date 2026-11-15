@@ -23,6 +23,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.toRoute
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
+import com.isaakhanimann.journal.data.substances.classes.SubstanceWithCategories
 import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepository
 import com.isaakhanimann.journal.ui.main.navigation.graphs.SubstanceRoute
 import com.isaakhanimann.journal.ui.tabs.journal.experience.TimelineDisplayOption
@@ -49,7 +50,8 @@ class SubstanceViewModel @Inject constructor(
 
     val substanceName = state.toRoute<SubstanceRoute>().substanceName
 
-    val substanceWithCategories = substanceRepo.getSubstanceWithCategories(substanceName)!!
+    val substanceWithCategories: SubstanceWithCategories? =
+        substanceRepo.getSubstanceWithCategories(substanceName)
 
     val customUnitsFlow = experienceRepo.getUnArchivedCustomUnitsFlow(substanceName).stateIn(
         initialValue = emptyList(),
@@ -66,7 +68,8 @@ class SubstanceViewModel @Inject constructor(
     }
 
     val timelineDisplayOptionFlow = ingestionTimeFlow.map { ingestionTime ->
-        val substance = substanceWithCategories.substance
+        val substance = substanceWithCategories?.substance
+            ?: return@map TimelineDisplayOption.NotWorthDrawing
         val roasWithDurationsDefined = substance.roas.filter { roa ->
             val roaDuration = roa.roaDuration
             val isEveryDurationNull =

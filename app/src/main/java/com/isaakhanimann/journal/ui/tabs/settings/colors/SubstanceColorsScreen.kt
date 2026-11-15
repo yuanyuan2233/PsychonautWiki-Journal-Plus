@@ -121,7 +121,10 @@ fun SubstanceColorsScreenContent(
                 .padding(horizontal = horizontalPadding)
                 .fillMaxSize()
         ) {
-            items(substanceCompanions) { substanceCompanion ->
+            items(
+                items = substanceCompanions,
+                key = { it.substanceName }
+            ) { substanceCompanion ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()

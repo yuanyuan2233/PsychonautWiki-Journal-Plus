@@ -19,6 +19,8 @@
 package com.isaakhanimann.journal.data.substances.repositories
 
 import com.isaakhanimann.journal.data.substances.classes.SubstanceWithCategories
+import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -26,6 +28,12 @@ import javax.inject.Singleton
 class SearchRepository @Inject constructor(
     val substanceRepo: SubstanceRepository
 ) : SearchRepositoryInterface {
+
+    companion object {
+        private val SEARCH_STRIP_REGEX = Regex("[-\\s_]")
+        private fun normalizeCategoryKey(category: String): String =
+            category.trim().lowercase(Locale.ROOT).replace(' ', '-')
+    }
 
     override fun getMatchingSubstances(
         searchText: String,
@@ -38,44 +46,46 @@ class SearchRepository @Inject constructor(
     }
 
     private fun getSubstancesMatchingCategories(filterCategories: List<String>): List<SubstanceWithCategories> {
+        if (filterCategories.isEmpty()) return substanceRepo.getAllSubstancesWithCategories()
+        val normalizedFilters = filterCategories.map(::normalizeCategoryKey)
         return substanceRepo.getAllSubstancesWithCategories().filter { substanceWithCategories ->
-            filterCategories.all { substanceWithCategories.substance.categories.contains(it) }
+            val substanceCategories = substanceWithCategories.substance.categories.map(::normalizeCategoryKey).toSet()
+            normalizedFilters.all { it in substanceCategories }
         }
     }
 
     private fun getSubstancesMatchingSearchText(searchText: String, prefilteredSubstances: List<SubstanceWithCategories>): List<SubstanceWithCategories> {
-        return if (searchText.isEmpty()) {
-            prefilteredSubstances
-        } else {
-            val searchString = searchText.replace(Regex("[- ]"), "")
-            // substances whose primary name begins with the search string
-            val mainPrefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
-                substanceWithCategories.substance.name.replace(Regex("[- ]"), "").startsWith(
+        if (searchText.isBlank()) return prefilteredSubstances
+        val searchString = SEARCH_STRIP_REGEX.replace(searchText.trim(), "")
+        if (searchString.isEmpty()) return prefilteredSubstances
+
+        val mainPrefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
+            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
+            SEARCH_STRIP_REGEX.replace(substanceWithCategories.substance.name, "").startsWith(
+                prefix = searchString, ignoreCase = true
+            ) || SEARCH_STRIP_REGEX.replace(localized, "").startsWith(
+                prefix = searchString, ignoreCase = true
+            )
+        }
+        val prefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
+            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
+            val allNames = substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name + localized
+            allNames.any { name ->
+                SEARCH_STRIP_REGEX.replace(name, "").startsWith(
                     prefix = searchString, ignoreCase = true
                 )
             }
-            // substances with any name beginning with the search string
-            val prefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
-                val allNames =
-                    substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name
-                allNames.any { name ->
-                    name.replace(Regex("[- ]"), "").startsWith(
-                        prefix = searchString, ignoreCase = true
-                    )
-                }
-            }
-            // substances containing the search string in any of their names
-            val matches = prefilteredSubstances.filter { substanceWithCategories ->
-                val allNames =
-                    substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name
-                allNames.any { name ->
-                    name.replace(Regex("[- ]"), "").contains(
-                        other = searchString, ignoreCase = true
-                    )
-                }
-            }
-            return (mainPrefixMatches + prefixMatches + matches).distinctBy { it.substance.name }
         }
+        val matches = prefilteredSubstances.filter { substanceWithCategories ->
+            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
+            val allNames = substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name + localized
+            allNames.any { name ->
+                SEARCH_STRIP_REGEX.replace(name, "").contains(
+                    other = searchString, ignoreCase = true
+                )
+            }
+        }
+        return (mainPrefixMatches + prefixMatches + matches).distinctBy { it.substance.name }
     }
 
     private fun getSubstancesSorted(

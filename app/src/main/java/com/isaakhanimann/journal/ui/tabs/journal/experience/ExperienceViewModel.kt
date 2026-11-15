@@ -412,9 +412,13 @@ class ExperienceViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000)
     )
 
-    fun deleteExperience() {
+    fun deleteExperience(onDone: () -> Unit = {}) {
         viewModelScope.launch {
+            routineSchedulerManager.onExperienceDeleted(experienceId)
             experienceRepo.deleteEverythingOfExperience(experienceId = experienceId)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 

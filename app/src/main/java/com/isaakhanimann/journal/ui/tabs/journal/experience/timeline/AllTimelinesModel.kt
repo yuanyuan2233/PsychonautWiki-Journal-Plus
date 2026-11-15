@@ -61,8 +61,7 @@ class AllTimelinesModel(
         val ingestionTimes = dataForLines.map { it.startTime }
         val noteTimes = timedNotes.map { it.time }
         val allStartTimeCandidates = ratingTimes + ingestionTimes + noteTimes
-        startTime =
-            allStartTimeCandidates.reduce { acc, date -> if (acc.isBefore(date)) acc else date }
+        startTime = allStartTimeCandidates.minOrNull() ?: Instant.now()
         val roaGroups = dataForLines.groupBy { it.substanceName }
             .flatMap { substanceGroup ->
                 val linesPerSubstance = substanceGroup.value
@@ -90,21 +89,28 @@ class AllTimelinesModel(
                 areSubstanceHeightsIndependent = areSubstanceHeightsIndependent
             )
         }
-        val overallMaxHeight = groupDrawables.maxOfOrNull { it.nonNormalisedHeight } ?: 1f
+        val overallMaxHeight = (groupDrawables
+            .asSequence()
+            .map { it.nonNormalisedHeight }
+            .filter { it.isFinite() }
+            .maxOrNull() ?: 1f)
+            .coerceAtLeast(0.01f)
         groupDrawables.forEach { it.normaliseHeight(overallMaxHeight) }
         this.groupDrawables = groupDrawables
-        val maxWidthOfGroups: Float = groupDrawables.maxOfOrNull {
-            it.endOfLineRelativeToStartInSeconds
-        } ?: 0f
+        val maxWidthOfGroups: Float = groupDrawables
+            .asSequence()
+            .map { it.endOfLineRelativeToStartInSeconds }
+            .filter { it.isFinite() && it >= 0f }
+            .maxOrNull() ?: 0f
         val latestRating = ratingTimes.maxOrNull()
         val maxWidthRating: Float = if (latestRating != null) {
-            Duration.between(startTime, latestRating).seconds.toFloat()
+            Duration.between(startTime, latestRating).seconds.toFloat().coerceAtLeast(0f)
         } else {
             0f
         }
         val latestNote = noteTimes.maxOrNull()
         val maxWidthNote: Float = if (latestNote != null) {
-            Duration.between(startTime, latestNote).seconds.toFloat()
+            Duration.between(startTime, latestNote).seconds.toFloat().coerceAtLeast(0f)
         } else {
             0f
         }

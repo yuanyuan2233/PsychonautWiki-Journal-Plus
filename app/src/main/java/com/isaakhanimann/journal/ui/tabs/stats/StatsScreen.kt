@@ -54,7 +54,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,6 +66,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.ui.YOU
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.toReadableString
@@ -86,9 +86,9 @@ fun StatsScreen(
         navigateToSubstanceCompanion = navigateToSubstanceCompanion,
         navigateToToleranceChart = navigateToToleranceChart,
         onTapOption = viewModel::onTapOption,
-        statsModel = viewModel.statsModelFlow.collectAsState().value,
+        statsModel = viewModel.statsModelFlow.collectAsStateWithLifecycle().value,
         onChangeConsumerName = viewModel::onChangeConsumer,
-        consumerNamesSorted = viewModel.sortedConsumerNamesFlow.collectAsState().value,
+        consumerNamesSorted = viewModel.sortedConsumerNamesFlow.collectAsStateWithLifecycle().value,
     )
 }
 
@@ -230,7 +230,10 @@ fun StatsScreen(
                         )
                         HorizontalDivider()
                         LazyColumn {
-                            items(statsModel.statItems) { subStat ->
+                            items(
+                                items = statsModel.statItems,
+                                key = { it.substanceName }
+                            ) { subStat ->
                                 Column {
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically,

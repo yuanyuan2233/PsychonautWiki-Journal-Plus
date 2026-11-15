@@ -198,7 +198,10 @@ fun SheetContent(
     navigateToEditIngestion: (ingestionId: Int) -> Unit = {},
 ) {
     LazyColumn {
-        items(experienceIds) { experienceId ->
+        items(
+            items = experienceIds.distinct(),
+            key = { it }
+        ) { experienceId ->
             ExperienceRowWithFetch(
                 experienceId = experienceId,
                 navigateToExperiencePopNothing = navigateToExperiencePopNothing,

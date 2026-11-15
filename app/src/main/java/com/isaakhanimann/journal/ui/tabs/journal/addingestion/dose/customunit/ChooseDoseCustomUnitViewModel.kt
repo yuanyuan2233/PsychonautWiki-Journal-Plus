@@ -73,8 +73,9 @@ class ChooseDoseCustomUnitViewModel @Inject constructor(
         estimatedDoseDeviationText = newEstimatedDeviationText
     }
 
-    val dose: Double? get() = doseText.toDoubleOrNull()
-    val estimatedDoseDeviation: Double? get() = estimatedDoseDeviationText.toDoubleOrNull()
+    val dose: Double? get() = doseText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
+    val estimatedDoseDeviation: Double?
+        get() = estimatedDoseDeviationText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
     val isValidDose: Boolean get() = dose != null
 
     private val customUnitDose: CustomUnitDose?

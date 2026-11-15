@@ -15,6 +15,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate Signing Secrets for Tag Build
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE }}
+          KEYSTORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$KEYSTORE_PASSWORD" ] || [ -z "$KEY_ALIAS" ] || [ -z "$KEY_PASSWORD" ]; then
+            echo "::error::Tag builds require KEYSTORE, SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS, and SIGNING_KEY_PASSWORD secrets."
+            exit 1
+          fi
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -24,51 +37,69 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager "build-tools;35.0.0"
+          "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" "build-tools;35.0.0"
 
       - name: Setup Signing Keystore
         if: ${{ secrets.KEYSTORE != '' }}
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
-          echo "KEYSTORE_FILE=$(pwd)/release.keystore" >> $GITHUB_ENV
-          echo "KEYSTORE_PASSWORD=${{ secrets.SIGNING_STORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.SIGNING_KEY_ALIAS }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.SIGNING_KEY_PASSWORD }}" >> $GITHUB_ENV
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > release.keystore
+          if [ ! -s release.keystore ]; then
+            echo "::error::Decoded release.keystore is empty."
+            exit 1
+          fi
 
       - name: Build Release APK
+        env:
+          KEYSTORE_FILE: ${{ secrets.KEYSTORE != '' && 'release.keystore' || '' }}
+          KEYSTORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: ./gradlew assembleRelease --no-daemon
+
+      - name: Cleanup Signing Keystore
+        if: always()
+        run: rm -f release.keystore
 
       - name: Verify & Package Release APK
         run: |
           APK_FILE="app/build/outputs/apk/release/app-release.apk"
           if [ ! -f "$APK_FILE" ]; then
-            APK_FILE="app/build/outputs/apk/release/app-release-unsigned.apk"
+            echo "::error::Signed release APK not found at $APK_FILE (unsigned APK fallback is disabled)."
+            exit 1
           fi
-          
+
+          # 强制校验 APK 签名有效性
+          "${ANDROID_HOME}/build-tools/35.0.0/apksigner" verify --verbose "$APK_FILE"
+
           # 断言必须不是 debuggable
-          if ${ANDROID_SDK_ROOT}/build-tools/35.0.0/aapt2 dump badging "$APK_FILE" | grep -q 'application-debuggable'; then
+          if "${ANDROID_HOME}/build-tools/35.0.0/aapt2" dump badging "$APK_FILE" | grep -q 'application-debuggable'; then
             echo "ERROR: Release APK must not be debuggable!"
             exit 1
           fi
 
           # 断言包名独立性
-          ${ANDROID_SDK_ROOT}/build-tools/35.0.0/aapt2 dump badging "$APK_FILE" | grep -q "package: name='com.isaakhanimann.journal.zh'" || {
+          "${ANDROID_HOME}/build-tools/35.0.0/aapt2" dump badging "$APK_FILE" | grep -q "package: name='com.isaakhanimann.journal.zh'" || {
             echo "ERROR: Package name must be com.isaakhanimann.journal.zh!"
             exit 1
           }
 
-          RELEASE_NAME="${{ github.ref_name }}"
-          if [ -z "$RELEASE_NAME" ]; then
-            RELEASE_NAME="manual-build"
-          fi
+          RAW_REF_NAME="${GITHUB_REF_NAME:-manual-build}"
+          RELEASE_NAME="${RAW_REF_NAME//\//-}"
 
           RELEASE_APK="PsychonautWiki-Journal-${RELEASE_NAME}.apk"
           cp "$APK_FILE" "$RELEASE_APK"
           sha256sum "$RELEASE_APK" > SHA256SUMS.txt
           echo "Release APK verified and packaged successfully:"
           cat SHA256SUMS.txt
+
+      - name: Upload Mapping Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: "release-mapping"
+          path: app/build/outputs/mapping/release/mapping.txt
+          if-no-files-found: error
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4

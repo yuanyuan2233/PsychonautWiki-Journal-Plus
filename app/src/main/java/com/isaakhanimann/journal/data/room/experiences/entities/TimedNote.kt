@@ -19,11 +19,25 @@
 package com.isaakhanimann.journal.data.room.experiences.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.Ignore
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.Instant
 
-@Entity
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Experience::class,
+            parentColumns = ["id"],
+            childColumns = ["experienceId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [
+        Index(value = ["experienceId"])
+    ]
+)
 data class TimedNote(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

@@ -29,58 +29,75 @@ data class RoaDose(
     val heavyMin: Double?,
 ) {
     fun getDoseClass(ingestionDose: Double?, ingestionUnits: String? = units): DoseClass? {
-        if (ingestionUnits != units || ingestionDose == null) return null
-        return if (lightMin != null && ingestionDose < lightMin) {
-            DoseClass.THRESHOLD
-        } else if (lightMin != null && commonMin != null && lightMin <= ingestionDose && ingestionDose < commonMin) {
-            DoseClass.LIGHT
-        } else if (commonMin != null && strongMin != null && commonMin <= ingestionDose && ingestionDose < strongMin) {
-            DoseClass.COMMON
-        } else if (strongMin != null && heavyMin != null && strongMin <= ingestionDose && ingestionDose < heavyMin) {
-            DoseClass.STRONG
-        } else if (heavyMin != null && heavyMin <= ingestionDose) {
-            DoseClass.HEAVY
-        } else {
-            null
+        val normalizedDose = normalizeDose(ingestionDose, ingestionUnits) ?: return null
+        return when {
+            heavyMin != null && normalizedDose >= heavyMin -> DoseClass.HEAVY
+            strongMin != null && normalizedDose >= strongMin -> DoseClass.STRONG
+            commonMin != null && normalizedDose >= commonMin -> DoseClass.COMMON
+            lightMin != null && normalizedDose >= lightMin -> DoseClass.LIGHT
+            hasAnyThreshold -> DoseClass.THRESHOLD
+            else -> null
         }
     }
 
     fun getNumDots(ingestionDose: Double?, ingestionUnits: String? = units): Int? {
-        if (ingestionUnits != units || ingestionDose == null) return null
-        if (lightMin != null && ingestionDose < lightMin) {
-            return 0
-        } else if (lightMin != null && commonMin != null && lightMin <= ingestionDose && ingestionDose < commonMin) {
-            return 1
-        } else if (commonMin != null && strongMin != null && commonMin <= ingestionDose && ingestionDose < strongMin) {
-            return 2
-        } else if (strongMin != null && heavyMin != null && strongMin <= ingestionDose && ingestionDose < heavyMin) {
-            return 3
-        } else if (heavyMin != null) {
-            return if (heavyMin <= ingestionDose) {
-                val timesHeavy = floor(ingestionDose.div(heavyMin)).roundToInt()
-                val rest = ingestionDose.rem(heavyMin)
-                return (timesHeavy * 4) + getNumDotsUpTo4(dose = rest)
-            } else {
-                floor(ingestionDose / heavyMin).roundToInt()
+        val normalizedDose = normalizeDose(ingestionDose, ingestionUnits) ?: return null
+        return when {
+            heavyMin != null && normalizedDose >= heavyMin -> {
+                if (heavyMin > 0.0) {
+                    val timesHeavy = floor(normalizedDose / heavyMin).roundToInt()
+                    val rest = normalizedDose.rem(heavyMin)
+                    (timesHeavy * 4) + getNumDotsUpTo4(dose = rest)
+                } else {
+                    4
+                }
             }
-        } else {
-            return null
+            strongMin != null && normalizedDose >= strongMin -> 3
+            commonMin != null && normalizedDose >= commonMin -> 2
+            lightMin != null && normalizedDose >= lightMin -> 1
+            hasAnyThreshold -> 0
+            else -> null
         }
     }
 
     private fun getNumDotsUpTo4(dose: Double): Int {
-        return if (lightMin != null && dose < lightMin) {
-            0
-        } else if (lightMin != null && commonMin != null && lightMin <= dose && dose < commonMin) {
-            1
-        } else if (commonMin != null && strongMin != null && commonMin <= dose && dose < strongMin) {
-            2
-        } else if (strongMin != null && heavyMin != null && strongMin <= dose && dose < heavyMin) {
-            3
-        } else if (heavyMin != null) {
-            floor(dose / heavyMin).roundToInt()
-        } else {
-            0
+        return when {
+            heavyMin != null && dose >= heavyMin ->
+                if (heavyMin > 0.0) floor(dose / heavyMin).roundToInt().coerceAtMost(4) else 4
+            strongMin != null && dose >= strongMin -> 3
+            commonMin != null && dose >= commonMin -> 2
+            lightMin != null && dose >= lightMin -> 1
+            else -> 0
+        }
+    }
+
+    private val hasAnyThreshold: Boolean
+        get() = lightMin != null || commonMin != null || strongMin != null || heavyMin != null
+
+    private fun normalizeDose(ingestionDose: Double?, ingestionUnits: String?): Double? {
+        if (ingestionDose == null || !ingestionDose.isFinite() || ingestionDose < 0.0) return null
+        val targetUnits = units.trim()
+        val sourceUnits = ingestionUnits?.trim() ?: return null
+        if (sourceUnits == targetUnits) return ingestionDose
+        val sourceMg = toMilligramsOrNull(ingestionDose, sourceUnits) ?: return null
+        return fromMilligramsOrNull(sourceMg, targetUnits)
+    }
+
+    private fun toMilligramsOrNull(value: Double, unit: String): Double? {
+        return when (unit) {
+            "µg", "\u03bcg", "ug", "mcg" -> value / 1000.0
+            "mg" -> value
+            "g" -> value * 1000.0
+            else -> null
+        }
+    }
+
+    private fun fromMilligramsOrNull(mgValue: Double, targetUnit: String): Double? {
+        return when (targetUnit) {
+            "µg", "\u03bcg", "ug", "mcg" -> mgValue * 1000.0
+            "mg" -> mgValue
+            "g" -> mgValue / 1000.0
+            else -> null
         }
     }
 

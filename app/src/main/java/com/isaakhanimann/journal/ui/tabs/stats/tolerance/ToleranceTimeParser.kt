@@ -57,15 +57,17 @@ object ToleranceTimeParser {
             }
         }
 
-        // 2. 查基准对照表
+        // 2. 查基准对照表（先精确匹配，再规范化英文学名做无视大小写与空白的精确匹配，严禁子串误命中如 4-AcO-DMT -> DMT）
         standardToleranceHours[substanceName]?.first?.let { return it }
 
-        // 3. 针对常见中文别名做二次匹配
-        for ((key, pair) in standardToleranceHours) {
-            if (substanceName.contains(key, ignoreCase = true) && pair.first != null) {
-                return pair.first
-            }
-        }
+        val trimmedInput = substanceName.trim()
+        val canonical = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
+            .getCanonicalEnglishName(trimmedInput)
+            ?.trim()
+            ?: trimmedInput
+        standardToleranceHours.entries.firstOrNull { (key, pair) ->
+            pair.first != null && (key.equals(canonical, ignoreCase = true) || key.equals(trimmedInput, ignoreCase = true))
+        }?.value?.first?.let { return it }
 
         return null
     }
@@ -82,15 +84,17 @@ object ToleranceTimeParser {
             }
         }
 
-        // 2. 查基准对照表
+        // 2. 查基准对照表（先精确匹配，再规范化英文学名做无视大小写与空白的精确匹配，严禁子串误命中）
         standardToleranceHours[substanceName]?.second?.let { return it }
 
-        // 3. 针对常见中文别名做二次匹配
-        for ((key, pair) in standardToleranceHours) {
-            if (substanceName.contains(key, ignoreCase = true) && pair.second != null) {
-                return pair.second
-            }
-        }
+        val trimmedInput = substanceName.trim()
+        val canonical = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
+            .getCanonicalEnglishName(trimmedInput)
+            ?.trim()
+            ?: trimmedInput
+        standardToleranceHours.entries.firstOrNull { (key, _) ->
+            key.equals(canonical, ignoreCase = true) || key.equals(trimmedInput, ignoreCase = true)
+        }?.value?.second?.let { return it }
 
         return null
     }
@@ -117,7 +121,10 @@ object ToleranceTimeParser {
      */
     fun parseTimeToHours(text: String?): Double? {
         if (text.isNullOrBlank()) return null
-        val lower = text.lowercase().trim()
+        val lower = DECIMAL_COMMA_REGEX.replace(
+            text.lowercase(java.util.Locale.ROOT).trim(),
+            "$1.$2"
+        )
 
         // 排除非时间性质描述（如 "with prolonged use", "unknown"）
         if (lower.contains("prolonged") || lower.contains("unknown") || lower.contains("长期") || lower.contains("未知")) {
@@ -139,9 +146,13 @@ object ToleranceTimeParser {
             lower.contains("month") || lower.contains("月") -> value * 30.0 * 24.0
             lower.contains("week") || lower.contains("周") || lower.contains("星期") -> value * 7.0 * 24.0
             lower.contains("day") || lower.contains("天") || lower.contains("日") -> value * 24.0
-            lower.contains("hour") || lower.contains("小时") || lower.contains("hr") || lower.contains("h") -> value
-            lower.contains("minute") || lower.contains("分") || lower.contains("min") -> value / 60.0
+            lower.contains("minute") || lower.contains("分钟") || lower.contains("分") || MINUTE_UNIT_REGEX.containsMatchIn(lower) -> value / 60.0
+            lower.contains("hour") || lower.contains("小时") || HOUR_UNIT_REGEX.containsMatchIn(lower) -> value
             else -> null
         }
     }
+
+    private val DECIMAL_COMMA_REGEX = Regex("(\\d+),(\\d{1,2})(?!\\d)")
+    private val MINUTE_UNIT_REGEX = Regex("(?<![a-z])(?:minutes?|mins?)(?![a-z])")
+    private val HOUR_UNIT_REGEX = Regex("(?<![a-z])(?:hours?|hrs?|h)(?![a-z])")
 }

@@ -65,7 +65,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
@@ -156,7 +155,7 @@ fun AddIngestionSearchScreen(
         Column(modifier = Modifier.padding(padding)) {
             LinearProgressIndicator(
                 progress = { 0.17f },
-                modifier = Modifier.fillMaxWidth().clearAndSetSemantics {  },
+                modifier = Modifier.fillMaxWidth(),
             )
             TextField(
                 value = searchText,
@@ -168,7 +167,7 @@ fun AddIngestionSearchScreen(
                     .focusRequester(focusRequester)
                     .onFocusChanged { focusState ->
                         isFocused = focusState.isFocused
-                    }.clearAndSetSemantics {  },
+                    },
                 placeholder = { Text(text = stringResource(R.string.journal_search_substances)) },
                 leadingIcon = {
                     IconButton(onClick = navigateBack) {
@@ -206,7 +205,16 @@ fun AddIngestionSearchScreen(
                         SectionHeader(title = stringResource(R.string.journal_section_quick_logging))
                     }
                 }
-                itemsIndexed(suggestions) { index, suggestion ->
+                itemsIndexed(
+                    items = suggestions,
+                    key = { _, suggestion ->
+                        when (suggestion) {
+                            is Suggestion.PureSubstanceSuggestion -> "sug_pure_${suggestion.substanceName}_${suggestion.administrationRoute.name}"
+                            is Suggestion.CustomUnitSuggestion -> "sug_cu_${suggestion.customUnit.id}"
+                            is Suggestion.CustomSubstanceSuggestion -> "sug_cs_${suggestion.customSubstance.id}_${suggestion.administrationRoute.name}"
+                        }
+                    }
+                ) { index, suggestion ->
                     SuggestionRow(
                         suggestion = suggestion,
                         navigateToDose = navigateToDose,
@@ -223,7 +231,10 @@ fun AddIngestionSearchScreen(
                         SectionHeader(title = stringResource(R.string.journal_section_custom_substances))
                     }
                 }
-                itemsIndexed(filteredCustomSubstances) { index, customSubstance ->
+                itemsIndexed(
+                    items = filteredCustomSubstances,
+                    key = { _, customSubstance -> "cs_${customSubstance.id}" }
+                ) { index, customSubstance ->
                     SubstanceRowAddIngestion(substanceModel = SubstanceModel(
                         name = customSubstance.name,
                         commonNames = emptyList(),
@@ -242,7 +253,10 @@ fun AddIngestionSearchScreen(
                         SectionHeader(title = stringResource(R.string.journal_section_custom_units))
                     }
                 }
-                itemsIndexed(filteredCustomUnits) { index, customUnit ->
+                itemsIndexed(
+                    items = filteredCustomUnits,
+                    key = { _, customUnit -> "cu_${customUnit.id}" }
+                ) { index, customUnit ->
                     CustomUnitRowAddIngestion(
                         customUnit = customUnit,
                         navigateToCustomUnitChooseDose = navigateToCustomUnitChooseDose)
@@ -255,7 +269,10 @@ fun AddIngestionSearchScreen(
                         SectionHeader(title = stringResource(R.string.journal_section_substances))
                     }
                 }
-                items(filteredSubstances) { substance ->
+                items(
+                    items = filteredSubstances,
+                    key = { substance -> "sub_${substance.name}" }
+                ) { substance ->
                     SubstanceRowAddIngestion(substanceModel = substance, onTap = {
                         if (substance.hasSaferUse) {
                             navigateToCheckSaferUse(substance.name)

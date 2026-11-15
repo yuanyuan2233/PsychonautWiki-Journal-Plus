@@ -95,18 +95,21 @@ class AddTimedNoteViewModel @Inject constructor(
         color = AppColor(newColor)
     }
 
-    fun onDoneTap() {
-        if (note.isNotBlank()) {
-            viewModelScope.launch {
+    fun onDoneTap(onDone: () -> Unit = {}) {
+        viewModelScope.launch {
+            if (note.isNotBlank()) {
                 val newTimedNote = TimedNote(
                     time = localDateTimeFlow.firstOrNull()?.getInstant() ?: Instant.now(),
                     creationDate = Instant.now(),
-                    note = note,
+                    note = note.trim(),
                     color = color,
                     experienceId = experienceId,
                     isPartOfTimeline = isPartOfTimeline
                 )
                 experienceRepo.insert(newTimedNote)
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
             }
         }
     }

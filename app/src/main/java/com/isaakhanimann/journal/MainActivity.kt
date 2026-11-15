@@ -32,7 +32,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,16 +77,25 @@ class MainActivity : ComponentActivity() {
     lateinit var routineSchedulerManager: RoutineSchedulerManager
 
     private var routineDeepLinkState by mutableStateOf<RoutineDeepLinkRequest?>(null)
+    private var isLanguageLoaded = false
+    private var currentAppLanguage by mutableStateOf(AppLanguage.FOLLOW_SYSTEM)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
+        splashScreen.setKeepOnScreenCondition { !isLanguageLoaded }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lifecycleScope.launch {
+            userPreferences.appLanguageFlow.collect { lang ->
+                currentAppLanguage = lang
+                isLanguageLoaded = true
+            }
+        }
         if (savedInstanceState == null) {
             routineDeepLinkState = extractRoutineDeepLink(intent)
         }
         setContent {
-            val appLanguage by userPreferences.appLanguageFlow.collectAsState(initial = AppLanguage.FOLLOW_SYSTEM)
+            val appLanguage = currentAppLanguage
             val currentContext = LocalContext.current
 
             val targetLocale = remember(appLanguage) {
@@ -96,17 +105,20 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            Locale.setDefault(targetLocale)
+            LaunchedEffect(targetLocale) {
+                Locale.setDefault(targetLocale)
+            }
 
             val localizedConfiguration = remember(targetLocale, currentContext) {
-                val config = Configuration(currentContext.resources.configuration)
-                config.setLocale(targetLocale)
-                config
+                Configuration(currentContext.resources.configuration).apply {
+                    setLocale(targetLocale)
+                }
             }
 
             val wrappedLocalizedContext = remember(localizedConfiguration, currentContext) {
-                val configContext = currentContext.createConfigurationContext(localizedConfiguration)
-                LocalizedActivityContext(base = currentContext, localizedContext = configContext)
+                val baseContext = (currentContext as? LocalizedActivityContext)?.baseContext ?: currentContext
+                val configContext = baseContext.createConfigurationContext(localizedConfiguration)
+                LocalizedActivityContext(base = baseContext, localizedContext = configContext)
             }
 
             CompositionLocalProvider(

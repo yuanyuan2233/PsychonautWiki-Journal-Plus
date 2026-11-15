@@ -55,6 +55,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.relations.ExperienceWithIngestionsCompanionsAndRatings
+import com.isaakhanimann.journal.data.room.experiences.entities.AppColor
 import com.isaakhanimann.journal.data.room.experiences.relations.IngestionWithCompanionAndCustomUnit
 import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineUiHelpers
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
@@ -256,7 +257,9 @@ fun ColorRectangle(ingestions: List<IngestionWithCompanionAndCustomUnit>) {
     if (ingestions.size >= 2) {
         val brush = remember(ingestions) {
             val colors =
-                ingestions.map { it.substanceCompanion!!.color.getComposeColor(isDarkTheme) }
+                ingestions.map {
+                    (it.substanceCompanion?.color ?: AppColor.RED).getComposeColor(isDarkTheme)
+                }
             Brush.verticalGradient(colors = colors)
         }
         Box(
@@ -273,7 +276,7 @@ fun ColorRectangle(ingestions: List<IngestionWithCompanionAndCustomUnit>) {
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(cornerRadius))
                 .background(
-                    ingestions.first().substanceCompanion!!.color.getComposeColor(
+                    (ingestions.first().substanceCompanion?.color ?: AppColor.RED).getComposeColor(
                         isDarkTheme
                     )
                 ),

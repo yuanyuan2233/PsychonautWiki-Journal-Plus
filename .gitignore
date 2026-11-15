@@ -22,3 +22,11 @@ __pycache__/
 
 # Kotlin compiler daemon logs
 .kotlin/
+
+# Signing keys and credentials
+*.keystore
+*.jks
+*.p12
+*.pem
+keystore.properties
+signing.properties

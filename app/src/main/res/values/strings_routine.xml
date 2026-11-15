@@ -108,6 +108,10 @@
     <string name="routine_validation_need_weekdays">Select at least one weekday</string>
     <string name="routine_validation_need_slot">Add at least one time slot</string>
     <string name="routine_validation_bad_interval">Interval must be greater than 0</string>
+    <string name="routine_validation_bad_number">Dose and half-life must be greater than 0 (std. dev. non-negative)</string>
+    <string name="routine_validation_bad_date_range">End date cannot be earlier than start date</string>
+    <string name="routine_catch_up_chip_days">%1$dd</string>
+    <string name="routine_perm_open_settings_failed">Unable to open exact alarm settings on this device</string>
     <string name="routine_search_substance_placeholder">Search built-in or custom substances...</string>
     <string name="routine_summary_daily">%1$d slot(s) daily</string>
     <string name="routine_summary_weekly">Weekly · %1$s</string>

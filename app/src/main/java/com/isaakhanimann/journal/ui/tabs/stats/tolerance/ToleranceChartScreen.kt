@@ -39,7 +39,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import java.time.Instant
 import java.time.ZoneId
@@ -63,7 +63,7 @@ fun ToleranceChartScreen(
     navigateBack: () -> Unit,
     viewModel: ToleranceViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showExplanationDialog by remember { mutableStateOf(false) }
     var showAddSimulationDialog by remember { mutableStateOf(false) }
     var selectedSubstanceForCustomization by remember { mutableStateOf<String?>(null) }
@@ -273,8 +273,16 @@ fun ToleranceChartScreen(
                                             Spacer(modifier = Modifier.height(2.dp))
                                             val isZh = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.isChinese()
                                             val zoneId = remember { ZoneId.systemDefault() }
-                                            val dateFormatter = remember(isZh) {
-                                                DateTimeFormatter.ofPattern(if (isZh) "M月d日" else "MMM d", if (isZh) java.util.Locale.CHINA else java.util.Locale.US).withZone(zoneId)
+                                            val dateFormatter = remember(isZh, zoneId, maxEndInstant) {
+                                                val nowYear = Instant.now().atZone(zoneId).year
+                                                val endYear = maxEndInstant.atZone(zoneId).year
+                                                val pattern = when {
+                                                    isZh && endYear != nowYear -> "yyyy年M月d日"
+                                                    isZh -> "M月d日"
+                                                    endYear != nowYear -> "MMM d, yyyy"
+                                                    else -> "MMM d"
+                                                }
+                                                DateTimeFormatter.ofPattern(pattern, if (isZh) java.util.Locale.CHINA else java.util.Locale.US).withZone(zoneId)
                                             }
                                             val formattedDate = dateFormatter.format(maxEndInstant)
                                             val now = Instant.now()

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="audit_journal_cannot_open_link">Unable to open link</string>
+</resources>

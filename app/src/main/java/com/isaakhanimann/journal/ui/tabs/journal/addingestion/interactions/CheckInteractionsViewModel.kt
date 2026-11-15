@@ -93,11 +93,17 @@ class CheckInteractionsViewModel @Inject constructor(
         val enabledExtraInteractions =
             combinationSettingsStorage.enabledInteractionsFlow.first()
         val dangerousExtras =
-            enabledExtraInteractions.filter { substance.interactions?.dangerous?.contains(it) == true }
+            enabledExtraInteractions.filter {
+                interactionChecker.matchesExtraInteraction(substance.interactions?.dangerous, it)
+            }
         val unsafeExtras =
-            enabledExtraInteractions.filter { substance.interactions?.unsafe?.contains(it) == true }
+            enabledExtraInteractions.filter {
+                interactionChecker.matchesExtraInteraction(substance.interactions?.unsafe, it)
+            }
         val uncertainExtras =
-            enabledExtraInteractions.filter { substance.interactions?.uncertain?.contains(it) == true }
+            enabledExtraInteractions.filter {
+                interactionChecker.matchesExtraInteraction(substance.interactions?.uncertain, it)
+            }
         alertInteractionType =
             if (dangerousIngestions.isNotEmpty() || dangerousExtras.isNotEmpty()) {
                 InteractionType.DANGEROUS

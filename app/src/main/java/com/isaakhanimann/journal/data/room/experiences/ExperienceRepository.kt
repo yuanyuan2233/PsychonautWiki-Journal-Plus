@@ -64,10 +64,6 @@ class ExperienceRepository @Inject constructor(private val experienceDao: Experi
         substanceCompanion
     )
 
-    suspend fun insertEverything(
-        journalExport: JournalExport
-    ) = experienceDao.insertEverything(journalExport)
-
     suspend fun replaceEverything(
         journalExport: JournalExport
     ) = experienceDao.replaceEverything(journalExport)
@@ -83,22 +79,17 @@ class ExperienceRepository @Inject constructor(private val experienceDao: Experi
     suspend fun deleteEverything() = experienceDao.deleteEverything()
 
     suspend fun delete(ingestion: Ingestion) = experienceDao.delete(ingestion)
-    suspend fun delete(customUnit: CustomUnit) = experienceDao.delete(customUnit)
+    suspend fun delete(customUnit: CustomUnit) =
+        experienceDao.deleteCustomUnitAndFlattenIngestions(customUnit)
 
     suspend fun deleteEverythingOfExperience(experienceId: Int) =
         experienceDao.deleteEverythingOfExperience(experienceId)
-
-    suspend fun delete(experience: Experience) =
-        experienceDao.delete(experience)
 
     suspend fun delete(rating: ShulginRating) =
         experienceDao.delete(rating)
 
     suspend fun delete(timedNote: TimedNote) =
         experienceDao.delete(timedNote)
-
-    suspend fun delete(experienceWithIngestions: ExperienceWithIngestions) =
-        experienceDao.deleteExperienceWithIngestions(experienceWithIngestions)
 
     suspend fun deleteUnusedSubstanceCompanions() =
         experienceDao.deleteUnusedSubstanceCompanions()
@@ -221,6 +212,9 @@ class ExperienceRepository @Inject constructor(private val experienceDao: Experi
 
     suspend fun update(customSubstance: CustomSubstance) =
         experienceDao.update(customSubstance)
+
+    suspend fun renameCustomSubstanceAndReferences(customSubstance: CustomSubstance, oldName: String) =
+        experienceDao.renameCustomSubstanceAndReferences(customSubstance, oldName)
 
     fun getSortedIngestionsWithSubstanceCompanionsFlow(limit: Int) =
         experienceDao.getSortedIngestionsWithSubstanceCompanionsFlow(limit)

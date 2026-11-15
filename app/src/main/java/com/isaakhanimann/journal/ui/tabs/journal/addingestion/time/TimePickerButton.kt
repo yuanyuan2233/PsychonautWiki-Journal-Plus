@@ -34,7 +34,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import com.isaakhanimann.journal.R
 import java.time.LocalDateTime
 
@@ -64,7 +63,7 @@ fun TimePickerButton(
         }, localDateTime.hour, localDateTime.minute, DateFormat.is24HourFormat(context)
     )
     if (hasOutline) {
-        OutlinedButton(onClick = timePickerDialog::show, modifier = modifier.clearAndSetSemantics {  }) {
+        OutlinedButton(onClick = timePickerDialog::show, modifier = modifier) {
             Icon(
                 Icons.Outlined.Schedule,
                 contentDescription = stringResource(R.string.journal_action_open_time_picker)
@@ -73,7 +72,7 @@ fun TimePickerButton(
             Text(timeString)
         }
     } else {
-        TextButton(onClick = timePickerDialog::show, modifier = modifier.clearAndSetSemantics {  }) {
+        TextButton(onClick = timePickerDialog::show, modifier = modifier) {
             Icon(
                 Icons.Outlined.Schedule,
                 contentDescription = stringResource(R.string.journal_action_open_time_picker)

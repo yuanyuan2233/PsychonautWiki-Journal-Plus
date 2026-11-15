@@ -288,13 +288,26 @@ class EditRoutineScheduleViewModel @Inject constructor(
         return results
     }
 
+    private var isSaving = false
+
     fun saveSchedule(onSaved: () -> Unit) {
+        if (isSaving) return
         val schedule = buildScheduleOrNull(previewOnly = false) ?: return
+        isSaving = true
         viewModelScope.launch {
-            schedulerManager.saveScheduleAndReschedule(schedule)
-            onSaved()
+            try {
+                schedulerManager.saveScheduleAndReschedule(schedule)
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    onSaved()
+                }
+            } finally {
+                isSaving = false
+            }
         }
     }
+
+    private fun parseLocaleDecimal(raw: String): Double? =
+        raw.replace(',', '.').trim().toDoubleOrNull()
 
     private fun buildScheduleOrNull(previewOnly: Boolean): MedicationSchedule? {
         if (substanceName.isBlank()) {
@@ -324,6 +337,60 @@ class EditRoutineScheduleViewModel @Inject constructor(
             return null
         }
 
+        val startDay = startEpochDay
+        val endDay = endEpochDay
+        if (startDay != null && endDay != null && startDay > endDay) {
+            if (!previewOnly) validationErrorRes = R.string.routine_validation_bad_date_range
+            return null
+        }
+
+        val parsedHalfLife = if (customHalfLifeText.isBlank()) {
+            null
+        } else {
+            val h = parseLocaleDecimal(customHalfLifeText)
+            if (h == null || !h.isFinite() || h <= 0.0) {
+                if (!previewOnly) validationErrorRes = R.string.routine_validation_bad_number
+                return null
+            }
+            h
+        }
+
+        val slotModels = ArrayList<ScheduleTimeSlot>(slots.size)
+        for (slot in slots) {
+            val parsedDose = if (slot.doseText.isBlank()) {
+                null
+            } else {
+                val d = parseLocaleDecimal(slot.doseText)
+                if (d == null || !d.isFinite() || d <= 0.0) {
+                    if (!previewOnly) validationErrorRes = R.string.routine_validation_bad_number
+                    return null
+                }
+                d
+            }
+            val parsedSd = if (slot.sdText.isBlank() || !slot.isEstimate) {
+                null
+            } else {
+                val s = parseLocaleDecimal(slot.sdText)
+                if (s == null || !s.isFinite() || s < 0.0) {
+                    if (!previewOnly) validationErrorRes = R.string.routine_validation_bad_number
+                    return null
+                }
+                s
+            }
+            slotModels.add(
+                ScheduleTimeSlot(
+                    id = slot.id,
+                    hour = slot.hour.coerceIn(0, 23),
+                    minute = slot.minute.coerceIn(0, 59),
+                    dose = parsedDose,
+                    units = slot.unitsText.trim().takeIf { it.isNotBlank() },
+                    isDoseAnEstimate = slot.isEstimate,
+                    estimatedDoseStandardDeviation = parsedSd,
+                    notes = slot.noteText.trim().takeIf { it.isNotBlank() }
+                )
+            )
+        }
+
         val now = Instant.now()
         val zoneId = ZoneId.systemDefault()
         val anchorEpochMillis = ZonedDateTime.of(
@@ -332,20 +399,7 @@ class EditRoutineScheduleViewModel @Inject constructor(
             zoneId
         ).toInstant().toEpochMilli()
 
-        val encodedSlots = ScheduleSlotCodec.encodeSlots(
-            slots.map { slot ->
-                ScheduleTimeSlot(
-                    id = slot.id,
-                    hour = slot.hour.coerceIn(0, 23),
-                    minute = slot.minute.coerceIn(0, 59),
-                    dose = slot.doseText.toDoubleOrNull(),
-                    units = slot.unitsText.takeIf { it.isNotBlank() },
-                    isDoseAnEstimate = slot.isEstimate,
-                    estimatedDoseStandardDeviation = slot.sdText.toDoubleOrNull(),
-                    notes = slot.noteText.takeIf { it.isNotBlank() }
-                )
-            }
-        )
+        val encodedSlots = ScheduleSlotCodec.encodeSlots(slotModels)
 
         if (!previewOnly) validationErrorRes = null
         return MedicationSchedule(
@@ -367,7 +421,7 @@ class EditRoutineScheduleViewModel @Inject constructor(
             startEpochDay = startEpochDay,
             endEpochDay = endEpochDay,
             maxOccurrences = maxOccurrencesText.toIntOrNull()?.takeIf { it > 0 },
-            customHalfLifeHours = customHalfLifeText.toDoubleOrNull()?.takeIf { it > 0.0 },
+            customHalfLifeHours = parsedHalfLife,
             note = scheduleNoteText.trim().takeIf { it.isNotBlank() },
             createdAt = existingCreatedAt ?: now,
             updatedAt = now

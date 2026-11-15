@@ -19,12 +19,21 @@
 package com.isaakhanimann.journal.data.substances.repositories
 
 import android.content.Context
+import android.util.Log
 import com.isaakhanimann.journal.data.substances.classes.Category
 import com.isaakhanimann.journal.data.substances.classes.Substance
 import com.isaakhanimann.journal.data.substances.classes.SubstanceFile
 import com.isaakhanimann.journal.data.substances.classes.SubstanceWithCategories
 import com.isaakhanimann.journal.data.substances.parse.SubstanceParserInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,50 +43,114 @@ class SubstanceRepository @Inject constructor(
     substanceParser: SubstanceParserInterface,
 ) : SubstanceRepositoryInterface {
 
-    private var substanceFile: SubstanceFile
+    private val loadScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val substanceFileDeferred = CompletableDeferred<SubstanceFile>()
+
+    @Volatile
+    private var cachedSubstanceFile: SubstanceFile? = null
 
     init {
-        val fileContent = getAssetsSubstanceFileContent()
-        substanceFile = substanceParser.parseSubstanceFile(string = fileContent)
+        loadScope.launch {
+            try {
+                val fileContent = getAssetsSubstanceFileContent()
+                val parsed = substanceParser.parseSubstanceFile(string = fileContent)
+                substanceFileDeferred.complete(parsed)
+            } catch (e: CancellationException) {
+                substanceFileDeferred.cancel(e)
+                throw e
+            } catch (e: Exception) {
+                logError("Failed to load Substances.json from assets", e)
+                substanceFileDeferred.complete(
+                    SubstanceFile(
+                        categories = emptyList(),
+                        substances = emptyList()
+                    )
+                )
+            }
+        }
     }
 
     private fun getAssetsSubstanceFileContent(): String {
         return appContext.assets.open("Substances.json").bufferedReader().use { it.readText() }
     }
 
+    private fun getSubstanceFile(): SubstanceFile {
+        cachedSubstanceFile?.let { return it }
+        return runBlocking {
+            substanceFileDeferred.await()
+        }.also {
+            cachedSubstanceFile = it
+        }
+    }
+
     override fun getAllSubstances(): List<Substance> {
-        return substanceFile.substances
+        return getSubstanceFile().substances
     }
 
     override fun getAllSubstancesWithCategories(): List<SubstanceWithCategories> {
-        return substanceFile.substances.map { substance ->
+        val file = getSubstanceFile()
+        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
+        return file.substances.map { substance ->
+            val matchedCategories = substance.categories.mapNotNull { catName ->
+                categoriesByKey[normalizeCategoryKey(catName)]
+            }.distinctBy { it.name }
             SubstanceWithCategories(
                 substance = substance,
-                categories = substanceFile.categories.filter { category ->
-                    substance.categories.contains(category.name)
-                }
+                categories = matchedCategories
             )
         }
     }
 
     override fun getAllCategories(): List<Category> {
-        return substanceFile.categories
+        return getSubstanceFile().categories
     }
 
     override fun getSubstance(substanceName: String): Substance? {
-        return substanceFile.substancesMap.getOrDefault(key = substanceName, defaultValue = null)
+        val file = getSubstanceFile()
+        return findSubstance(file, substanceName)
     }
 
     override fun getCategory(categoryName: String): Category? {
-        return substanceFile.categories.firstOrNull { it.name == categoryName }
+        val normalized = normalizeCategoryKey(categoryName)
+        return getSubstanceFile().categories.firstOrNull {
+            normalizeCategoryKey(it.name) == normalized
+        }
     }
 
     override fun getSubstanceWithCategories(substanceName: String): SubstanceWithCategories? {
-        val substance =
-            substanceFile.substances.firstOrNull { it.name == substanceName } ?: return null
+        val file = getSubstanceFile()
+        val substance = findSubstance(file, substanceName) ?: return null
+        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
+        val matchedCategories = substance.categories.mapNotNull { catName ->
+            categoriesByKey[normalizeCategoryKey(catName)]
+        }.distinctBy { it.name }
         return SubstanceWithCategories(
             substance = substance,
-            categories = substanceFile.categories.filter { substance.categories.contains(it.name) }
+            categories = matchedCategories
         )
+    }
+
+    private fun findSubstance(file: SubstanceFile, rawName: String): Substance? {
+        file.substancesMap[rawName]?.let { return it }
+        val trimmed = rawName.trim()
+        if (trimmed.isEmpty()) return null
+        file.substancesMap[trimmed]?.let { return it }
+        return file.substances.firstOrNull { it.name.equals(trimmed, ignoreCase = true) }
+    }
+
+    private fun normalizeCategoryKey(name: String): String {
+        return name.trim().lowercase(Locale.ROOT).replace('-', ' ')
+    }
+
+    private fun logError(message: String, throwable: Throwable) {
+        try {
+            Log.e(TAG, message, throwable)
+        } catch (_: RuntimeException) {
+            System.err.println("$TAG: $message (${throwable.message})")
+        }
+    }
+
+    private companion object {
+        const val TAG = "SubstanceRepository"
     }
 }

@@ -18,6 +18,7 @@
 
 package com.isaakhanimann.journal.ui.tabs.settings
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -68,7 +69,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,10 +80,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.ui.VERSION_NAME
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CardWithTitle
@@ -125,6 +128,16 @@ fun SettingsScreen(
     navigateToDonate: () -> Unit,
     navigateToRoutineSchedules: () -> Unit = {},
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(viewModel, context) {
+        viewModel.snackbarEvents.collect { event ->
+            viewModel.snackbarHostState.currentSnackbarData?.dismiss()
+            viewModel.snackbarHostState.showSnackbar(
+                message = context.getString(event.messageRes),
+                duration = event.duration
+            )
+        }
+    }
     SettingsScreen(
         navigateToFAQ = navigateToFAQ,
         navigateToComboSettings = navigateToComboSettings,
@@ -136,13 +149,13 @@ fun SettingsScreen(
         importFile = viewModel::importFile,
         exportFile = viewModel::exportFile,
         snackbarHostState = viewModel.snackbarHostState,
-        areDosageDotsHidden = viewModel.areDosageDotsHiddenFlow.collectAsState().value,
+        areDosageDotsHidden = viewModel.areDosageDotsHiddenFlow.collectAsStateWithLifecycle().value,
         saveDosageDotsAreHidden = viewModel::saveDosageDotsAreHidden,
-        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsState().value,
+        isTimelineHidden = viewModel.isTimelineHiddenFlow.collectAsStateWithLifecycle().value,
         saveIsTimelineHidden = viewModel::saveIsTimelineHidden,
-        areSubstanceHeightsIndependent = viewModel.areSubstanceHeightsIndependentFlow.collectAsState().value,
+        areSubstanceHeightsIndependent = viewModel.areSubstanceHeightsIndependentFlow.collectAsStateWithLifecycle().value,
         saveAreSubstanceHeightsIndependent = viewModel::saveAreSubstanceHeightsIndependent,
-        appLanguage = viewModel.appLanguageFlow.collectAsState().value,
+        appLanguage = viewModel.appLanguageFlow.collectAsStateWithLifecycle().value,
         saveAppLanguage = viewModel::saveAppLanguage,
     )
 }
@@ -178,6 +191,16 @@ fun SettingsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val showSnackbarMessage: (Int) -> Unit = { messageRes ->
+            scope.launch {
+                snackbarHostState.currentSnackbarData?.dismiss()
+                snackbarHostState.showSnackbar(
+                    message = context.getString(messageRes),
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -362,11 +385,15 @@ fun SettingsScreen(
                             TextButton(
                                 onClick = {
                                     isShowingExportDialog = false
-                                    launcherExport.launch(
-                                        "Journal ${
-                                            Instant.now().getStringOfPattern("dd MMM yyyy")
-                                        }.json"
-                                    )
+                                    try {
+                                        launcherExport.launch(
+                                            "Journal ${
+                                                Instant.now().getStringOfPattern("dd MMM yyyy")
+                                            }.json"
+                                        )
+                                    } catch (_: ActivityNotFoundException) {
+                                        showSnackbarMessage(R.string.settings_no_file_picker)
+                                    }
                                 }
                             ) {
                                 Text(stringResource(R.string.settings_export_btn))
@@ -387,7 +414,7 @@ fun SettingsScreen(
                     isShowingImportDialog = true
                 }
                 val launcherImport =
-                    rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri ->
+                    rememberLauncherForActivityResult(contract = ActivityResultContracts.OpenDocument()) { uri ->
                         if (uri != null) {
                             importFile(uri)
                         }
@@ -405,7 +432,18 @@ fun SettingsScreen(
                             TextButton(
                                 onClick = {
                                     isShowingImportDialog = false
-                                    launcherImport.launch(jsonMIMEType)
+                                    try {
+                                        launcherImport.launch(
+                                            arrayOf(
+                                                "application/json",
+                                                "text/plain",
+                                                "application/octet-stream",
+                                                "*/*"
+                                            )
+                                        )
+                                    } catch (_: ActivityNotFoundException) {
+                                        showSnackbarMessage(R.string.settings_no_file_picker)
+                                    }
                                 }
                             ) {
                                 Text(stringResource(R.string.settings_import_btn))
@@ -428,7 +466,6 @@ fun SettingsScreen(
                 ) {
                     isShowingDeleteDialog = true
                 }
-                val scope = rememberCoroutineScope()
                 AnimatedVisibility(visible = isShowingDeleteDialog) {
                     AlertDialog(
                         onDismissRequest = { isShowingDeleteDialog = false },
@@ -443,12 +480,6 @@ fun SettingsScreen(
                                 onClick = {
                                     isShowingDeleteDialog = false
                                     deleteEverything()
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            message = context.getString(R.string.settings_deleted_everything_snackbar),
-                                            duration = SnackbarDuration.Short
-                                        )
-                                    }
                                 }
                             ) {
                                 Text(stringResource(R.string.settings_delete_btn))
@@ -474,12 +505,20 @@ fun SettingsScreen(
                     imageVector = Icons.AutoMirrored.Outlined.ContactSupport,
                     text = stringResource(R.string.settings_question_bug_report)
                 ) {
-                    uriHandler.openUri("https://github.com/yuanyuan2233/psychonautwiki-journal-android/issues")
+                    openUriSafely(
+                        uriHandler = uriHandler,
+                        uri = "https://github.com/yuanyuan2233/psychonautwiki-journal-android/issues",
+                        onFailure = { showSnackbarMessage(R.string.settings_no_app_to_open_link) }
+                    )
                 }
             }
             CardWithTitle(title = stringResource(R.string.settings_section_app), innerPaddingHorizontal = 0.dp) {
                 SettingsButton(imageVector = Icons.Outlined.Code, text = stringResource(R.string.settings_source_code)) {
-                    uriHandler.openUri("https://github.com/yuanyuan2233/psychonautwiki-journal-android")
+                    openUriSafely(
+                        uriHandler = uriHandler,
+                        uri = "https://github.com/yuanyuan2233/psychonautwiki-journal-android",
+                        onFailure = { showSnackbarMessage(R.string.settings_no_app_to_open_link) }
+                    )
                 }
                 HorizontalDivider()
                 val sendIntent: Intent = Intent().apply {
@@ -489,7 +528,13 @@ fun SettingsScreen(
                 }
                 val shareIntent = Intent.createChooser(sendIntent, null)
                 SettingsButton(imageVector = Icons.Outlined.Share, text = stringResource(R.string.settings_share)) {
-                    context.startActivity(shareIntent)
+                    try {
+                        context.startActivity(shareIntent)
+                    } catch (_: ActivityNotFoundException) {
+                        showSnackbarMessage(R.string.settings_no_app_to_share)
+                    } catch (_: IllegalArgumentException) {
+                        showSnackbarMessage(R.string.settings_no_app_to_share)
+                    }
                 }
                 HorizontalDivider()
                 Text(
@@ -523,5 +568,23 @@ fun SettingsButton(imageVector: ImageVector, text: String, onClick: () -> Unit) 
         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
         Text(text)
         Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+private fun openUriSafely(
+    uriHandler: UriHandler,
+    uri: String,
+    onFailure: () -> Unit
+) {
+    if (uri.isBlank() || Uri.parse(uri).scheme.isNullOrBlank()) {
+        onFailure()
+        return
+    }
+    try {
+        uriHandler.openUri(uri)
+    } catch (_: ActivityNotFoundException) {
+        onFailure()
+    } catch (_: IllegalArgumentException) {
+        onFailure()
     }
 }

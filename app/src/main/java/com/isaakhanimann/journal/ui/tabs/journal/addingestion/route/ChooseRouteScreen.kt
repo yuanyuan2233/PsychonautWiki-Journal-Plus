@@ -50,7 +50,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
@@ -273,8 +275,9 @@ fun RouteBox(route: AdministrationRoute, titleStyle: TextStyle) {
 @Composable
 fun SaferInjectionLink() {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     TextButton(onClick = {
-        uriHandler.openUri(AdministrationRoute.SAFER_INJECTION_ARTICLE_URL)
+        openUriSafely(context, uriHandler, AdministrationRoute.SAFER_INJECTION_ARTICLE_URL)
     }) {
         Icon(
             Icons.Outlined.OpenInBrowser,

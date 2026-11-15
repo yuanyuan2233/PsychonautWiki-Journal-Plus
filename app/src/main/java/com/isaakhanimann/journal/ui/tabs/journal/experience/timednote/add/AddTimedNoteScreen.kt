@@ -47,8 +47,7 @@ fun AddTimedNoteScreen(
                 title = { Text(stringResource(R.string.journal_add_timed_note)) },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.onDoneTap()
-                        navigateBack()
+                        viewModel.onDoneTap(onDone = navigateBack)
                     }) {
                         Icon(
                             Icons.Filled.Done,

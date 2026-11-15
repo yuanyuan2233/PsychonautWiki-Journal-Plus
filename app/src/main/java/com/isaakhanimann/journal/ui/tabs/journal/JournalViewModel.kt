@@ -160,8 +160,10 @@ class JournalViewModel @Inject constructor(
                             other = searchText,
                             ignoreCase = true
                         ) || it.ingestionsWithCompanions.any { ingestionWithCompanion ->
-                            val isSubstanceAMatch =
-                                matchingSubstances.any { name -> name == ingestionWithCompanion.substanceCompanion?.substanceName }
+                            val isSubstanceAMatch = matchingSubstances.any { name ->
+                                name == ingestionWithCompanion.ingestion.substanceName ||
+                                    name == ingestionWithCompanion.substanceCompanion?.substanceName
+                            }
                             val isConsumerAMatch =
                                 ingestionWithCompanion.ingestion.consumerName?.contains(
                                     searchText,

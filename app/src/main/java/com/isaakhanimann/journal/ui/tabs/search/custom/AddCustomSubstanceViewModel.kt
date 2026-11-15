@@ -41,14 +41,22 @@ class AddCustomSubstanceViewModel @Inject constructor(
     val isValid get() = name.isNotBlank() && units.isNotBlank()
 
     fun addCustomSubstance(onDone: (customSubstanceName: String) -> Unit) {
+        val cleanName = name.trim()
+        val cleanUnits = units.trim()
+        if (cleanName.isBlank() || cleanUnits.isBlank()) return
         viewModelScope.launch {
-            val customSubstance = CustomSubstance(
-                name = name,
-                units = units,
-                description = description
-            )
-            experienceRepo.insert(customSubstance)
-            onDone(name)
+            val existing = experienceRepo.getCustomSubstance(cleanName)
+            if (existing == null) {
+                val customSubstance = CustomSubstance(
+                    name = cleanName,
+                    units = cleanUnits,
+                    description = description
+                )
+                experienceRepo.insert(customSubstance)
+            }
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone(existing?.name ?: cleanName)
+            }
         }
     }
 }

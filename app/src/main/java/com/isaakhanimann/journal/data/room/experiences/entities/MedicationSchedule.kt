@@ -1,11 +1,25 @@
 package com.isaakhanimann.journal.data.room.experiences.entities
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import java.time.Instant
 
-@Entity
+@Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = CustomUnit::class,
+            parentColumns = ["id"],
+            childColumns = ["customUnitId"],
+            onDelete = ForeignKey.SET_NULL
+        )
+    ],
+    indices = [
+        Index(value = ["customUnitId"])
+    ]
+)
 data class MedicationSchedule(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

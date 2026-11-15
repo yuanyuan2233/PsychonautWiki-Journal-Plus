@@ -43,7 +43,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -95,6 +97,7 @@ fun SaferUseScreen(
                 SaferText(text = stringResource(R.string.safer_section_research_text))
             }
             val uriHandler = LocalUriHandler.current
+            val context = LocalContext.current
             SectionWithTitle(title = stringResource(R.string.safer_section_testing_title)) {
                 SaferText(text = stringResource(R.string.safer_section_testing_text))
                 Button(
@@ -159,7 +162,7 @@ fun SaferUseScreen(
                 SaferText(text = stringResource(R.string.safer_section_combinations_text))
                 Button(
                     onClick = {
-                        uriHandler.openUri("https://combi-checker.ch")
+                        openUriSafely(context, uriHandler, "https://combi-checker.ch")
                     },
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {
@@ -173,7 +176,7 @@ fun SaferUseScreen(
                 }
                 Button(
                     onClick = {
-                        uriHandler.openUri("https://combo.tripsit.me")
+                        openUriSafely(context, uriHandler, "https://combo.tripsit.me")
                     },
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {
@@ -216,7 +219,7 @@ fun SaferUseScreen(
                 SaferText(text = stringResource(R.string.safer_section_recovery_text))
                 Button(
                     onClick = {
-                        uriHandler.openUri("https://www.youtube.com/watch?v=dv3agW-DZ5I")
+                        openUriSafely(context, uriHandler, "https://www.youtube.com/watch?v=dv3agW-DZ5I")
                     },
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {
@@ -238,7 +241,7 @@ fun SaferUseScreen(
             ) {
                 TextButton(
                     onClick = {
-                        uriHandler.openUri("https://psychonautwiki.org/wiki/Responsible_drug_use")
+                        openUriSafely(context, uriHandler, "https://psychonautwiki.org/wiki/Responsible_drug_use")
                     },
                     modifier = Modifier.padding(horizontal = horizontalPadding)
                 ) {

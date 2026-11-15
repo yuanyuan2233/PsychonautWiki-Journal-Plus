@@ -70,16 +70,14 @@ fun EditRatingScreen(
 ) {
     EditRatingScreen(
         onDone = {
-            viewModel.onDoneTap()
-            navigateBack()
+            viewModel.onDoneTap(onDone = navigateBack)
         },
         selectedTime = viewModel.localDateTimeFlow.collectAsState().value,
         onTimeChange = viewModel::onChangeTime,
         selectedRating = viewModel.selectedRatingOption,
         onRatingChange = viewModel::onChangeRating,
         onDelete = {
-            viewModel.delete()
-            navigateBack()
+            viewModel.delete(onDone = navigateBack)
         },
         isOverallRating = viewModel.isOverallRatingFlow.collectAsState().value
     )

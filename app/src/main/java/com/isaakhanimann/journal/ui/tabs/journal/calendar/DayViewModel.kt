@@ -35,7 +35,7 @@ class DayViewModel @Inject constructor(
 
     suspend fun getExperienceInfo(day: CalendarDay): ExperienceInfo {
         val startOfDay = day.date.atStartOfDay().getInstant()
-        val endOfDay = startOfDay.plusMillis(24 * 60 * 60 * 1000)
+        val endOfDay = day.date.plusDays(1).atStartOfDay().getInstant()
         val ingestions = experienceRepo.getIngestionsWithCompanions(
             fromInstant = startOfDay,
             toInstant = endOfDay

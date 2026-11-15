@@ -25,6 +25,8 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.TextMeasurer
@@ -83,7 +85,7 @@ fun ToleranceChart(
     val headerHeightDp = 36.dp
     val totalHeightDp = headerHeightDp + (rowHeightDp * substances.size)
 
-    val now = remember { Instant.now() }
+    val now = remember(toleranceWindows, timeRange) { Instant.now() }
     val rangeStart = remember(timeRange, now) {
         now.minus(timeRange.days, ChronoUnit.DAYS)
     }
@@ -96,8 +98,17 @@ fun ToleranceChart(
 
     val zoneId = remember { ZoneId.systemDefault() }
     val isZh = SubstanceLocalizationHelper.isChinese()
-    val dateFormatter = remember(isZh) {
-        val pattern = if (isZh) "M月d日" else "MMM d"
+    val spansMultipleYears = remember(rangeStart, rangeEnd, zoneId) {
+        rangeStart.atZone(zoneId).year != rangeEnd.atZone(zoneId).year
+    }
+    val beyondViewText = stringResource(R.string.tolerance_chart_beyond_view)
+    val dateFormatter = remember(isZh, zoneId, spansMultipleYears) {
+        val pattern = when {
+            isZh && spansMultipleYears -> "yy/M/d"
+            isZh -> "M月d日"
+            spansMultipleYears -> "yy/MM/dd"
+            else -> "MMM d"
+        }
         val locale = if (isZh) java.util.Locale.CHINA else java.util.Locale.US
         DateTimeFormatter.ofPattern(pattern, locale).withZone(zoneId)
     }
@@ -109,14 +120,21 @@ fun ToleranceChart(
     ) {
         val width = size.width
         val labelColumnWidth = 110.dp.toPx() // 左侧留出物质名宽度
-        val chartPlotWidth = width - labelColumnWidth - 16.dp.toPx()
+        val chartPlotWidth = (width - labelColumnWidth - 16.dp.toPx()).coerceAtLeast(1f)
+        val plotRight = labelColumnWidth + chartPlotWidth
         val headerHeight = headerHeightDp.toPx()
         val rowHeight = rowHeightDp.toPx()
 
+        fun instantToRawRatio(instant: Instant): Float {
+            return computeToleranceRawRatio(instant, rangeStart, totalSeconds)
+        }
+
+        fun ratioToX(ratio: Float): Float {
+            return labelColumnWidth + ratio.coerceIn(0f, 1f) * chartPlotWidth
+        }
+
         fun instantToX(instant: Instant): Float {
-            val secondsFromStart = ChronoUnit.SECONDS.between(rangeStart, instant)
-            val ratio = (secondsFromStart.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
-            return labelColumnWidth + ratio * chartPlotWidth
+            return ratioToX(instantToRawRatio(instant))
         }
 
         fun xToInstant(x: Float): Instant {
@@ -216,9 +234,16 @@ fun ToleranceChart(
 
             // 找出属于该物质的所有耐受窗口
             for (window in windowsForSubstance) {
-                val startX = instantToX(window.start)
-                val endX = instantToX(window.end)
-                val barWidth = (endX - startX).coerceAtLeast(4.dp.toPx())
+                val startRawRatio = instantToRawRatio(window.start)
+                val endRawRatio = instantToRawRatio(window.end)
+                // 完全落在视图左界之前或右界之后的窗口不绘制，避免夹断后在边界处画出虚假条带
+                if (endRawRatio <= 0f || startRawRatio >= 1f) continue
+
+                val startX = ratioToX(startRawRatio)
+                val endX = ratioToX(endRawRatio)
+                val maxDrawableWidth = (plotRight - startX).coerceAtLeast(0f)
+                val barWidth = (endX - startX).coerceAtLeast(minOf(4.dp.toPx(), maxDrawableWidth))
+                if (barWidth <= 0f) continue
 
                 val baseColor = window.adaptiveColor.getComposeColor(isDark)
                 val barColor = when (window.toleranceType) {
@@ -236,38 +261,43 @@ fun ToleranceChart(
 
                 // 若包含用户自适应调整，在条带上绘制小徽章点
                 if (window.isUserCustomized) {
+                    val dotCenterX = (startX + 6.dp.toPx())
+                        .coerceAtMost((startX + barWidth - 4.dp.toPx()).coerceAtLeast(startX + barWidth / 2f))
                     drawCircle(
                         color = Color(0xFFFFD54F),
                         radius = 3.dp.toPx(),
-                        center = Offset(startX + 6.dp.toPx(), barY + barHeight / 2)
+                        center = Offset(dotCenterX, barY + barHeight / 2)
                     )
                 }
             }
 
-            // 若存在完全耐受向半耐受过渡（双阶段完整），在阶段交界处绘制细分转换线与标记
+            // 若存在完全耐受向半耐受过渡（双阶段完整），仅当分界点处于当前视图区间内时才绘制阶段分界虚线
             if (hasFull && hasHalf) {
                 val fullEndInstant = windowsForSubstance
                     .filter { it.toleranceType == ToleranceType.FULL }
                     .map { it.end }
                     .maxOrNull()
                 if (fullEndInstant != null) {
-                    val transitionX = instantToX(fullEndInstant)
-                    if (transitionX in labelColumnWidth..width) {
+                    val transitionRawRatio = instantToRawRatio(fullEndInstant)
+                    if (transitionRawRatio in 0f..1f) {
+                        val transitionX = ratioToX(transitionRawRatio)
                         drawLine(
                             color = if (isDark) Color(0x88FFFFFF) else Color(0x88000000),
                             start = Offset(transitionX, barY),
                             end = Offset(transitionX, barY + barHeight),
-                            strokeWidth = 1.5.dp.toPx()
+                            strokeWidth = 1.5.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 2.dp.toPx()))
                         )
                     }
                 }
             }
 
-            // 绘制“结束耐药 / 归零”醒目标记线与日期标签
+            // 绘制“结束耐受 / 归零”醒目标记线与日期标签；若归零晚于视图右界，则在右边界绘制向右延续标识
             val maxEndInstant = windowsForSubstance.map { it.end }.maxOrNull()
             if (maxEndInstant != null) {
-                val endX = instantToX(maxEndInstant)
-                if (endX in labelColumnWidth..width) {
+                val endRawRatio = instantToRawRatio(maxEndInstant)
+                if (endRawRatio in 0f..1f) {
+                    val endX = ratioToX(endRawRatio)
                     val isRecoveredFuture = maxEndInstant.isAfter(now)
                     val markerColor = if (isRecoveredFuture) Color(0xFF00E676) else Color(0x9900E676)
 
@@ -310,6 +340,58 @@ fun ToleranceChart(
                         textLayoutResult = textLayout,
                         topLeft = Offset(textTopLeftX, textTopLeftY)
                     )
+                } else if (endRawRatio > 1f) {
+                    // 归零晚于视图右界 rangeEnd：仅在右边界绘制向右延续/超出当前视图指示，避免误判为右边界当天归零
+                    val continuationColor = if (isDark) Color(0xFFFFB74D) else Color(0xFFE65100)
+                    val centerY = barY + barHeight / 2f
+                    val chevronHalfH = 4.dp.toPx()
+                    val chevronW = 3.5.dp.toPx()
+                    val chevronStroke = 1.8.dp.toPx()
+                    val c1X = plotRight + 3.dp.toPx()
+                    drawLine(
+                        color = continuationColor,
+                        start = Offset(c1X, centerY - chevronHalfH),
+                        end = Offset(c1X + chevronW, centerY),
+                        strokeWidth = chevronStroke,
+                        cap = StrokeCap.Round
+                    )
+                    drawLine(
+                        color = continuationColor,
+                        start = Offset(c1X + chevronW, centerY),
+                        end = Offset(c1X, centerY + chevronHalfH),
+                        strokeWidth = chevronStroke,
+                        cap = StrokeCap.Round
+                    )
+                    val c2X = c1X + 4.dp.toPx()
+                    drawLine(
+                        color = continuationColor,
+                        start = Offset(c2X, centerY - chevronHalfH),
+                        end = Offset(c2X + chevronW, centerY),
+                        strokeWidth = chevronStroke,
+                        cap = StrokeCap.Round
+                    )
+                    drawLine(
+                        color = continuationColor,
+                        start = Offset(c2X + chevronW, centerY),
+                        end = Offset(c2X, centerY + chevronHalfH),
+                        strokeWidth = chevronStroke,
+                        cap = StrokeCap.Round
+                    )
+
+                    val beyondTextLayout = textMeasurer.measure(
+                        text = beyondViewText,
+                        style = TextStyle(
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = continuationColor
+                        )
+                    )
+                    val beyondTextX = (width - beyondTextLayout.size.width.toFloat() - 4.dp.toPx())
+                        .coerceAtLeast(labelColumnWidth)
+                    drawText(
+                        textLayoutResult = beyondTextLayout,
+                        topLeft = Offset(beyondTextX, barY - 14.dp.toPx())
+                    )
                 }
             }
 
@@ -323,8 +405,9 @@ fun ToleranceChart(
         }
 
         // 3. 绘制“今日 (Today)”发光垂直基准参考线
-        val todayX = instantToX(now)
-        if (todayX in labelColumnWidth..width) {
+        val todayRawRatio = instantToRawRatio(now)
+        if (todayRawRatio in 0f..1f) {
+            val todayX = ratioToX(todayRawRatio)
             drawLine(
                 color = Color(0xFF00E5FF),
                 start = Offset(todayX, 6.dp.toPx()),
@@ -339,4 +422,18 @@ fun ToleranceChart(
             )
         }
     }
+}
+
+/**
+ * 计算时刻在当前图表时间跨度内的未夹断线性比例。
+ * 返回值落在 0f..1f 之外表示该时刻早于视图左界或晚于视图右界。
+ */
+internal fun computeToleranceRawRatio(
+    instant: Instant,
+    rangeStart: Instant,
+    totalSeconds: Long
+): Float {
+    val safeTotalSeconds = totalSeconds.coerceAtLeast(1L)
+    val secondsFromStart = ChronoUnit.SECONDS.between(rangeStart, instant)
+    return (secondsFromStart.toDouble() / safeTotalSeconds.toDouble()).toFloat()
 }

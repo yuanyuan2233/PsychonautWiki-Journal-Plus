@@ -118,10 +118,11 @@ fun EditIngestionScreen(
         selectedExperienceId = viewModel.experienceId,
         onChangeId = { viewModel.experienceId = it },
         navigateBack = navigateBack,
-        deleteIngestion = viewModel::deleteIngestion,
+        deleteIngestion = {
+            viewModel.deleteIngestion(onDone = navigateBack)
+        },
         onDone = {
-            viewModel.onDoneTap()
-            navigateBack()
+            viewModel.onDoneTap(onDone = navigateBack)
         },
         ingestionTimePickerOption = viewModel.ingestionTimePickerOptionFlow.collectAsState().value,
         onChangeTimePickerOption = viewModel::onChangeTimePickerOption,
@@ -244,7 +245,6 @@ fun EditIngestionScreen(
                                     onClick = {
                                         isShowingDeleteDialog = false
                                         deleteIngestion()
-                                        navigateBack()
                                     }
                                 ) {
                                     Text(stringResource(R.string.journal_action_delete))
@@ -614,7 +614,10 @@ fun EditIngestionScreen(
                         }
                     )
                 }
-                items(consumerNamesSorted) { consumerName ->
+                items(
+                    items = consumerNamesSorted.distinct(),
+                    key = { it }
+                ) { consumerName ->
                     ListItem(
                         headlineContent = { Text(consumerName) },
                         leadingContent = {

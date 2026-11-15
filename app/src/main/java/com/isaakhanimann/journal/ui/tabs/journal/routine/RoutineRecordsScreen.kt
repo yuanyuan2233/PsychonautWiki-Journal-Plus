@@ -38,11 +38,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -71,9 +71,9 @@ fun RoutineRecordsScreen(
     navigateToEditIngestion: (Int) -> Unit,
     viewModel: RoutineRecordsViewModel = hiltViewModel()
 ) {
-    val records by viewModel.recordsFlow.collectAsState()
-    val currentFilter by viewModel.filter.collectAsState()
-    val unconfirmedCount by viewModel.unconfirmedCountFlow.collectAsState()
+    val records by viewModel.recordsFlow.collectAsStateWithLifecycle()
+    val currentFilter by viewModel.filter.collectAsStateWithLifecycle()
+    val unconfirmedCount by viewModel.unconfirmedCountFlow.collectAsStateWithLifecycle()
 
     var pendingActionIngestion by remember { mutableStateOf<Ingestion?>(null) }
     var selectedMemoItem by remember { mutableStateOf<RoutineRecordUiItem?>(null) }

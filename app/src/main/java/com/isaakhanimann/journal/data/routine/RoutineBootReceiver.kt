@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.os.UserManager
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,8 @@ class RoutineBootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         if (action !in SUPPORTED_ACTIONS) return
+        val userManager = context.getSystemService(Context.USER_SERVICE) as? UserManager
+        if (userManager != null && !userManager.isUserUnlocked) return
         val pendingResult = goAsync()
         receiverScope.launch {
             try {
@@ -33,7 +36,6 @@ class RoutineBootReceiver : BroadcastReceiver() {
     companion object {
         private val SUPPORTED_ACTIONS = setOf(
             Intent.ACTION_BOOT_COMPLETED,
-            Intent.ACTION_LOCKED_BOOT_COMPLETED,
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
             Intent.ACTION_MY_PACKAGE_REPLACED,

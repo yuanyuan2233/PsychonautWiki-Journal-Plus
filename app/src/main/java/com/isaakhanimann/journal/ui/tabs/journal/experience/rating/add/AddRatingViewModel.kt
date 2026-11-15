@@ -81,7 +81,7 @@ class AddRatingViewModel @Inject constructor(
         selectedRating = newRating
     }
 
-    fun onDoneTap() {
+    fun onDoneTap(onDone: () -> Unit = {}) {
         viewModelScope.launch {
             val selectedInstant = if (isThisOverallRating) {
                 null
@@ -95,6 +95,9 @@ class AddRatingViewModel @Inject constructor(
                 experienceId = experienceId
             )
             experienceRepo.insert(newRating)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onDone()
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ package com.isaakhanimann.journal.data.substances.classes
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.data.substances.classes.roa.Roa
 import com.isaakhanimann.journal.ui.utils.getInteractionExplanationURLForSubstance
+import java.util.Locale
 
 data class Substance(
     val name: String,
@@ -62,14 +63,14 @@ data class Substance(
                 "dissociative",
                 "deliriant",
             )
-            hallucinogens.contains(it.lowercase())
+            hallucinogens.contains(it.lowercase(Locale.ROOT))
         }
     val isStimulant
         get() = categories.any {
             val stimulants = setOf(
                 "stimulant",
             )
-            stimulants.contains(it.lowercase())
+            stimulants.contains(it.lowercase(Locale.ROOT))
         }
 
     val interactionExplanationURL get() = getInteractionExplanationURLForSubstance(url)

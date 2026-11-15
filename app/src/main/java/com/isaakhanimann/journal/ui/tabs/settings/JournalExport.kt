@@ -37,6 +37,7 @@ data class JournalExport(
     val substanceCompanions: List<SubstanceCompanion> = emptyList(),
     val customSubstances: List<CustomSubstance> = emptyList(),
     val customUnits: List<CustomUnitSerializable> = emptyList(),
+    val toleranceCustomizations: List<ToleranceCustomizationExport> = emptyList(),
     val medicationSchedules: List<MedicationScheduleSerializable> = emptyList(),
     val routineOccurrences: List<RoutineOccurrenceSerializable> = emptyList()
 ) {
@@ -45,10 +46,19 @@ data class JournalExport(
             substanceCompanions.isEmpty() &&
             customSubstances.isEmpty() &&
             customUnits.isEmpty() &&
+            toleranceCustomizations.isEmpty() &&
             medicationSchedules.isEmpty() &&
             routineOccurrences.isEmpty()
     }
 }
+
+@Serializable
+data class ToleranceCustomizationExport(
+    val substanceName: String,
+    val customFullDays: Double? = null,
+    val customZeroDays: Double? = null,
+    @Serializable(with = InstantSerializer::class) val manualResetInstant: Instant? = null
+)
 
 @Serializable
 data class ExperienceSerializable(

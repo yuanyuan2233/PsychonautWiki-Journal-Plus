@@ -97,7 +97,7 @@ fun PharmacokineticsView(pk: Pharmacokinetics) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (pk.halfLife != null) {
-                            val hlDisplay = if (pk.halfLifeHours != null) "${pk.halfLifeHours}h" else pk.halfLife
+                            val hlDisplay = if (pk.halfLifeHours != null) formatHours(pk.halfLifeHours) else pk.halfLife
                             PkMetricCard(
                                 title = "消除半衰期 (t½)",
                                 value = hlDisplay,
@@ -323,11 +323,20 @@ private fun PkMetricCard(
 
 @Composable
 private fun PkEliminationTimeline(halfLifeHours: Double) {
+    val isZh = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.isChinese()
     val totalClearHours = (halfLifeHours * 5.0)
     val totalClearFormatted = if (totalClearHours >= 48.0) {
-        String.format("%.1f 天 (%.0f 小时)", totalClearHours / 24.0, totalClearHours)
+        if (isZh) {
+            String.format(java.util.Locale.ROOT, "%.1f 天 (%.0f 小时)", totalClearHours / 24.0, totalClearHours)
+        } else {
+            String.format(java.util.Locale.ROOT, "%.1f d (%.0f h)", totalClearHours / 24.0, totalClearHours)
+        }
     } else {
-        String.format("%.1f 小时", totalClearHours)
+        if (isZh) {
+            String.format(java.util.Locale.ROOT, "%.1f 小时", totalClearHours)
+        } else {
+            String.format(java.util.Locale.ROOT, "%.1f h", totalClearHours)
+        }
     }
 
     Surface(
@@ -356,7 +365,7 @@ private fun PkEliminationTimeline(halfLifeHours: Double) {
             EliminationStepRow(step = "1× t½ (${formatHours(halfLifeHours * 1)})", percent = 50f, remaining = "50%")
             EliminationStepRow(step = "2× t½ (${formatHours(halfLifeHours * 2)})", percent = 25f, remaining = "25%")
             EliminationStepRow(step = "3× t½ (${formatHours(halfLifeHours * 3)})", percent = 12.5f, remaining = "12.5%")
-            EliminationStepRow(step = "5× t½ (${formatHours(halfLifeHours * 5)})", percent = 3.1f, remaining = "< 3.2% (完全清除)")
+            EliminationStepRow(step = "5× t½ (${formatHours(halfLifeHours * 5)})", percent = 3.1f, remaining = if (isZh) "< 3.2% (完全清除)" else "< 3.2% (Cleared)")
 
             Spacer(modifier = Modifier.height(6.dp))
             HorizontalDivider()
@@ -372,7 +381,7 @@ private fun PkEliminationTimeline(halfLifeHours: Double) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "临床预测完全代谢清除时间：约 $totalClearFormatted",
+                    text = if (isZh) "临床预测完全代谢清除时间：约 $totalClearFormatted" else "Estimated complete clearance (~5× t½): $totalClearFormatted",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -406,8 +415,8 @@ private fun EliminationStepRow(step: String, percent: Float, remaining: String) 
 
 private fun formatHours(hours: Double): String {
     return if (hours >= 48.0) {
-        String.format("%.1fd", hours / 24.0)
+        String.format(java.util.Locale.ROOT, "%.1fd", hours / 24.0)
     } else {
-        String.format("%.1fh", hours)
+        String.format(java.util.Locale.ROOT, "%.1fh", hours)
     }
 }

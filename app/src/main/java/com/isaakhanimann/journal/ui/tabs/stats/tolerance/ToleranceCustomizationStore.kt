@@ -29,9 +29,15 @@ class ToleranceCustomizationStore @Inject constructor(
         val raw = prefs.getString(getKey(substanceName), null) ?: return null
         return try {
             val json = JSONObject(raw)
-            val fullDays = if (json.has("fullDays")) json.getDouble("fullDays") else null
-            val zeroDays = if (json.has("zeroDays")) json.getDouble("zeroDays") else null
-            val resetEpoch = if (json.has("manualResetEpoch")) json.getLong("manualResetEpoch") else null
+            val fullDays = if (json.has("fullDays") && !json.isNull("fullDays")) {
+                json.getDouble("fullDays").takeIf { it.isFinite() && it >= 0.0 }
+            } else null
+            val zeroDays = if (json.has("zeroDays") && !json.isNull("zeroDays")) {
+                json.getDouble("zeroDays").takeIf { it.isFinite() && it >= 0.0 }
+            } else null
+            val resetEpoch = if (json.has("manualResetEpoch") && !json.isNull("manualResetEpoch")) {
+                json.getLong("manualResetEpoch")
+            } else null
             val resetInstant = resetEpoch?.let { Instant.ofEpochMilli(it) }
 
             SubstanceToleranceCustomization(
@@ -49,12 +55,7 @@ class ToleranceCustomizationStore @Inject constructor(
      * 保存指定物质的用户自定义耐受配置
      */
     fun saveCustomization(customization: SubstanceToleranceCustomization) {
-        val json = JSONObject().apply {
-            customization.customFullDays?.let { put("fullDays", it) }
-            customization.customZeroDays?.let { put("zeroDays", it) }
-            customization.manualResetInstant?.let { put("manualResetEpoch", it.toEpochMilli()) }
-        }
-        prefs.edit().putString(getKey(customization.substanceName), json.toString()).apply()
+        prefs.edit().putString(getKey(customization.substanceName), serializeCustomization(customization)).apply()
     }
 
     /**
@@ -78,6 +79,58 @@ class ToleranceCustomizationStore @Inject constructor(
             }
         }
         return result
+    }
+
+    /**
+     * 导出全部自定义耐受配置列表（按物质名称排序）
+     */
+    fun getAllCustomizationsForExport(): List<SubstanceToleranceCustomization> {
+        return getAllCustomizations()
+            .values
+            .sortedBy { it.substanceName }
+    }
+
+    /**
+     * 同步原子替换全部自定义耐受配置（用于备份导入恢复）
+     */
+    @Synchronized
+    fun replaceAllCustomizations(customizations: List<SubstanceToleranceCustomization>): Boolean {
+        val editor = prefs.edit()
+        editor.clear()
+        customizations.forEach { customization ->
+            if (customization.substanceName.isBlank()) return@forEach
+            val validFullDays = customization.customFullDays?.takeIf { it.isFinite() && it >= 0.0 }
+            val validZeroDays = customization.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 }
+            val resetInstant = customization.manualResetInstant
+            if (validFullDays == null && validZeroDays == null && resetInstant == null) {
+                return@forEach
+            }
+            val sanitized = SubstanceToleranceCustomization(
+                substanceName = customization.substanceName,
+                customFullDays = validFullDays,
+                customZeroDays = validZeroDays,
+                manualResetInstant = resetInstant
+            )
+            editor.putString(getKey(sanitized.substanceName), serializeCustomization(sanitized))
+        }
+        return editor.commit()
+    }
+
+    /**
+     * 同步清空全部自定义耐受配置（用于清空所有应用数据）
+     */
+    @Synchronized
+    fun clearAllCustomizations(): Boolean {
+        return prefs.edit().clear().commit()
+    }
+
+    private fun serializeCustomization(customization: SubstanceToleranceCustomization): String {
+        val json = JSONObject().apply {
+            customization.customFullDays?.takeIf { it.isFinite() && it >= 0.0 }?.let { put("fullDays", it) }
+            customization.customZeroDays?.takeIf { it.isFinite() && it >= 0.0 }?.let { put("zeroDays", it) }
+            customization.manualResetInstant?.let { put("manualResetEpoch", it.toEpochMilli()) }
+        }
+        return json.toString()
     }
 
     private fun getKey(substanceName: String): String = "$PREFIX$substanceName"

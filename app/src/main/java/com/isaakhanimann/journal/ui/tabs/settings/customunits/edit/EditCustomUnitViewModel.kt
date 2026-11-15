@@ -86,13 +86,15 @@ class EditCustomUnitViewModel @Inject constructor(
     fun onChangeOfDose(newDose: String) {
         doseText = newDose
     }
-    val dose: Double? get() = doseText.toDoubleOrNull()
+    val dose: Double?
+        get() = doseText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
 
     var estimatedDoseDeviationText by mutableStateOf("")
     fun onChangeOfEstimatedDoseDeviation(newEstimatedDoseDeviation: String) {
         estimatedDoseDeviationText = newEstimatedDoseDeviation
     }
-    val estimatedDoseStandardDeviation: Double? get() = estimatedDoseDeviationText.toDoubleOrNull()
+    val estimatedDoseStandardDeviation: Double?
+        get() = estimatedDoseDeviationText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
 
 
     var isEstimate by mutableStateOf(false)
@@ -114,15 +116,18 @@ class EditCustomUnitViewModel @Inject constructor(
     fun updateAndDismissAfter(dismiss: () -> Unit) {
         viewModelScope.launch {
             customUnit?.let {
+                val cleanName = name.trim().ifBlank { it.name }
+                val cleanUnit = unit.trim().ifBlank { it.unit }
+                val cleanOriginalUnit = originalUnit.trim().ifBlank { it.originalUnit }
                 it.dose = dose
-                it.name = name
+                it.name = cleanName
                 it.isEstimate = isEstimate
-                it.originalUnit = originalUnit
-                it.unitPlural = unitPlural
+                it.originalUnit = cleanOriginalUnit
+                it.unitPlural = unitPlural.trim()
                 it.estimatedDoseStandardDeviation = if (isEstimate) estimatedDoseStandardDeviation else null
                 it.isArchived = isArchived
-                it.unit = unit
-                it.note = note
+                it.unit = cleanUnit
+                it.note = note.trim()
                 experienceRepo.update(it)
             }
             withContext(Dispatchers.Main) {

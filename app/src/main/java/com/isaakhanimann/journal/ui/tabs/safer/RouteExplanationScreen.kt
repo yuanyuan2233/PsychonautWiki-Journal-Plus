@@ -42,7 +42,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +62,7 @@ import com.isaakhanimann.journal.ui.theme.horizontalPadding
 fun RouteExplanationScreen(navigateBack: () -> Unit = {}) {
     BackHandler(onBack = navigateBack)
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
@@ -74,7 +77,7 @@ fun RouteExplanationScreen(navigateBack: () -> Unit = {}) {
                 },
                 actions = {
                     TextButton(
-                        onClick = { uriHandler.openUri(AdministrationRoute.PSYCHONAUT_WIKI_ARTICLE_URL) },
+                        onClick = { openUriSafely(context, uriHandler, AdministrationRoute.PSYCHONAUT_WIKI_ARTICLE_URL) },
                     ) {
                         Text(stringResource(R.string.safer_action_article))
                     }
@@ -112,7 +115,7 @@ fun RouteExplanationScreen(navigateBack: () -> Unit = {}) {
                     )
                     if (it == AdministrationRoute.RECTAL) {
                         Button(
-                            onClick = { uriHandler.openUri(AdministrationRoute.SAFER_PLUGGING_ARTICLE_URL) },
+                            onClick = { openUriSafely(context, uriHandler, AdministrationRoute.SAFER_PLUGGING_ARTICLE_URL) },
                             modifier = Modifier.padding(horizontal = 5.dp)
                         ) {
                             Icon(

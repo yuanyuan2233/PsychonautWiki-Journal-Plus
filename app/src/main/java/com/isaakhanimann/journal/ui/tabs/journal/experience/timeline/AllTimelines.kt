@@ -132,7 +132,7 @@ fun AllTimelines(
     val context = LocalContext.current
     val density = LocalDensity.current
     val axisLabelSize = MaterialTheme.typography.labelMedium.fontSize
-    val axisLabelTextPaint = remember(density) {
+    val axisLabelTextPaint = remember(density, isDarkTheme) {
         Paint().apply {
             color =
                 if (isDarkTheme) android.graphics.Color.WHITE else android.graphics.Color.BLACK
@@ -144,7 +144,7 @@ fun AllTimelines(
     val dragTimeTextSize = MaterialTheme.typography.titleMedium
     val textMeasurer = rememberTextMeasurer()
     val ratingSize = MaterialTheme.typography.labelLarge.fontSize
-    val ratingTextPaint = remember(density) {
+    val ratingTextPaint = remember(density, isDarkTheme) {
         Paint().apply {
             color =
                 if (isDarkTheme) android.graphics.Color.WHITE else android.graphics.Color.BLACK
@@ -185,6 +185,9 @@ fun AllTimelines(
         val canvasWithLabelsHeight = size.height
         val labelsHeight = axisLabelSize.toPx()
         val canvasWidth = size.width
+        if (canvasWidth <= 0f || canvasWithLabelsHeight <= labelsHeight + strokeWidth || !model.widthInSeconds.isFinite() || model.widthInSeconds <= 0f) {
+            return@Canvas
+        }
         val pixelsPerSec = canvasWidth / model.widthInSeconds
 
         inset(left = 0f, top = 0f, right = 0f, bottom = labelsHeight + strokeWidth) {

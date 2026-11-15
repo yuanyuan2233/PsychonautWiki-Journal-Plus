@@ -773,7 +773,25 @@ fun EditRoutineScheduleScreen(
             }
 
             // Upcoming Triggers Preview
-            val upcoming = viewModel.buildUpcomingPreview(3)
+            val upcoming = remember(
+                viewModel.substanceName,
+                viewModel.recurrenceType,
+                viewModel.daysOfWeekMask,
+                viewModel.intervalDaysText,
+                viewModel.intervalHoursText,
+                viewModel.intervalExtraMinutesText,
+                viewModel.anchorHour,
+                viewModel.anchorMinute,
+                viewModel.anchorDateEpochDay,
+                viewModel.cycleOnDaysText,
+                viewModel.cycleOffDaysText,
+                viewModel.startEpochDay,
+                viewModel.endEpochDay,
+                viewModel.maxOccurrencesText,
+                viewModel.slots
+            ) {
+                viewModel.buildUpcomingPreview(3)
+            }
             if (upcoming.isNotEmpty()) {
                 OutlinedCard(modifier = Modifier.fillMaxWidth()) {
                     Column(

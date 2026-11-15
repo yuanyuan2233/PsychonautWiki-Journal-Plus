@@ -160,15 +160,15 @@ class RoutineSchedulerManager @Inject constructor(
     suspend fun confirmDose(ingestionId: Int, notificationId: Int = 0) {
         syncMutex.withLock {
             val ingestion = routineDao.getIngestionById(ingestionId)
+            val occ = routineDao.getOccurrenceByIngestionId(ingestionId)
             if (ingestion != null) {
                 routineDao.setIngestionConfirmed(ingestionId, true)
                 val scheduleId = ingestion.routineScheduleId
                 val scheduledMillis = ingestion.scheduledEpochMillis
                 if (scheduleId != null && scheduledMillis != null) {
-                    notificationHelper.cancelNotification(scheduleId, scheduledMillis)
+                    notificationHelper.cancelNotification(scheduleId, scheduledMillis, occ?.slotId.orEmpty())
                 }
             }
-            val occ = routineDao.getOccurrenceByIngestionId(ingestionId)
             if (occ != null) {
                 routineDao.updateOccurrenceStatus(
                     id = occ.id,
@@ -214,20 +214,38 @@ class RoutineSchedulerManager @Inject constructor(
                 val scheduleId = ingestion.routineScheduleId
                 val scheduledMillis = ingestion.scheduledEpochMillis
                 if (scheduleId != null && scheduledMillis != null) {
-                    notificationHelper.cancelNotification(scheduleId, scheduledMillis)
+                    notificationHelper.cancelNotification(scheduleId, scheduledMillis, occ?.slotId.orEmpty())
                 }
             }
             notificationHelper.cancelNotificationById(notificationId)
         }
     }
 
+    suspend fun onExperienceDeleted(experienceId: Int) {
+        syncMutex.withLock {
+            val routineIngestions = routineDao.getRoutineIngestionsByExperienceId(experienceId)
+            val now = Instant.now()
+            for (ing in routineIngestions) {
+                val occ = routineDao.getOccurrenceByIngestionId(ing.id)
+                routineDao.markOccurrenceByIngestionId(
+                    ingestionId = ing.id,
+                    status = RoutineOccurrenceStatus.SKIPPED,
+                    handledAt = now
+                )
+                val scheduleId = ing.routineScheduleId
+                val scheduledMillis = ing.scheduledEpochMillis
+                if (scheduleId != null && scheduledMillis != null) {
+                    notificationHelper.cancelNotification(scheduleId, scheduledMillis, occ?.slotId.orEmpty())
+                }
+            }
+        }
+    }
+
     suspend fun confirmAllUnconfirmed() {
         syncMutex.withLock {
-            val unconfirmed = routineDao.getRoutineIngestionsWithDetailsFlow().first()
-                .filter { !it.ingestion.isConfirmed }
+            val unconfirmed = routineDao.getUnconfirmedRoutineIngestions()
             val now = Instant.now()
-            for (item in unconfirmed) {
-                val ing = item.ingestion
+            for (ing in unconfirmed) {
                 routineDao.setIngestionConfirmed(ing.id, true)
                 val occ = routineDao.getOccurrenceByIngestionId(ing.id)
                 if (occ != null) {
@@ -241,7 +259,7 @@ class RoutineSchedulerManager @Inject constructor(
                 val scheduleId = ing.routineScheduleId
                 val scheduledMillis = ing.scheduledEpochMillis
                 if (scheduleId != null && scheduledMillis != null) {
-                    notificationHelper.cancelNotification(scheduleId, scheduledMillis)
+                    notificationHelper.cancelNotification(scheduleId, scheduledMillis, occ?.slotId.orEmpty())
                 }
             }
         }

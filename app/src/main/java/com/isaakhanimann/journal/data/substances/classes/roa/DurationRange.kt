@@ -23,18 +23,41 @@ data class DurationRange(
     val max: Float?,
     val units: DurationUnits?
 ) {
-    val text
-        get() = "${min.toString().removeSuffix(".0")}-${
-            max.toString().removeSuffix(".0")
-        }${units?.shortText ?: ""}"
+    val text: String
+        get() {
+            val unitSuffix = units?.shortText ?: ""
+            return when {
+                min != null && max != null -> {
+                    val minStr = formatNumber(min)
+                    val maxStr = formatNumber(max)
+                    if (minStr == maxStr) {
+                        "$minStr$unitSuffix"
+                    } else {
+                        "$minStr-$maxStr$unitSuffix"
+                    }
+                }
+                min != null -> "${formatNumber(min)}+$unitSuffix"
+                max != null -> "≤${formatNumber(max)}$unitSuffix"
+                else -> ""
+            }
+        }
 
     val minInSec: Float? = if (units != null) min?.times(units.inSecondsMultiplier) else null
     val maxInSec: Float? = if (units != null) max?.times(units.inSecondsMultiplier) else null
 
     fun interpolateAtValueInSeconds(value: Float): Float? {
-        if (min == null || max == null || units == null) return null
-        val diff = max - min
-        val withUnit = min + diff.times(value)
-        return withUnit.times(units.inSecondsMultiplier)
+        if (units == null) return null
+        val clamped = value.coerceIn(0f, 1f)
+        val raw = when {
+            min != null && max != null -> min + (max - min) * clamped
+            min != null -> min
+            max != null -> max
+            else -> return null
+        }
+        return raw * units.inSecondsMultiplier
+    }
+
+    private fun formatNumber(number: Float): String {
+        return number.toString().removeSuffix(".0")
     }
 }

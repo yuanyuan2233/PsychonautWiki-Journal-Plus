@@ -18,13 +18,16 @@
 
 package com.isaakhanimann.journal.ui.tabs.search.substance
 
+import android.content.ActivityNotFoundException
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -55,15 +58,21 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,10 +97,12 @@ import com.isaakhanimann.journal.ui.tabs.search.substance.roa.ToleranceSection
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.dose.RoaDoseView
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.duration.RoaDurationView
 import com.isaakhanimann.journal.ui.tabs.search.substance.roa.toReadableString
+import com.isaakhanimann.journal.ui.tabs.stats.EmptyScreenDisclaimer
 import com.isaakhanimann.journal.ui.theme.JournalTheme
 import com.isaakhanimann.journal.ui.theme.horizontalPadding
 import com.isaakhanimann.journal.ui.theme.verticalPaddingCards
 import com.isaakhanimann.journal.ui.utils.getShortTimeText
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.absoluteValue
@@ -163,13 +174,41 @@ fun SubstanceScreen(
     navigateToExplainTimeline: () -> Unit,
     navigateToCategoryScreen: (categoryName: String) -> Unit,
     navigateBack: () -> Unit,
-    substanceWithCategories: SubstanceWithCategories,
+    substanceWithCategories: SubstanceWithCategories?,
     customUnits: List<CustomUnit>,
     navigateToCreateRoutineSchedule: (substanceName: String) -> Unit = {},
 ) {
+    BackHandler(onBack = navigateBack)
+    if (substanceWithCategories == null) {
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.drugs_substance_not_found)) },
+                    navigationIcon = {
+                        IconButton(onClick = navigateBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.journal_action_back)
+                            )
+                        }
+                    }
+                )
+            }
+        ) { padding ->
+            Box(modifier = Modifier.padding(padding)) {
+                EmptyScreenDisclaimer(
+                    title = stringResource(R.string.drugs_substance_not_found),
+                    description = stringResource(R.string.drugs_substance_error_navigate_back)
+                )
+            }
+        }
+        return
+    }
     val substance = substanceWithCategories.substance
     val uriHandler = LocalUriHandler.current
-    BackHandler(onBack = navigateBack)
+    val context = LocalContext.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val displayName = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.getSubstanceDisplayName(substance.name, substance.commonNames)
     Scaffold(
         topBar = {
@@ -194,13 +233,39 @@ fun SubstanceScreen(
                 },
                 actions = {
                     TextButton(
-                        onClick = { uriHandler.openUri(substance.url) },
+                        onClick = {
+                            val opened = if (
+                                substance.url.isNotBlank() &&
+                                !Uri.parse(substance.url).scheme.isNullOrBlank()
+                            ) {
+                                try {
+                                    uriHandler.openUri(substance.url)
+                                    true
+                                } catch (_: ActivityNotFoundException) {
+                                    false
+                                } catch (_: IllegalArgumentException) {
+                                    false
+                                }
+                            } else {
+                                false
+                            }
+                            if (!opened) {
+                                scope.launch {
+                                    snackbarHostState.currentSnackbarData?.dismiss()
+                                    snackbarHostState.showSnackbar(
+                                        message = context.getString(R.string.settings_no_app_to_open_link),
+                                        duration = SnackbarDuration.Short
+                                    )
+                                }
+                            }
+                        },
                     ) {
                         Text(stringResource(R.string.drugs_article))
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Column(
             modifier = Modifier

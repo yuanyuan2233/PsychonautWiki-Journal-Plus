@@ -50,8 +50,8 @@ class ChooseDoseViewModel @Inject constructor(
     var units by mutableStateOf("")
     private val purity: Double?
         get() {
-            val p = purityText.toDoubleOrNull()
-            return if (p != null && p > 0 && p <= 100) {
+            val p = purityText.replace(',', '.').trim().toDoubleOrNull()
+            return if (p != null && p.isFinite() && p > 0.0 && p <= 100.0) {
                 p
             } else {
                 null
@@ -69,8 +69,9 @@ class ChooseDoseViewModel @Inject constructor(
                 }
             }
         }
-    val dose: Double? get() = doseText.toDoubleOrNull()
-    val estimatedDoseStandardDeviation: Double? get() = estimatedDoseStandardDeviationText.toDoubleOrNull()
+    val dose: Double? get() = doseText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
+    val estimatedDoseStandardDeviation: Double?
+        get() = estimatedDoseStandardDeviationText.replace(',', '.').trim().toDoubleOrNull()?.takeIf { it.isFinite() && it >= 0.0 }
     val isValidDose: Boolean get() = dose != null
     val currentDoseClass: DoseClass? get() = roaDose?.getDoseClass(ingestionDose = dose)
 

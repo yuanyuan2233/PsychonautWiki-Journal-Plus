@@ -715,7 +715,7 @@ CURATED_DRUGS = [
             }
         ],
         "interactions": {
-            "dangerous": ["酒精 / 乙醇 (长期合用肝毒性高危)", "酮康唑 (血药浓度暴增翻倍)"],
+            "dangerous": ["Alcohol (长期合用肝毒性高危)", "酮康唑 (血药浓度暴增翻倍)"],
             "unsafe": ["利福平", "卡马西平", "他汀类药物 (他汀类可能加重肌病)"],
             "uncertain": ["口服降糖药 (可影响糖耐量)"]
         }
@@ -750,7 +750,7 @@ CURATED_DRUGS = [
         "interactions": {
             "dangerous": ["补钾制剂 (补钾剂合用极高致死性高血钾风险)", "ACEI 类降压药 (卡托普利、依那普利等)", "ARB 类降压药 (氯沙坦等)"],
             "unsafe": ["非甾体抗炎药 (NSAIDs) (降低利尿抗雄效果且损害肾脏升高血钾)", "地高辛 (延长地高辛半衰期致蓄积)"],
-            "uncertain": ["酒精 / 乙醇 (增强体位性低血压)"]
+            "uncertain": ["Alcohol (增强体位性低血压)"]
         }
     },
     {
@@ -808,7 +808,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "oral",
-                "dose": {"units": "mg", "lightMin": 1.0, "commonMin": 1.0, "strongMin": 2.5, "heavyMin": 5.0},
+                "dose": {"units": "mg", "lightMin": 0.5, "commonMin": 1.0, "strongMin": 2.5, "heavyMin": 5.0},
                 "duration": {"onset": {"min": 0.5, "max": 1.0, "units": "hours"}, "peak": {"min": 1.0, "max": 2.0, "units": "hours"}, "total": {"min": 12.0, "max": 24.0, "units": "hours"}},
                 "bioavailability": {"min": 60.0, "max": 70.0}
             }
@@ -841,7 +841,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "subcutaneous",
-                "dose": {"units": "mg", "lightMin": 3.75, "commonMin": 3.75, "strongMin": 7.5, "heavyMin": 11.25},
+                "dose": {"units": "mg", "lightMin": 1.875, "commonMin": 3.75, "strongMin": 7.5, "heavyMin": 11.25},
                 "duration": {"onset": {"min": 24.0, "max": 48.0, "units": "hours"}, "peak": {"min": 48.0, "max": 96.0, "units": "hours"}, "total": {"min": 672.0, "max": 2016.0, "units": "hours"}},
                 "bioavailability": {"min": 95.0, "max": 100.0}
             }
@@ -911,7 +911,7 @@ CURATED_DRUGS = [
         "roas": [
             {
                 "name": "intramuscular",
-                "dose": {"units": "mg", "lightMin": 500.0, "commonMin": 1000.0, "strongMin": 1000.0, "heavyMin": 1000.0},
+                "dose": {"units": "mg", "lightMin": 250.0, "commonMin": 500.0, "strongMin": 750.0, "heavyMin": 1000.0},
                 "duration": {"onset": {"min": 24.0, "max": 48.0, "units": "hours"}, "peak": {"min": 168.0, "max": 336.0, "units": "hours"}, "total": {"min": 1680.0, "max": 2352.0, "units": "hours"}},
                 "bioavailability": {"min": 98.0, "max": 100.0}
             },
@@ -1001,19 +1001,29 @@ def main():
             # 增强已有物质
             target["pharmacokinetics"] = item["pk"]
             if item.get("roas"):
-                target["roas"] = item["roas"]
+                existing_roas = {r.get("name"): i for i, r in enumerate(target.get("roas", []))}
+                merged_roas = list(target.get("roas", []))
+                for roa in item["roas"]:
+                    rname = roa.get("name")
+                    if rname in existing_roas:
+                        merged_roas[existing_roas[rname]] = roa
+                    else:
+                        merged_roas.append(roa)
+                target["roas"] = merged_roas
             if item.get("interactions"):
                 target["interactions"] = item["interactions"]
             if item.get("summary") and (not target.get("summary") or len(target.get("summary", "")) < 20):
                 target["summary"] = item["summary"]
 
-            # 合并分类与别名
-            cur_cats = list(target.get("categories", []))
+            # 合并分类与别名（同时清理已知上游错误污染条目）
+            remove_cats = set(item.get("remove_categories", []))
+            cur_cats = [c for c in target.get("categories", []) if c not in remove_cats]
             for c in item["categories"]:
                 if c not in cur_cats: cur_cats.append(c)
             target["categories"] = cur_cats
 
-            cur_commons = list(target.get("commonNames", []))
+            remove_commons = set(item.get("remove_common_names", []))
+            cur_commons = [c for c in target.get("commonNames", []) if c not in remove_commons]
             for c in combined_commons:
                 if c not in cur_commons: cur_commons.append(c)
             target["commonNames"] = cur_commons

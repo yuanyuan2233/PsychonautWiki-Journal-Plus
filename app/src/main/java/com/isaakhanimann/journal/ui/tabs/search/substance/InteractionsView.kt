@@ -18,6 +18,9 @@
 
 package com.isaakhanimann.journal.ui.tabs.search.substance
 
+import android.content.ActivityNotFoundException
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -38,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -91,9 +95,31 @@ fun InteractionsView(
 @Composable
 fun InteractionExplanationButton(substanceURL: String) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     TextButton(onClick = {
         val interactionURL = getInteractionExplanationURLForSubstance(substanceURL)
-        uriHandler.openUri(interactionURL)
+        val opened = if (
+            substanceURL.isNotBlank() &&
+            !Uri.parse(interactionURL).scheme.isNullOrBlank()
+        ) {
+            try {
+                uriHandler.openUri(interactionURL)
+                true
+            } catch (_: ActivityNotFoundException) {
+                false
+            } catch (_: IllegalArgumentException) {
+                false
+            }
+        } else {
+            false
+        }
+        if (!opened) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.settings_no_app_to_open_link),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }) {
         Icon(
             Icons.Outlined.OpenInBrowser,

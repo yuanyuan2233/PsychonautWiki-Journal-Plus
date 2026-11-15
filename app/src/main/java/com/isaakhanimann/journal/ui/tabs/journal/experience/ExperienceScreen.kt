@@ -75,6 +75,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -85,7 +86,6 @@ import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
-import com.isaakhanimann.journal.ui.FULL_STOMACH_DISCLAIMER
 import com.isaakhanimann.journal.ui.YOU
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions.Interaction
 import com.isaakhanimann.journal.ui.tabs.journal.components.UnconfirmedDoseActionDialog
@@ -157,7 +157,9 @@ fun ExperienceScreen(
             viewModel.saveLastIngestionTimeOfExperience()
             navigateToAddIngestionSearch()
         },
-        deleteExperience = viewModel::deleteExperience,
+        deleteExperience = {
+            viewModel.deleteExperience(onDone = navigateBack)
+        },
         navigateToEditExperienceScreen = navigateToEditExperienceScreen,
         navigateToExplainTimeline = navigateToExplainTimeline,
         navigateToIngestionScreen = navigateToIngestionScreen,
@@ -397,9 +399,10 @@ private fun ExperienceInteractionsSection(
         ) {
             oneExperienceScreenModel.interactionExplanations.forEach {
                 val uriHandler = LocalUriHandler.current
+                val context = LocalContext.current
                 SuggestionChip(
                     onClick = {
-                        uriHandler.openUri(it.url)
+                        openUriSafely(context, uriHandler, it.url)
                     },
                     label = { Text(SubstanceLocalizationHelper.getLocalizedName(it.name)) }
                 )
@@ -865,7 +868,6 @@ private fun ExperienceTopBar(
                             onClick = {
                                 isShowingDeleteDialog = false
                                 deleteExperience()
-                                navigateBack()
                             }
                         ) {
                             Text(stringResource(R.string.journal_action_delete))

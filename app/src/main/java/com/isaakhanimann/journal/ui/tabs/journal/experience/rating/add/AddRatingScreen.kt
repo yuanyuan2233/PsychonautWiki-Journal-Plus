@@ -75,8 +75,7 @@ fun AddRatingScreen(
 ) {
     AddRatingScreen(
         onDone = {
-            viewModel.onDoneTap()
-            navigateBack()
+            viewModel.onDoneTap(onDone = navigateBack)
         },
         selectedTime = viewModel.localDateTimeFlow.collectAsState().value,
         onTimeChange = viewModel::onChangeTime,

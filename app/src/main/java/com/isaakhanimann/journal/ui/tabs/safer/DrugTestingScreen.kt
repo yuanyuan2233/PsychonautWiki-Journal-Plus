@@ -45,7 +45,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import com.isaakhanimann.journal.ui.utils.openUriSafely
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -135,7 +137,7 @@ fun DrugTestingScreen(navigateBack: () -> Unit = {}) {
                 TestingServiceItem(
                     name = "Get Your Drugs Tested",
                     city = stringResource(R.string.safer_city_vancouver),
-                    url = "http://www.vch.ca/public-health/harm-reduction/overdose-prevention-response/drug-checking"
+                    url = "https://www.vch.ca/en/health-topics/overdose-prevention-and-response"
                 )
                 HorizontalDivider()
                 TestingServiceItem(
@@ -167,7 +169,7 @@ fun DrugTestingScreen(navigateBack: () -> Unit = {}) {
                 TestingServiceItem(
                     name = "Centre \"Les Wads\"",
                     city = stringResource(R.string.safer_city_metz),
-                    url = "http://www.leswadscmsea.fr"
+                    url = "https://www.leswadscmsea.fr"
                 )
             }
             CardWithTesting(title = stringResource(R.string.safer_country_italy)) {
@@ -270,10 +272,11 @@ fun DrugTestingScreen(navigateBack: () -> Unit = {}) {
             }
 
             val uriHandler = LocalUriHandler.current
+            val context = LocalContext.current
             val reportServiceText = stringResource(R.string.safer_drug_testing_report_missing)
             TextButton(
                 onClick = {
-                    uriHandler.openUri("https://t.me/isaakhanimann")
+                    openUriSafely(context, uriHandler, "https://t.me/isaakhanimann")
                 },
                 modifier = Modifier.semantics {
                     contentDescription = reportServiceText
@@ -325,12 +328,13 @@ fun TestingServiceItem(
     url: String
 ) {
     val uriHandler = LocalUriHandler.current
+    val context = LocalContext.current
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         modifier = Modifier
             .clickable {
-                uriHandler.openUri(url)
+                openUriSafely(context, uriHandler, url)
             }
             .padding(horizontal = horizontalPadding, vertical = 5.dp)
             .heightIn(min = minimumTouchTargetHeight)

@@ -33,8 +33,13 @@ import kotlin.math.absoluteValue
 
 fun getDurationText(fromInstant: Instant, toInstant: Instant, context: Context? = null): String {
     val duration = Duration.between(fromInstant, toInstant)
-    val isZh = context?.resources?.configuration?.locales?.get(0)?.language == "zh" ||
-            Locale.getDefault().language == "zh"
+    val effectiveLocale = if (context != null) {
+        val locales = context.resources.configuration.locales
+        if (!locales.isEmpty) locales[0] else Locale.getDefault()
+    } else {
+        Locale.getDefault()
+    }
+    val isZh = effectiveLocale.language.equals("zh", ignoreCase = true)
     return when {
         duration.toDays().absoluteValue > 500 -> {
             val years = roundToOneDecimal(duration.toDays().toDouble().absoluteValue / 365.0)

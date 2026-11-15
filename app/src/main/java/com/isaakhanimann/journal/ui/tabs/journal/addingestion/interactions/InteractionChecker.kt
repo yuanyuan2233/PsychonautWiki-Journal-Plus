@@ -20,18 +20,19 @@ package com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions
 
 import com.isaakhanimann.journal.data.substances.classes.InteractionType
 import com.isaakhanimann.journal.data.substances.classes.Interactions
-import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepository
+import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepositoryInterface
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
+import java.util.Locale
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
 @Singleton
 class InteractionChecker @Inject constructor(
-    private val substanceRepo: SubstanceRepository,
+    private val substanceRepo: SubstanceRepositoryInterface,
 ) {
     fun getInteractionBetween(aName: String, bName: String): Interaction? {
-        if (aName == bName) {
+        if (aName.equals(bName, ignoreCase = true)) {
             return null
         }
         val interactionFromAToB = getInteractionFromAToB(aName, bName)
@@ -131,76 +132,238 @@ class InteractionChecker @Inject constructor(
         }
     }
 
+    /**
+     * 检查来自 CombinationSettingsStorage 的额外风险项（如 "MAOI"、"SSRIs"、"Hormonal birth control" 等）
+     * 是否命中物质交互列表（支持中英文、括号临床说明、斜杠拆分与常见缩写归一化）。
+     */
+    fun matchesExtraInteraction(interactions: List<String>?, extraInteraction: String): Boolean {
+        if (interactions.isNullOrEmpty() || extraInteraction.isBlank()) {
+            return false
+        }
+        return isDirectMatch(interactions = interactions, substanceName = extraInteraction)
+    }
+
     private fun isClassMatch(interactions: List<String>, categories: List<String>): Boolean {
         val extendedInteractions = extendAndCleanInteractions(interactions)
         return categories.any { categoryName ->
-                extendedInteractions.any { interactionName ->
-                    interactionName.contains(categoryName, ignoreCase = true)
+            val trimmedCategory = categoryName.trim()
+            if (trimmedCategory.isEmpty()) return@any false
+            val boundaryRegex = Regex(
+                pattern = "(?<![A-Za-z])${Regex.escape(trimmedCategory)}",
+                option = RegexOption.IGNORE_CASE
+            )
+            extendedInteractions.any { interactionName ->
+                // 避免 category="depressant"/"antidepressant" 与三环类抗抑郁药发生误匹配，但保留 category="tca" 命中 "TCAs"
+                if (isTricyclicTerm(interactionName) && !trimmedCategory.equals("tca", ignoreCase = true)) {
+                    false
+                } else {
+                    boundaryRegex.containsMatchIn(interactionName)
                 }
             }
+        }
     }
 
     private fun isWildcardMatch(interactions: List<String>, substanceName: String): Boolean {
         val extendedInteractions = extendAndCleanInteractions(interactions)
-        return extendedInteractions.map { interaction ->
-            Regex(
-                pattern = interaction.replace(
-                    oldValue = "x",
-                    newValue = "[\\S]{2}",
-                    ignoreCase = true
-                ),
-                option = RegexOption.IGNORE_CASE
-            ).matches(substanceName)
-        }.any { it }
+        val targetVariants = expandTermVariants(substanceName)
+        return extendedInteractions.any { interaction ->
+            val regex = buildWildcardRegex(interaction) ?: return@any false
+            targetVariants.any { target -> regex.matches(target) }
+        }
     }
 
     private fun isDirectMatch(interactions: List<String>, substanceName: String): Boolean {
         val extendedInteractions = extendAndCleanInteractions(interactions)
-        return extendedInteractions.contains(substanceName)
+        val targetVariants = expandTermVariants(substanceName)
+        return extendedInteractions.any { interaction ->
+            targetVariants.any { target -> interaction.equals(target, ignoreCase = true) }
+        }
     }
 
     private fun extendAndCleanInteractions(interactions: List<String>): List<String> {
         return interactions.flatMap { rawName ->
-            val resolvedList = mutableListOf(rawName)
-            // 归一化中文名称或附带注释的条目为标准英文名
-            SubstanceLocalizationHelper.getCanonicalEnglishName(rawName)?.let { canonical ->
-                resolvedList.add(canonical)
-            }
+            val resolvedList = mutableListOf<String>()
+            addExpandedTermVariants(rawName, resolvedList)
             // 去除括号中的临床说明或化学注释
-            val clean = rawName.replace(Regex("[\\(（][^\\)）]*[\\)）]"), "").trim()
+            val clean = rawName.replace(PAREN_REGEX, "").trim()
             if (clean != rawName && clean.isNotEmpty()) {
-                resolvedList.add(clean)
-                SubstanceLocalizationHelper.getCanonicalEnglishName(clean)?.let { canonical ->
-                    resolvedList.add(canonical)
-                }
+                addExpandedTermVariants(clean, resolvedList)
             }
-            // 针对 "/"、"、" 拆分多物质条目
-            val parts = clean.split(Regex("[/、|]")).map { it.trim() }.filter { it.isNotEmpty() }
+            // 针对 "/"、"、"、"|" 拆分多物质条目
+            val parts = clean.split(SPLIT_REGEX).map { it.trim() }.filter { it.isNotEmpty() }
             if (parts.size > 1) {
                 for (part in parts) {
-                    resolvedList.add(part)
-                    SubstanceLocalizationHelper.getCanonicalEnglishName(part)?.let { canonical ->
-                        resolvedList.add(canonical)
-                    }
+                    addExpandedTermVariants(part, resolvedList)
                 }
             }
             resolvedList
         }.flatMap { name ->
-            when (name) {
-                "Substituted amphetamines", "取代苯丙胺类" -> {
+            when {
+                name.equals("Substituted amphetamines", ignoreCase = true) || name == "取代苯丙胺类" -> {
                     substitutedAmphetamines
                 }
-                "Serotonin releasers", "5-羟色胺释放剂" -> {
+                name.equals("Serotonin releasers", ignoreCase = true) || name == "5-羟色胺释放剂" -> {
                     serotoninReleasers
-                }
-                "Tricyclic antidepressants", "三环类抗抑郁药" -> {
-                    emptyList() // remove because we don't want to match "depressant" with it and there is no substance that belongs to that class
                 }
                 else -> {
                     listOf(name)
                 }
             }
         }.distinct()
+    }
+
+    private fun expandTermVariants(term: String): List<String> {
+        val variants = mutableListOf<String>()
+        addExpandedTermVariants(term, variants)
+        val clean = term.replace(PAREN_REGEX, "").trim()
+        if (clean.isNotEmpty() && clean != term) {
+            addExpandedTermVariants(clean, variants)
+        }
+        return variants.distinct()
+    }
+
+    private fun addExpandedTermVariants(term: String, out: MutableList<String>) {
+        val trimmed = term.trim()
+        if (trimmed.isEmpty()) return
+        out.add(trimmed)
+
+        val canonical = SubstanceLocalizationHelper.getCanonicalEnglishName(trimmed)
+        if (!canonical.isNullOrBlank()) {
+            out.add(canonical)
+            CANONICAL_ALIAS_MAP[canonical.lowercase(Locale.ROOT)]?.let { out.addAll(it) }
+        }
+
+        val lower = trimmed.lowercase(Locale.ROOT)
+        CANONICAL_ALIAS_MAP[lower]?.let { out.addAll(it) }
+
+        when {
+            trimmed.endsWith("抗生素") -> out.add("Antibiotics")
+            trimmed.endsWith("抗组胺药") || trimmed.endsWith("抗组胺药物") -> out.add("Antihistamine")
+            trimmed.contains("避孕药") -> out.add("Hormonal birth control")
+        }
+    }
+
+    private fun isTricyclicTerm(term: String): Boolean {
+        val cleaned = term.replace(PAREN_REGEX, "").trim()
+        val lower = cleaned.lowercase(Locale.ROOT)
+        return lower == "tricyclic antidepressants" ||
+            lower == "trycyclic antidepressants" ||
+            lower == "tca" ||
+            lower == "tcas" ||
+            cleaned == "三环类抗抑郁药"
+    }
+
+    private fun buildWildcardRegex(interaction: String): Regex? {
+        val matches = WILDCARD_TOKEN_REGEX.findAll(interaction).toList()
+        if (matches.isEmpty()) return null
+        val patternBuilder = StringBuilder()
+        var lastIndex = 0
+        for (match in matches) {
+            if (match.range.first > lastIndex) {
+                patternBuilder.append(Regex.escape(interaction.substring(lastIndex, match.range.first)))
+            }
+            val token = match.value
+            val replacement = if (token == "x" && match.range.first >= 2 &&
+                interaction.substring(0, match.range.first).all { it in 'A'..'Z' } &&
+                match.range.last == interaction.lastIndex
+            ) {
+                // DOx -> DO + 1~2 位取代基字符（匹配 DOB/DOC/DOI/DOM/DOET，不误伤 Doxepin）
+                "\\S{1,2}"
+            } else {
+                "\\S+"
+            }
+            patternBuilder.append(replacement)
+            lastIndex = match.range.last + 1
+        }
+        if (lastIndex < interaction.length) {
+            patternBuilder.append(Regex.escape(interaction.substring(lastIndex)))
+        }
+        return Regex(pattern = patternBuilder.toString(), option = RegexOption.IGNORE_CASE)
+    }
+
+    companion object {
+        private val PAREN_REGEX = Regex("[\\(（][^\\)）]*[\\)）]")
+        private val SPLIT_REGEX = Regex("[/、|]")
+        private val WILDCARD_TOKEN_REGEX = Regex(
+            "(?i:x{2,})|(?<=-)[xX](?=$|-)|(?<=\\d)[xX](?=$|-)|(?<=[A-Z]{2})x$"
+        )
+
+        private val CANONICAL_ALIAS_MAP: Map<String, List<String>> = mapOf(
+            "alcohol" to listOf("Alcohol"),
+            "酒精" to listOf("Alcohol"),
+            "乙醇" to listOf("Alcohol"),
+            "酒精 (乙醇)" to listOf("Alcohol"),
+
+            "caffeine" to listOf("Caffeine"),
+            "咖啡因" to listOf("Caffeine"),
+
+            "cannabis" to listOf("Cannabis"),
+            "大麻" to listOf("Cannabis"),
+
+            "grapefruit" to listOf("Grapefruit"),
+            "grapefruit juice" to listOf("Grapefruit"),
+            "西柚" to listOf("Grapefruit"),
+            "葡萄柚" to listOf("Grapefruit"),
+            "西柚汁" to listOf("Grapefruit"),
+            "葡萄柚汁" to listOf("Grapefruit"),
+            "西柚 / 葡萄柚" to listOf("Grapefruit"),
+            "西柚汁 (葡萄柚汁)" to listOf("Grapefruit"),
+
+            "hormonal birth control" to listOf("Hormonal birth control"),
+            "oral contraceptives" to listOf("Hormonal birth control"),
+            "combined oral contraceptives" to listOf("Hormonal birth control"),
+            "hormonal contraceptives" to listOf("Hormonal birth control"),
+            "steroidal contraceptives" to listOf("Hormonal birth control"),
+            "激素类避孕药" to listOf("Hormonal birth control"),
+            "口服避孕药" to listOf("Hormonal birth control"),
+            "复方口服避孕药" to listOf("Hormonal birth control"),
+            "口服复方避孕药" to listOf("Hormonal birth control"),
+            "大剂量联合口服避孕药" to listOf("Hormonal birth control"),
+
+            "nicotine" to listOf("Nicotine"),
+            "尼古丁" to listOf("Nicotine"),
+
+            "lithium" to listOf("Lithium"),
+            "li" to listOf("Lithium", "Li"),
+            "碳酸锂" to listOf("Lithium"),
+            "锂" to listOf("Lithium"),
+            "锂盐" to listOf("Lithium"),
+
+            "maoi" to listOf("MAOI", "MAOIs"),
+            "maois" to listOf("MAOI", "MAOIs"),
+            "单胺氧化酶抑制剂" to listOf("MAOI", "MAOIs"),
+
+            "ssri" to listOf("SSRIs", "SSRI"),
+            "ssris" to listOf("SSRIs", "SSRI"),
+            "选择性5-羟色胺再摄取抑制剂" to listOf("SSRIs", "SSRI"),
+
+            "snri" to listOf("SNRIs", "SNRI"),
+            "snris" to listOf("SNRIs", "SNRI"),
+            "5-羟色胺与去甲肾上腺素再摄取抑制剂" to listOf("SNRIs", "SNRI"),
+
+            "5-hydroxytryptophan" to listOf("5-Hydroxytryptophan", "5-HTP"),
+            "5-htp" to listOf("5-Hydroxytryptophan", "5-HTP"),
+            "5-羟色氨酸" to listOf("5-Hydroxytryptophan", "5-HTP"),
+
+            "tricyclic antidepressants" to listOf("Tricyclic antidepressants", "TCAs"),
+            "trycyclic antidepressants" to listOf("Tricyclic antidepressants", "TCAs"),
+            "tca" to listOf("Tricyclic antidepressants", "TCAs"),
+            "tcas" to listOf("Tricyclic antidepressants", "TCAs"),
+            "三环类抗抑郁药" to listOf("Tricyclic antidepressants", "TCAs"),
+
+            "antibiotic" to listOf("Antibiotics"),
+            "antibiotics" to listOf("Antibiotics"),
+            "抗生素" to listOf("Antibiotics"),
+            "碳青霉烯类抗生素" to listOf("Antibiotics"),
+            "耳毒性抗生素" to listOf("Antibiotics"),
+
+            "antihistamine" to listOf("Antihistamine", "Antihistamines"),
+            "antihistamines" to listOf("Antihistamine", "Antihistamines"),
+            "sedative antihistamines" to listOf("Antihistamine", "Antihistamines"),
+            "抗组胺药" to listOf("Antihistamine", "Antihistamines"),
+            "抗组胺药物" to listOf("Antihistamine", "Antihistamines"),
+            "镇静性抗组胺药" to listOf("Antihistamine", "Antihistamines"),
+        )
     }
 
     private val serotoninReleasers = listOf(

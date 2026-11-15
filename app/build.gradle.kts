@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     id("com.google.dagger.hilt.android")
     id("androidx.room")
-    kotlin("plugin.serialization") version "2.0.20"
+    kotlin("plugin.serialization") version libs.versions.kotlin
     id("kotlin-kapt") // this needs to be on bottom
 }
 
@@ -28,24 +28,46 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = project.findProperty("KEYSTORE_FILE")?.toString()
-                ?: System.getenv("KEYSTORE_FILE")
-            if (keystoreFile != null && file(keystoreFile).exists()) {
-                storeFile = file(keystoreFile)
-                storePassword = project.findProperty("KEYSTORE_PASSWORD")?.toString()
-                    ?: System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = project.findProperty("KEY_ALIAS")?.toString()
-                    ?: System.getenv("KEY_ALIAS")
-                keyPassword = project.findProperty("KEY_PASSWORD")?.toString()
-                    ?: System.getenv("KEY_PASSWORD")
+            fun resolveSigningParam(name: String): String? =
+                project.findProperty(name)?.toString()?.takeIf { it.isNotBlank() }
+                    ?: System.getenv(name)?.takeIf { it.isNotBlank() }
+
+            val keystoreFilePath = resolveSigningParam("KEYSTORE_FILE")
+            val releaseStorePassword = resolveSigningParam("KEYSTORE_PASSWORD")
+            val releaseKeyAlias = resolveSigningParam("KEY_ALIAS")
+            val releaseKeyPassword = resolveSigningParam("KEY_PASSWORD")
+
+            val anySigningParamProvided = listOf(
+                keystoreFilePath,
+                releaseStorePassword,
+                releaseKeyAlias,
+                releaseKeyPassword
+            ).any { it != null }
+
+            if (anySigningParamProvided) {
+                val resolvedKeystore = keystoreFilePath?.let { rootProject.file(it) }
+                if (resolvedKeystore == null || !resolvedKeystore.isFile) {
+                    throw org.gradle.api.GradleException(
+                        "Release signing requested, but KEYSTORE_FILE is missing or does not point to an existing file."
+                    )
+                }
+                if (releaseStorePassword == null || releaseKeyAlias == null || releaseKeyPassword == null) {
+                    throw org.gradle.api.GradleException(
+                        "Release signing requested, but KEYSTORE_PASSWORD, KEY_ALIAS, or KEY_PASSWORD is missing or blank."
+                    )
+                }
+                storeFile = resolvedKeystore
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
             }
         }
     }
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".zh"
-            versionNameSuffix = "-zh"
+            applicationIdSuffix = ".zh.debug"
+            versionNameSuffix = "-zh-debug"
         }
         release {
             applicationIdSuffix = ".zh"
@@ -60,6 +82,13 @@ android {
             ndk.debugSymbolLevel = "FULL"
         }
     }
+    androidResources {
+        ignoreAssetsPatterns += listOf(
+            "Substances.original.json",
+            "substances_zh_dict.json"
+        )
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -85,6 +114,8 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.adaptive.navigation.suite.android)
     testImplementation(libs.junit)
+    // 为 JVM 本地单元测试提供真实 org.json 实现，避免被 Android SDK 存根跳过 TestParse
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

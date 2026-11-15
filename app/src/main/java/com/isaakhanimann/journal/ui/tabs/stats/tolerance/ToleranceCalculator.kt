@@ -21,6 +21,10 @@ import kotlin.math.max
  */
 object ToleranceCalculator {
 
+    internal const val MAX_TOLERANCE_DAYS = 3650.0
+    internal const val MAX_TOLERANCE_HOURS = MAX_TOLERANCE_DAYS * 24.0
+    internal const val MAX_TOLERANCE_SECONDS = 3650L * 24L * 3600L
+
     fun getToleranceWindows(
         substanceAndDays: List<SubstanceAndDay>,
         substanceCompanions: List<SubstanceCompanion>,
@@ -72,26 +76,40 @@ object ToleranceCalculator {
 
             val result = mutableListOf<SubstanceInterval>()
 
-            // 优先读取用户自设天数，无自设则回退至算法解析小时数
-            val halfToleranceInHours = if (customization?.customFullDays != null) {
-                customization.customFullDays * 24.0
+            // 优先读取用户自设天数，无自设则回退至算法解析小时数，并统一做有限值与安全上限钳制
+            val rawHalfHours = if (customization?.customFullDays != null) {
+                customDaysToHours(customization.customFullDays)
             } else {
-                ToleranceTimeParser.getHalfToleranceInHours(pair.substanceName, tolerance)
+                sanitizeToleranceHours(
+                    ToleranceTimeParser.getHalfToleranceInHours(pair.substanceName, tolerance)
+                )
             }
 
             val zeroToleranceInHours = if (customization?.customZeroDays != null) {
-                customization.customZeroDays * 24.0
+                customDaysToHours(customization.customZeroDays)
             } else {
-                ToleranceTimeParser.getZeroToleranceInHours(pair.substanceName, tolerance)
+                sanitizeToleranceHours(
+                    ToleranceTimeParser.getZeroToleranceInHours(pair.substanceName, tolerance)
+                )
+            }
+
+            val halfToleranceInHours = if (
+                rawHalfHours != null &&
+                zeroToleranceInHours != null &&
+                rawHalfHours > zeroToleranceInHours &&
+                (customization?.customZeroDays != null || customization?.customFullDays == null)
+            ) {
+                zeroToleranceInHours
+            } else {
+                rawHalfHours
             }
 
             var startOfHalfTolerance = pair.time
             val manualReset = customization?.manualResetInstant
 
             // 1. 完全耐受期 Full（高亮色块）
-            if (halfToleranceInHours != null && halfToleranceInHours > 0) {
-                val fullSeconds = (halfToleranceInHours * 3600.0).toLong()
-                var fullEnd = pair.time.plus(fullSeconds, ChronoUnit.SECONDS)
+            if (halfToleranceInHours != null && halfToleranceInHours > 0.0) {
+                var fullEnd = safePlusHours(pair.time, halfToleranceInHours)
 
                 // 若用户手动标记了提前归零且位于该区间内，自适应截断
                 if (manualReset != null && manualReset.isAfter(pair.time) && manualReset.isBefore(fullEnd)) {
@@ -112,9 +130,8 @@ object ToleranceCalculator {
             }
 
             // 2. 半耐受衰减期 Half（浅色过渡色块）
-            if (zeroToleranceInHours != null && zeroToleranceInHours > 0) {
-                val zeroSeconds = (zeroToleranceInHours * 3600.0).toLong()
-                var zeroEnd = pair.time.plus(zeroSeconds, ChronoUnit.SECONDS)
+            if (zeroToleranceInHours != null && zeroToleranceInHours > 0.0) {
+                var zeroEnd = safePlusHours(pair.time, zeroToleranceInHours)
 
                 // 若用户手动标记了提前归零，自适应截断
                 if (manualReset != null && manualReset.isAfter(pair.time) && manualReset.isBefore(zeroEnd)) {
@@ -135,6 +152,24 @@ object ToleranceCalculator {
 
             result
         }
+    }
+
+    private fun customDaysToHours(days: Double?): Double? {
+        if (days == null || !days.isFinite() || days <= 0.0) return null
+        return days.coerceAtMost(MAX_TOLERANCE_DAYS) * 24.0
+    }
+
+    private fun sanitizeToleranceHours(hours: Double?): Double? {
+        if (hours == null || !hours.isFinite() || hours <= 0.0) return null
+        return hours.coerceAtMost(MAX_TOLERANCE_HOURS)
+    }
+
+    private fun safePlusHours(base: Instant, hours: Double): Instant {
+        val clampedHours = sanitizeToleranceHours(hours) ?: return base
+        val seconds = (clampedHours * 3600.0).toLong().coerceIn(0L, MAX_TOLERANCE_SECONDS)
+        val maxAddableSeconds = (Instant.MAX.epochSecond - base.epochSecond).coerceAtLeast(0L)
+        val safeSeconds = seconds.coerceAtMost(maxAddableSeconds)
+        return base.plus(safeSeconds, ChronoUnit.SECONDS)
     }
 
     private fun getSubstanceIntervalsGroupedBySubstance(
@@ -260,7 +295,13 @@ object ToleranceCalculator {
                 toleranceType = interval.toleranceType,
                 adaptiveColor = color,
                 isUserCustomized = isCustom,
-                customNote = if (isCustom) "用户体感自适应" else null
+                customNote = if (isCustom) {
+                    if (com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.isChinese()) {
+                        "用户体感自适应"
+                    } else {
+                        "Subjective adaptation"
+                    }
+                } else null
             )
         }
     }
