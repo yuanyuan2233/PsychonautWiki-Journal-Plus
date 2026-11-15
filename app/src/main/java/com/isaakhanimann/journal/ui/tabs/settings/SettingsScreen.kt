@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,10 +50,12 @@ import androidx.compose.material.icons.outlined.Medication
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.QuestionAnswer
 import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.outlined.SystemUpdate
 import androidx.compose.material.icons.outlined.VolunteerActivism
 import androidx.compose.material.icons.outlined.WarningAmber
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -157,6 +160,9 @@ fun SettingsScreen(
         saveAreSubstanceHeightsIndependent = viewModel::saveAreSubstanceHeightsIndependent,
         appLanguage = viewModel.appLanguageFlow.collectAsStateWithLifecycle().value,
         saveAppLanguage = viewModel::saveAppLanguage,
+        updateCheckState = viewModel.updateCheckStateFlow.collectAsStateWithLifecycle().value,
+        onCheckForUpdates = { viewModel.checkForUpdates() },
+        onDismissUpdateDialog = viewModel::dismissUpdateDialog,
     )
 }
 
@@ -181,6 +187,9 @@ fun SettingsScreen(
     appLanguage: AppLanguage,
     saveAppLanguage: (AppLanguage) -> Unit,
     navigateToRoutineSchedules: () -> Unit = {},
+    updateCheckState: UpdateCheckUiState = UpdateCheckUiState.Idle,
+    onCheckForUpdates: () -> Unit = {},
+    onDismissUpdateDialog: () -> Unit = {},
 ) {
     Scaffold(
         topBar = {
@@ -507,7 +516,7 @@ fun SettingsScreen(
                 ) {
                     openUriSafely(
                         uriHandler = uriHandler,
-                        uri = "https://github.com/yuanyuan2233/psychonautwiki-journal-android/issues",
+                        uri = GITHUB_ISSUES_URL,
                         onFailure = { showSnackbarMessage(R.string.settings_no_app_to_open_link) }
                     )
                 }
@@ -516,7 +525,7 @@ fun SettingsScreen(
                 SettingsButton(imageVector = Icons.Outlined.Code, text = stringResource(R.string.settings_source_code)) {
                     openUriSafely(
                         uriHandler = uriHandler,
-                        uri = "https://github.com/yuanyuan2233/psychonautwiki-journal-android",
+                        uri = GITHUB_REPO_URL,
                         onFailure = { showSnackbarMessage(R.string.settings_no_app_to_open_link) }
                     )
                 }
@@ -537,20 +546,226 @@ fun SettingsScreen(
                     }
                 }
                 HorizontalDivider()
-                Text(
-                    text = stringResource(R.string.settings_version, VERSION_NAME),
-                    style = MaterialTheme.typography.labelLarge,
+                val isCheckingUpdates = updateCheckState is UpdateCheckUiState.Checking
+                TextButton(
+                    onClick = { if (!isCheckingUpdates) onCheckForUpdates() },
+                    enabled = !isCheckingUpdates,
+                    modifier = Modifier.padding(horizontal = 2.dp)
+                ) {
+                    if (isCheckingUpdates) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.SystemUpdate,
+                            contentDescription = Icons.Outlined.SystemUpdate.name,
+                            modifier = Modifier.size(ButtonDefaults.IconSize)
+                        )
+                    }
+                    Spacer(Modifier.size(ButtonDefaults.IconSpacing))
+                    Text(
+                        text = if (isCheckingUpdates) {
+                            stringResource(R.string.settings_checking_updates)
+                        } else {
+                            stringResource(R.string.settings_check_updates)
+                        }
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+                HorizontalDivider()
+                Column(
                     modifier = Modifier
                         .padding(horizontal = 15.dp)
-                        .padding(vertical = 10.dp)
-                )
+                        .padding(vertical = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_version, VERSION_NAME),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Text(
+                        text = stringResource(R.string.settings_update_privacy_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
+            UpdateStatusDialog(
+                state = updateCheckState,
+                uriHandler = uriHandler,
+                onDismiss = onDismissUpdateDialog,
+                onOpenLinkFailure = { showSnackbarMessage(R.string.settings_no_app_to_open_link) }
+            )
         }
     }
 }
 
 val SHARE_APP_URL: String
-    get() = "PsychonautWiki Journal 中文版 (v$VERSION_NAME)：\nhttps://github.com/yuanyuan2233/psychonautwiki-journal-android/releases/latest"
+    get() = "PsychonautWiki Journal+ 中文版 (v$VERSION_NAME)：\n$GITHUB_RELEASES_LATEST_URL"
+
+@Composable
+private fun UpdateStatusDialog(
+    state: UpdateCheckUiState,
+    uriHandler: UriHandler,
+    onDismiss: () -> Unit,
+    onOpenLinkFailure: () -> Unit
+) {
+    when (state) {
+        UpdateCheckUiState.Idle,
+        UpdateCheckUiState.Checking -> Unit
+
+        is UpdateCheckUiState.UpdateAvailable -> {
+            val primaryUrl = state.latest.apkDownloadUrl ?: state.latest.htmlUrl
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(
+                        text = stringResource(
+                            R.string.settings_update_available_title,
+                            state.latest.releaseName
+                        )
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = stringResource(
+                                R.string.settings_update_current_and_latest,
+                                state.currentVersion,
+                                state.latest.tagName
+                            ),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = state.latest.body.ifBlank {
+                                stringResource(R.string.settings_update_release_notes_empty)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .heightIn(max = 260.dp)
+                                .verticalScroll(rememberScrollState())
+                        )
+                        if (state.latest.apkDownloadUrl != null) {
+                            TextButton(
+                                onClick = {
+                                    onDismiss()
+                                    openUriSafely(
+                                        uriHandler = uriHandler,
+                                        uri = state.latest.htmlUrl,
+                                        onFailure = onOpenLinkFailure
+                                    )
+                                }
+                            ) {
+                                Text(stringResource(R.string.settings_update_open_release_page))
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            openUriSafely(
+                                uriHandler = uriHandler,
+                                uri = primaryUrl,
+                                onFailure = onOpenLinkFailure
+                            )
+                        }
+                    ) {
+                        Text(
+                            text = if (state.latest.apkDownloadUrl != null) {
+                                stringResource(R.string.settings_update_download_apk)
+                            } else {
+                                stringResource(R.string.settings_update_open_release_page)
+                            }
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.settings_cancel))
+                    }
+                }
+            )
+        }
+
+        is UpdateCheckUiState.UpToDate -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(stringResource(R.string.settings_update_up_to_date_title))
+                },
+                text = {
+                    Text(
+                        text = stringResource(
+                            R.string.settings_update_up_to_date_desc,
+                            state.currentVersion,
+                            state.latest.tagName
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.settings_update_ok))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            openUriSafely(
+                                uriHandler = uriHandler,
+                                uri = state.latest.htmlUrl,
+                                onFailure = onOpenLinkFailure
+                            )
+                        }
+                    ) {
+                        Text(stringResource(R.string.settings_update_open_release_page))
+                    }
+                }
+            )
+        }
+
+        is UpdateCheckUiState.Error -> {
+            AlertDialog(
+                onDismissRequest = onDismiss,
+                title = {
+                    Text(stringResource(R.string.settings_update_error_title))
+                },
+                text = {
+                    Text(
+                        text = stringResource(
+                            R.string.settings_update_error_desc,
+                            state.reason
+                        )
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            onDismiss()
+                            openUriSafely(
+                                uriHandler = uriHandler,
+                                uri = GITHUB_RELEASES_LATEST_URL,
+                                onFailure = onOpenLinkFailure
+                            )
+                        }
+                    ) {
+                        Text(stringResource(R.string.settings_update_open_release_page))
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.settings_cancel))
+                    }
+                }
+            )
+        }
+    }
+}
 
 
 

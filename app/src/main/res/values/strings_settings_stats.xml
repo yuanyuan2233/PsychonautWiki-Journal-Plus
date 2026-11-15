@@ -37,6 +37,19 @@
     <string name="settings_section_app">App</string>
     <string name="settings_source_code">Source Code</string>
     <string name="settings_share">Share</string>
+    <string name="settings_check_updates">Check for updates</string>
+    <string name="settings_checking_updates">Checking for updates…</string>
+    <string name="settings_update_privacy_hint">Connects to GitHub only when tapped (zero background traffic)</string>
+    <string name="settings_update_available_title">New Version Available: %1$s</string>
+    <string name="settings_update_current_and_latest">Current: v%1$s  →  Latest: %2$s</string>
+    <string name="settings_update_release_notes_empty">No release notes provided.</string>
+    <string name="settings_update_download_apk">Download APK</string>
+    <string name="settings_update_open_release_page">GitHub Releases</string>
+    <string name="settings_update_up_to_date_title">You\'re Up to Date</string>
+    <string name="settings_update_up_to_date_desc">Installed version v%1$s is already at or ahead of the latest published GitHub release (%2$s).</string>
+    <string name="settings_update_error_title">Unable to Check Updates</string>
+    <string name="settings_update_error_desc">Could not reach GitHub Releases API (%1$s). You can open the GitHub Releases page directly in your browser.</string>
+    <string name="settings_update_ok">Got it</string>
     <string name="settings_version">Version %1$s</string>
 
     <!-- Settings: Donate -->

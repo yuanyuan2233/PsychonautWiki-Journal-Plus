@@ -31,13 +31,17 @@ import com.isaakhanimann.journal.data.room.experiences.RoutineDao
 import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.data.substances.PkCustomizationStore
 import com.isaakhanimann.journal.data.substances.SubstancePkCustomization
+import com.isaakhanimann.journal.ui.VERSION_NAME
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import com.isaakhanimann.journal.ui.tabs.stats.tolerance.SubstanceToleranceCustomization
 import com.isaakhanimann.journal.ui.tabs.stats.tolerance.ToleranceCustomizationStore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -104,6 +108,24 @@ class SettingsViewModel @Inject constructor(
 
     fun saveAppLanguage(value: AppLanguage) = viewModelScope.launch {
         userPreferences.saveAppLanguage(value)
+    }
+
+    private val _updateCheckState = MutableStateFlow<UpdateCheckUiState>(UpdateCheckUiState.Idle)
+    val updateCheckStateFlow = _updateCheckState.asStateFlow()
+    private var updateCheckJob: Job? = null
+
+    fun checkForUpdates(currentVersionName: String = VERSION_NAME) {
+        if (updateCheckJob?.isActive == true) return
+        updateCheckJob = viewModelScope.launch {
+            _updateCheckState.value = UpdateCheckUiState.Checking
+            _updateCheckState.value = AppUpdateChecker.checkLatestRelease(currentVersionName)
+        }
+    }
+
+    fun dismissUpdateDialog() {
+        updateCheckJob?.cancel()
+        updateCheckJob = null
+        _updateCheckState.value = UpdateCheckUiState.Idle
     }
 
     val snackbarHostState = SnackbarHostState()
