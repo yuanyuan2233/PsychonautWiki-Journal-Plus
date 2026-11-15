@@ -208,6 +208,7 @@
     <string name="journal_alert_unsafe_extra">与 %1$s 存在不安全的相互作用。</string>
     <string name="journal_alert_uncertain_with_time">与 %1$s 存在不确定的相互作用（%2$s 前服用）。</string>
     <string name="journal_alert_uncertain_extra">与 %1$s 存在不确定的相互作用。</string>
+    <string name="journal_alert_residual_washout_suffix">（长效活性代谢物/临床洗脱期残留）</string>
     <string name="journal_other_routes">其他给药途径</string>
     <string name="journal_substance_route">%1$s 给药途径</string>
     <string name="journal_routes_info">给药途径说明</string>

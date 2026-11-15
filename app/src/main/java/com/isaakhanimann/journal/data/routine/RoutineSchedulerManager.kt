@@ -329,6 +329,16 @@ class RoutineSchedulerManager @Inject constructor(
         )
     }
 
+    suspend fun getInteractionWashoutHoursForIngestion(ingestion: Ingestion): Double {
+        val schedule = ingestion.routineScheduleId?.let { routineDao.getSchedule(it) }
+        val substance = substanceRepository.getSubstance(ingestion.substanceName)
+        return SmartExperienceSelector.resolveInteractionWashoutHours(
+            customHalfLifeHours = schedule?.customHalfLifeHours,
+            substance = substance,
+            route = ingestion.administrationRoute
+        )
+    }
+
     private suspend fun reconcileSingleScheduleLocked(
         schedule: MedicationSchedule,
         now: Instant,

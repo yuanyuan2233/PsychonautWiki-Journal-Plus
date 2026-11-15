@@ -370,7 +370,7 @@ class ExperienceViewModel @Inject constructor(
                 routineIng.consumerName == null && routineIng.experienceId != experienceId
             }
             val residualRoutineSubstances = lookbackIngestions.filter { routineIng ->
-                val windowHours = routineSchedulerManager.getSmartWindowHoursForIngestion(routineIng)
+                val windowHours = routineSchedulerManager.getInteractionWashoutHoursForIngestion(routineIng)
                 SmartExperienceSelector.isRoutineDoseActiveForInteractions(
                     routineTime = routineIng.time,
                     experienceStartTime = expStart,

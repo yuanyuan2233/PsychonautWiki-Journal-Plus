@@ -208,6 +208,7 @@
     <string name="journal_alert_unsafe_extra">Unsafe interaction with %1$s.</string>
     <string name="journal_alert_uncertain_with_time">Uncertain interaction with %1$s (taken %2$s ago).</string>
     <string name="journal_alert_uncertain_extra">Uncertain interaction with %1$s.</string>
+    <string name="journal_alert_residual_washout_suffix"> (active metabolite / clinical washout residual)</string>
     <string name="journal_other_routes">Other routes</string>
     <string name="journal_substance_route">%1$s route</string>
     <string name="journal_routes_info">Administration routes info</string>

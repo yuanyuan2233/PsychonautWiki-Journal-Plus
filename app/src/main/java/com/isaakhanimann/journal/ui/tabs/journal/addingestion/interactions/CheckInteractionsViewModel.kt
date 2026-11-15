@@ -29,22 +29,23 @@ import androidx.navigation.toRoute
 import com.isaakhanimann.journal.R
 import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.data.room.experiences.entities.Ingestion
+import com.isaakhanimann.journal.data.routine.SmartExperienceSelector
 import com.isaakhanimann.journal.data.substances.classes.InteractionType
 import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepository
 import com.isaakhanimann.journal.ui.main.navigation.graphs.CheckInteractionsRoute
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.getDurationText
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.CombinationSettingsStorage
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class CheckInteractionsViewModel @Inject constructor(
-    substanceRepo: SubstanceRepository,
+    private val substanceRepo: SubstanceRepository,
     private val experienceRepo: ExperienceRepository,
     private val combinationSettingsStorage: CombinationSettingsStorage,
     private val interactionChecker: InteractionChecker,
@@ -61,7 +62,7 @@ class CheckInteractionsViewModel @Inject constructor(
     var isShowingAlert by mutableStateOf(false)
     var alertInteractionType by mutableStateOf<InteractionType?>(null)
     var alertItems by mutableStateOf<List<AlertItem>>(emptyList())
-    private var latestIngestionsOfEverySubstanceSinceTwoDays: List<Ingestion> = emptyList()
+    private var latestActiveIngestions: List<Ingestion> = emptyList()
 
     sealed interface AlertItem {
         val type: InteractionType
@@ -71,9 +72,22 @@ class CheckInteractionsViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val twoDaysAgo = Instant.now().minus(2, ChronoUnit.DAYS)
-            latestIngestionsOfEverySubstanceSinceTwoDays =
-                experienceRepo.getLatestIngestionOfEverySubstanceSinceDate(twoDaysAgo)
+            val now = Instant.now()
+            val lookbackCutoff = now.minus(
+                SmartExperienceSelector.MAX_INTERACTION_LOOKBACK_HOURS,
+                ChronoUnit.HOURS
+            )
+            val candidates = experienceRepo.getLatestIngestionOfEverySubstanceSinceDate(lookbackCutoff)
+            latestActiveIngestions = candidates.filter { ingestion ->
+                val ingSubstance = substanceRepo.getSubstance(ingestion.substanceName)
+                val washoutHours = SmartExperienceSelector.resolveInteractionWashoutHours(
+                    customHalfLifeHours = null,
+                    substance = ingSubstance,
+                    route = ingestion.administrationRoute
+                )
+                val cutoff = now.minusMillis((washoutHours * 3_600_000.0).toLong())
+                !ingestion.time.isBefore(cutoff)
+            }
             checkInteractionsAndMaybeShowAlert()
             isSearchingForInteractions = false
         }
@@ -138,7 +152,20 @@ class CheckInteractionsViewModel @Inject constructor(
                         InteractionType.UNSAFE -> R.string.journal_alert_unsafe_with_time
                         InteractionType.UNCERTAIN -> R.string.journal_alert_uncertain_with_time
                     }
-                    messages.add(context.getString(strRes, localizedName, timeDiff))
+                    val baseMsg = context.getString(strRes, localizedName, timeDiff)
+                    val hoursAgo = Duration.between(item.ingestion.time, now).toHours()
+                    val pk = substanceRepo.getSubstance(item.ingestion.substanceName)?.pharmacokinetics
+                    val isLongWashout = hoursAgo > 48L && pk != null && (
+                        pk.activeMetabolites.isNotEmpty() ||
+                            pk.washoutHours != null ||
+                            (pk.resolvedEffectiveHalfLifeHours ?: 0.0) >= 24.0
+                        )
+                    val msg = if (isLongWashout) {
+                        baseMsg + context.getString(R.string.journal_alert_residual_washout_suffix)
+                    } else {
+                        baseMsg
+                    }
+                    messages.add(msg)
                 }
                 is AlertItem.ExtraAlert -> {
                     val localizedExtra = com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper.getLocalizedName(item.extra)
@@ -155,7 +182,7 @@ class CheckInteractionsViewModel @Inject constructor(
     }
 
     private fun getIngestionsWithInteraction(): List<IngestionInteraction> {
-        return latestIngestionsOfEverySubstanceSinceTwoDays.mapNotNull { ingestion ->
+        return latestActiveIngestions.mapNotNull { ingestion ->
             val interaction = interactionChecker.getInteractionBetween(
                 aName = substanceName,
                 bName = ingestion.substanceName

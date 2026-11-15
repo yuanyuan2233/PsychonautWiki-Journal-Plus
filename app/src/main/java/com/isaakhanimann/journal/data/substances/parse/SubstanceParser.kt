@@ -175,7 +175,57 @@ class SubstanceParser @Inject constructor() : SubstanceParserInterface {
             brandName = jsonPk.getOptionalString("brandName"),
             indications = parseJsonArrayToStringArray(jsonPk.getOptionalJSONArray("indications")),
             contraindications = parseJsonArrayToStringArray(jsonPk.getOptionalJSONArray("contraindications")),
+            pkRole = jsonPk.getOptionalString("pkRole"),
+            effectiveHalfLifeHours = jsonPk.getOptionalDouble("effectiveHalfLifeHours"),
+            washoutHours = jsonPk.getOptionalDouble("washoutHours"),
+            washoutNote = jsonPk.getOptionalString("washoutNote"),
+            mechanismSummary = jsonPk.getOptionalString("mechanismSummary"),
+            activeMetabolites = parseActiveMetabolites(jsonPk.getOptionalJSONArray("activeMetabolites")),
+            receptorTargets = parseReceptorTargets(jsonPk.getOptionalJSONArray("receptorTargets")),
         )
+    }
+
+    private fun parseActiveMetabolites(jsonArray: JSONArray?): List<ActiveMetabolite> {
+        if (jsonArray == null) return emptyList()
+        val result = mutableListOf<ActiveMetabolite>()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getOptionalJSONObject(i) ?: continue
+            val name = obj.getOptionalString("name")?.takeIf { it.isNotBlank() } ?: continue
+            result.add(
+                ActiveMetabolite(
+                    name = name,
+                    pathway = obj.getOptionalString("pathway")?.takeIf { it.isNotBlank() },
+                    halfLife = obj.getOptionalString("halfLife")?.takeIf { it.isNotBlank() },
+                    halfLifeHours = obj.getOptionalDouble("halfLifeHours"),
+                    tMaxHours = obj.getOptionalDouble("tMaxHours"),
+                    exposureRatio = obj.getOptionalDouble("exposureRatio"),
+                    relativeExposure = obj.getOptionalString("relativeExposure")?.takeIf { it.isNotBlank() },
+                    pharmacologicalRole = obj.getOptionalString("pharmacologicalRole")?.takeIf { it.isNotBlank() },
+                )
+            )
+        }
+        return result
+    }
+
+    private fun parseReceptorTargets(jsonArray: JSONArray?): List<ReceptorTarget> {
+        if (jsonArray == null) return emptyList()
+        val result = mutableListOf<ReceptorTarget>()
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getOptionalJSONObject(i) ?: continue
+            val target = obj.getOptionalString("target")?.takeIf { it.isNotBlank() } ?: continue
+            val action = obj.getOptionalString("action")?.takeIf { it.isNotBlank() } ?: continue
+            val rawWeight = obj.getOptionalDouble("affinityWeight")?.toFloat() ?: 0.7f
+            result.add(
+                ReceptorTarget(
+                    target = target,
+                    action = action,
+                    affinityTier = obj.getOptionalString("affinityTier")?.takeIf { it.isNotBlank() },
+                    affinityWeight = if (rawWeight.isFinite()) rawWeight.coerceIn(0.1f, 1.0f) else 0.7f,
+                    dominantActor = obj.getOptionalString("dominantActor")?.takeIf { it.isNotBlank() },
+                )
+            )
+        }
+        return result
     }
 
     private fun parseInteractions(jsonInteractions: JSONObject?): Interactions? {

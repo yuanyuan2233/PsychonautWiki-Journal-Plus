@@ -152,4 +152,102 @@ class SmartExperienceSelectorTest {
             )
         )
     }
+
+    @Test
+    fun resolveInteractionWashoutHoursSupportsLongMetaboliteAndIrreversibleWashouts() {
+        org.junit.Assert.assertEquals(
+            840.0,
+            SmartExperienceSelector.resolveInteractionWashoutHours(
+                customHalfLifeHours = null,
+                substanceWashoutHours = 840.0,
+                substanceEffectiveHalfLifeHours = 216.0,
+                roaTotalMaxHours = 24.0
+            ),
+            0.001
+        )
+        org.junit.Assert.assertEquals(
+            336.0,
+            SmartExperienceSelector.resolveInteractionWashoutHours(
+                customHalfLifeHours = null,
+                substanceWashoutHours = 336.0,
+                substanceEffectiveHalfLifeHours = 2.5,
+                roaTotalMaxHours = 8.0
+            ),
+            0.001
+        )
+        org.junit.Assert.assertEquals(
+            48.0,
+            SmartExperienceSelector.resolveSmartWindowHours(
+                customHalfLifeHours = null,
+                substanceHalfLifeHours = 336.0,
+                roaTotalMaxHours = 24.0
+            )!!,
+            0.001
+        )
+        org.junit.Assert.assertEquals(
+            1008.0,
+            SmartExperienceSelector.resolveInteractionWashoutHours(
+                customHalfLifeHours = null,
+                substanceWashoutHours = 2000.0,
+                substanceEffectiveHalfLifeHours = 720.0,
+                roaTotalMaxHours = null
+            ),
+            0.001
+        )
+        org.junit.Assert.assertEquals(
+            12.0,
+            SmartExperienceSelector.resolveInteractionWashoutHours(
+                customHalfLifeHours = 1.0,
+                substanceWashoutHours = 4.0,
+                substanceEffectiveHalfLifeHours = 1.0,
+                roaTotalMaxHours = 2.0
+            ),
+            0.001
+        )
+        org.junit.Assert.assertEquals(
+            360.0,
+            SmartExperienceSelector.resolveInteractionWashoutHours(
+                customHalfLifeHours = 72.0,
+                substanceWashoutHours = 100.0,
+                substanceEffectiveHalfLifeHours = 20.0,
+                roaTotalMaxHours = null
+            ),
+            0.001
+        )
+    }
+
+    @Test
+    fun activeResidualInteractionCheckCoversFourteenAndThirtyDayWashouts() {
+        val routineDose = zdt(2026, 10, 10, 9, 0)
+        val twoWeeksLaterStart = zdt(2026, 10, 23, 12, 0) // ~315h later
+        val twoWeeksLaterEnd = zdt(2026, 10, 23, 18, 0)
+
+        assertTrue(
+            SmartExperienceSelector.isRoutineDoseActiveForInteractions(
+                routineTime = routineDose,
+                experienceStartTime = twoWeeksLaterStart,
+                experienceEndTime = twoWeeksLaterEnd,
+                windowHours = 336.0
+            )
+        )
+
+        val fortyDaysLaterStart = zdt(2026, 11, 19, 12, 0) // 40d = 960h later
+        val fortyDaysLaterEnd = zdt(2026, 11, 19, 16, 0)
+        assertTrue(
+            SmartExperienceSelector.isRoutineDoseActiveForInteractions(
+                routineTime = routineDose,
+                experienceStartTime = fortyDaysLaterStart,
+                experienceEndTime = fortyDaysLaterEnd,
+                windowHours = 1008.0
+            )
+        )
+        assertFalse(
+            SmartExperienceSelector.isRoutineDoseActiveForInteractions(
+                routineTime = routineDose,
+                experienceStartTime = fortyDaysLaterStart,
+                experienceEndTime = fortyDaysLaterEnd,
+                windowHours = 840.0
+            )
+        )
+    }
 }

@@ -225,4 +225,63 @@ class TestParse {
         assertTrue("Expected large substance catalog", result.substances.size > 100)
         assertTrue("LSD should exist in catalog", result.substances.any { it.name == "LSD" })
     }
+
+    @Test
+    fun parseBundledSubstancesAsset_includesDualPkMetabolitesAndReceptors() {
+        assumeTrue(
+            "Requires real org.json implementation",
+            isRealOrgJsonAvailable()
+        )
+        val candidates = listOf(
+            java.io.File("src/main/assets/Substances.json"),
+            java.io.File("app/src/main/assets/Substances.json")
+        )
+        val assetFile = candidates.firstOrNull { it.isFile }
+            ?: throw AssertionError("Substances.json not found from ${java.io.File(".").absolutePath}")
+        val result = SubstanceParser().parseSubstanceFile(assetFile.readText(Charsets.UTF_8))
+        val byName = result.substances.associateBy { it.name }
+
+        val cariprazine = byName["Cariprazine"]
+            ?: throw AssertionError("Cariprazine must exist in bundled catalog")
+        val cariPk = cariprazine.pharmacokinetics!!
+        org.junit.Assert.assertEquals("ACTIVE_METABOLITE", cariPk.pkRole)
+        org.junit.Assert.assertEquals(72.0, cariPk.halfLifeHours!!, 0.01)
+        org.junit.Assert.assertEquals(336.0, cariPk.resolvedEffectiveHalfLifeHours!!, 0.01)
+        org.junit.Assert.assertEquals(1008.0, cariPk.resolvedWashoutHours!!, 0.01)
+        assertTrue(cariPk.activeMetabolites.any { it.name.contains("DCAR") && !it.name.contains("DDCAR") })
+        assertTrue(cariPk.activeMetabolites.any { it.name.contains("DDCAR") && it.halfLifeHours == 336.0 })
+        assertTrue(cariPk.receptorTargets.any { it.target.contains("D3") && (it.dominantActor ?: "").contains("DDCAR") })
+        assertTrue(cariprazine.roas.isNotEmpty())
+
+        val brex = byName["Brexpiprazole"] ?: throw AssertionError("Brexpiprazole missing")
+        org.junit.Assert.assertEquals("PARENT_DOMINANT", brex.pharmacokinetics?.pkRole)
+        org.junit.Assert.assertEquals(455.0, brex.pharmacokinetics?.resolvedWashoutHours!!, 0.01)
+
+        val desven = byName["Desvenlafaxine"] ?: throw AssertionError("Desvenlafaxine missing")
+        org.junit.Assert.assertEquals("PARENT_DOMINANT", desven.pharmacokinetics?.pkRole)
+        org.junit.Assert.assertEquals(72.0, desven.pharmacokinetics?.resolvedWashoutHours!!, 0.01)
+
+        val fluoxetine = byName["Fluoxetine"]?.pharmacokinetics!!
+        org.junit.Assert.assertEquals("ACTIVE_METABOLITE", fluoxetine.pkRole)
+        org.junit.Assert.assertEquals(72.0, fluoxetine.halfLifeHours!!, 0.01)
+        org.junit.Assert.assertEquals(216.0, fluoxetine.resolvedEffectiveHalfLifeHours!!, 0.01)
+        org.junit.Assert.assertEquals(840.0, fluoxetine.resolvedWashoutHours!!, 0.01)
+        assertTrue(fluoxetine.activeMetabolites.any { it.name.contains("Norfluoxetine") })
+
+        val tranyl = byName["Tranylcypromine"]?.pharmacokinetics!!
+        org.junit.Assert.assertEquals("IRREVERSIBLE_PD", tranyl.pkRole)
+        org.junit.Assert.assertEquals(2.5, tranyl.halfLifeHours!!, 0.01)
+        org.junit.Assert.assertEquals(336.0, tranyl.resolvedWashoutHours!!, 0.01)
+
+        val codeine = byName["Codeine"]?.pharmacokinetics!!
+        org.junit.Assert.assertEquals("PRODRUG", codeine.pkRole)
+        assertTrue(codeine.activeMetabolites.any { it.name.contains("Morphine") })
+
+        val tramadol = byName["Tramadol"]?.pharmacokinetics!!
+        org.junit.Assert.assertEquals("ACTIVE_METABOLITE", tramadol.pkRole)
+        assertTrue(tramadol.activeMetabolites.any { it.name.contains("O-DSMT") })
+
+        val upgradedWithRoles = result.substances.count { it.pharmacokinetics?.pkRole != null }
+        assertTrue("Expected at least 55 upgraded PK profiles, got $upgradedWithRoles", upgradedWithRoles >= 55)
+    }
 }

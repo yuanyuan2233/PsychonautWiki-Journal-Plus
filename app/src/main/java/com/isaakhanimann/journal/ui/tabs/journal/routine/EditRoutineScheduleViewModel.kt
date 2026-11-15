@@ -271,7 +271,7 @@ class EditRoutineScheduleViewModel @Inject constructor(
 
     fun getPkHintData(): Pair<Double?, String?> {
         val sub = substanceRepository.getSubstance(substanceName) ?: return null to null
-        val halfLife = sub.pharmacokinetics?.halfLifeHours
+        val halfLife = sub.pharmacokinetics?.resolvedEffectiveHalfLifeHours
         val total = sub.getRoa(selectedRoute)?.roaDuration?.total?.text
         return halfLife to total
     }

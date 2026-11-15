@@ -340,7 +340,7 @@ fun SubstanceScreen(
                 }
             }
             substance.pharmacokinetics?.let { pk ->
-                PharmacokineticsView(pk = pk)
+                PharmacokineticsView(pk = pk, substanceName = displayName)
             }
             val roasWithDosesDefined = substance.roas.filter { roa ->
                 val roaDose = roa.roaDose
@@ -578,7 +578,7 @@ fun SubstanceScreen(
                     }
                 }
             }
-            if (substance.generalRisks != null && substance.longtermRisks != null) {
+            if (substance.generalRisks != null) {
                 SectionWithTitle(title = stringResource(R.string.drugs_risks)) {
                     Column {
                         Text(
@@ -588,6 +588,8 @@ fun SubstanceScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
+            }
+            if (substance.longtermRisks != null) {
                 SectionWithTitle(title = stringResource(R.string.drugs_long_term)) {
                     Column {
                         Text(

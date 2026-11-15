@@ -15734,6 +15734,102 @@
       ],
       "cas": null,
       "url": "https://en.wikipedia.org/wiki/Psilocybe_cubensis"
+    },
+    "Cariprazine": {
+      "name_en": "Cariprazine",
+      "name_zh": "卡利哌嗪",
+      "zh_aliases": [
+        "卡利哌嗪",
+        "瑞吉拉",
+        "Vraylar",
+        "Reagila"
+      ],
+      "pinyin": [
+        "ka'li'pai'qin",
+        "kalipaiqin",
+        "rui'ji'la",
+        "ruijila"
+      ],
+      "pinyin_abbr": [
+        "klpq",
+        "rjl"
+      ],
+      "categories": [
+        "antipsychotic",
+        "atypical antipsychotic",
+        "common"
+      ],
+      "categories_zh": [
+        "抗精神病药",
+        "非典型抗精神病药",
+        "常见物质"
+      ],
+      "url": "https://en.wikipedia.org/wiki/Cariprazine"
+    },
+    "Brexpiprazole": {
+      "name_en": "Brexpiprazole",
+      "name_zh": "依派哌唑",
+      "zh_aliases": [
+        "依派哌唑",
+        "布瑞哌唑",
+        "瑞雪丽",
+        "Rexulti"
+      ],
+      "pinyin": [
+        "yi'pai'pai'zuo",
+        "yipaipaizuo",
+        "bu'rui'pai'zuo",
+        "buruipaizuo",
+        "rui'xue'li",
+        "ruixueli"
+      ],
+      "pinyin_abbr": [
+        "yppz",
+        "brpz",
+        "rxl"
+      ],
+      "categories": [
+        "antipsychotic",
+        "atypical antipsychotic",
+        "antidepressant"
+      ],
+      "categories_zh": [
+        "抗精神病药",
+        "非典型抗精神病药",
+        "抗抑郁药"
+      ],
+      "url": "https://en.wikipedia.org/wiki/Brexpiprazole"
+    },
+    "Desvenlafaxine": {
+      "name_en": "Desvenlafaxine",
+      "name_zh": "去甲文拉法辛",
+      "zh_aliases": [
+        "去甲文拉法辛",
+        "地文拉法辛",
+        "Pristiq",
+        "ODV"
+      ],
+      "pinyin": [
+        "qu'jia'wen'la'fa'xin",
+        "qujiawenlafaxin",
+        "di'wen'la'fa'xin",
+        "diwenlafaxin"
+      ],
+      "pinyin_abbr": [
+        "qjwlfx",
+        "dwlfx"
+      ],
+      "categories": [
+        "antidepressant",
+        "snri",
+        "common"
+      ],
+      "categories_zh": [
+        "抗抑郁药",
+        "SNRI",
+        "常见物质"
+      ],
+      "url": "https://en.wikipedia.org/wiki/Desvenlafaxine"
     }
   }
 }

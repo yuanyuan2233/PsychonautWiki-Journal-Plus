@@ -12,7 +12,8 @@ object SmartExperienceSelector {
 
     const val MIN_WINDOW_HOURS = 12.0
     const val MAX_WINDOW_HOURS = 48.0
-    const val MAX_INTERACTION_LOOKBACK_HOURS = 48L
+    const val MAX_INTERACTION_WASHOUT_HOURS = 1008.0 // 42 天 (6 周)，覆盖去甲氟西汀 5 周洗脱期与卡利哌嗪 DDCAR
+    const val MAX_INTERACTION_LOOKBACK_HOURS = 1008L
 
     fun resolveSmartWindowHours(
         customHalfLifeHours: Double?,
@@ -27,7 +28,7 @@ object SmartExperienceSelector {
             ?.let { it.toDouble() / 3600.0 }
         return resolveSmartWindowHours(
             customHalfLifeHours = customHalfLifeHours,
-            substanceHalfLifeHours = substance?.pharmacokinetics?.halfLifeHours,
+            substanceHalfLifeHours = substance?.pharmacokinetics?.resolvedEffectiveHalfLifeHours,
             roaTotalMaxHours = roaDurationHours
         )
     }
@@ -42,6 +43,43 @@ object SmartExperienceSelector {
             ?: roaTotalMaxHours?.takeIf { it > 0.0 }
             ?: return null
         return raw.coerceIn(MIN_WINDOW_HOURS, MAX_WINDOW_HOURS)
+    }
+
+    /**
+     * 计算 DDI 药物相互作用检查专用的残留活性/临床洗脱回溯窗口（12 ~ 1008 小时）：
+     * 优先采用用户自定义半衰期的 5 倍清除时间，其次读取物质临床洗脱期、总活性半衰期×5 或给药总时长。
+     */
+    fun resolveInteractionWashoutHours(
+        customHalfLifeHours: Double?,
+        substance: Substance?,
+        route: AdministrationRoute
+    ): Double {
+        val roaDurationHours = substance
+            ?.getRoa(route)
+            ?.roaDuration
+            ?.total
+            ?.maxInSec
+            ?.let { it.toDouble() / 3600.0 }
+        return resolveInteractionWashoutHours(
+            customHalfLifeHours = customHalfLifeHours,
+            substanceWashoutHours = substance?.pharmacokinetics?.resolvedWashoutHours,
+            substanceEffectiveHalfLifeHours = substance?.pharmacokinetics?.resolvedEffectiveHalfLifeHours,
+            roaTotalMaxHours = roaDurationHours
+        )
+    }
+
+    fun resolveInteractionWashoutHours(
+        customHalfLifeHours: Double?,
+        substanceWashoutHours: Double?,
+        substanceEffectiveHalfLifeHours: Double?,
+        roaTotalMaxHours: Double?
+    ): Double {
+        val raw = customHalfLifeHours?.takeIf { it > 0.0 }?.let { it * 5.0 }
+            ?: substanceWashoutHours?.takeIf { it > 0.0 }
+            ?: substanceEffectiveHalfLifeHours?.takeIf { it > 0.0 }?.let { it * 5.0 }
+            ?: roaTotalMaxHours?.takeIf { it > 0.0 }
+            ?: MAX_WINDOW_HOURS
+        return raw.coerceIn(MIN_WINDOW_HOURS, MAX_INTERACTION_WASHOUT_HOURS)
     }
 
     fun selectTargetNonRoutineExperience(
@@ -111,9 +149,10 @@ object SmartExperienceSelector {
         routineTime: Instant,
         experienceStartTime: Instant,
         experienceEndTime: Instant,
-        windowHours: Double?
+        windowHours: Double?,
+        maxWindowHours: Double = MAX_INTERACTION_WASHOUT_HOURS
     ): Boolean {
-        val effectiveHours = (windowHours ?: MIN_WINDOW_HOURS).coerceIn(MIN_WINDOW_HOURS, MAX_WINDOW_HOURS)
+        val effectiveHours = (windowHours ?: MIN_WINDOW_HOURS).coerceIn(MIN_WINDOW_HOURS, maxWindowHours)
         val routineActiveEnd = routineTime.plusMillis((effectiveHours * 3_600_000.0).toLong())
         val minExperienceEnd = experienceStartTime.plusMillis((MIN_WINDOW_HOURS * 3_600_000.0).toLong())
         val effectiveExpEnd = if (experienceEndTime.isAfter(minExperienceEnd)) experienceEndTime else minExperienceEnd
