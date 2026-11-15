@@ -2,10 +2,10 @@
 
 基于 Jetpack Compose 开发的离线个人用药记录、规律服药管理与科学减害（Harm Reduction）参考工具（中英双语增强版）。
 
-[![Latest Release](https://img.shields.io/github/v/release/yuanyuan2233/psychonautwiki-journal-android-zh_CN?label=Release&color=blue)](https://github.com/yuanyuan2233/psychonautwiki-journal-android-zh_CN/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/yuanyuan2233/PsychonautWiki-Journal-Plus?label=Release&color=blue)](https://github.com/yuanyuan2233/PsychonautWiki-Journal-Plus/releases/latest)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-green.svg)](LICENSE)
 [![Android 8.0+](https://img.shields.io/badge/Android-8.0%2B-orange.svg)](https://developer.android.com/about/versions/oreo)
-[![Offline & Private](https://img.shields.io/badge/Privacy-100%25%20Offline-success.svg)](https://github.com/yuanyuan2233/psychonautwiki-journal-android-zh_CN)
+[![Offline & Private](https://img.shields.io/badge/Privacy-100%25%20Offline-success.svg)](https://github.com/yuanyuan2233/PsychonautWiki-Journal-Plus)
 
 ---
 
@@ -64,7 +64,7 @@ PsychonautWiki Journal 原由 Isaak Hanimann 开源维护（至 v11.11 版本）
 
 ## 下载、安装与权限说明
 
-从 [GitHub Releases 页面](https://github.com/yuanyuan2233/psychonautwiki-journal-android-zh_CN/releases/latest) 下载预编译的稳定版 APK：
+从 [GitHub Releases 页面](https://github.com/yuanyuan2233/PsychonautWiki-Journal-Plus/releases/latest) 下载预编译的稳定版 APK：
 
 - **系统要求**：Android 8.0 (API 26) 及以上（`targetSdk = 35`）
 - **共存包名与桌面名称**：
@@ -87,8 +87,8 @@ PsychonautWiki Journal 原由 Isaak Hanimann 开源维护（至 v11.11 版本）
 
 ### 常用命令
 ```bash
-git clone https://github.com/yuanyuan2233/psychonautwiki-journal-android-zh_CN.git
-cd psychonautwiki-journal-android-zh_CN
+git clone https://github.com/yuanyuan2233/PsychonautWiki-Journal-Plus.git
+cd PsychonautWiki-Journal-Plus
 
 # 运行本地 JVM 单元测试
 ./gradlew testDebugUnitTest
