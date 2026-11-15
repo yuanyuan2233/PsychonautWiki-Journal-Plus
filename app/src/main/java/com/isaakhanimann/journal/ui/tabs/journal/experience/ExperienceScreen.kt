@@ -30,8 +30,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.FilterChip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.NoteAdd
 import androidx.compose.material.icons.filled.Add
@@ -93,6 +95,8 @@ import com.isaakhanimann.journal.ui.tabs.journal.routine.RoutineUiHelpers
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CardTitle
 import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.CumulativeDoseRow
+import com.isaakhanimann.journal.ui.tabs.journal.experience.components.ExperiencePkTimelineCard
+import com.isaakhanimann.journal.ui.tabs.journal.experience.components.ExperiencePkTimelineContent
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.IngestionTimeOrDurationText
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.InteractionRow
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.NoteOrRatingTimeOrDurationText
@@ -146,7 +150,8 @@ fun ExperienceScreen(
         ratings = viewModel.ratingsFlow.collectAsState().value,
         timedNotesSorted = viewModel.timedNotesSortedFlow.collectAsState().value,
         consumersWithIngestions = viewModel.consumersWithIngestionsFlow.collectAsState().value,
-        dataForEffectLines = viewModel.dataForEffectTimelinesFlow.collectAsState().value
+        dataForEffectLines = viewModel.dataForEffectTimelinesFlow.collectAsState().value,
+        livePkSimulation = viewModel.livePkSimulationFlow.collectAsState().value,
     )
     ExperienceScreen(
         oneExperienceScreenModel = oneExperienceScreenModel,
@@ -695,6 +700,12 @@ private fun MyIngestionList(
     }
 }
 
+private enum class ExperienceTimelineMode {
+    DUAL,
+    PK_ONLY,
+    SUBJECTIVE_ONLY,
+}
+
 @Composable
 private fun MyTimelineSection(
     timelineDisplayOption: TimelineDisplayOption,
@@ -706,12 +717,40 @@ private fun MyTimelineSection(
     isOralDisclaimerHidden: Boolean,
     onChangeIsOralDisclaimerHidden: (Boolean) -> Unit,
 ) {
+    val livePkSim = oneExperienceScreenModel.livePkSimulation
+    val hasLivePk = livePkSim != null && livePkSim.profiles.isNotEmpty()
+    val isZh = SubstanceLocalizationHelper.isChinese()
+
     when (timelineDisplayOption) {
         TimelineDisplayOption.Hidden -> {}
-        TimelineDisplayOption.Loading -> LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-        TimelineDisplayOption.NotWorthDrawing -> {}
+        TimelineDisplayOption.Loading -> {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            if (hasLivePk) {
+                ExperiencePkTimelineCard(
+                    simulation = livePkSim!!,
+                    firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
+                    timeDisplayOption = timeDisplayOption,
+                    verticalCardPadding = verticalCardPadding
+                )
+            }
+        }
+        TimelineDisplayOption.NotWorthDrawing -> {
+            if (hasLivePk) {
+                ExperiencePkTimelineCard(
+                    simulation = livePkSim!!,
+                    firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
+                    timeDisplayOption = timeDisplayOption,
+                    verticalCardPadding = verticalCardPadding
+                )
+            }
+        }
         is TimelineDisplayOption.Shown -> {
             val timelineModel = timelineDisplayOption.allTimelinesModel
+            var timelineMode by remember(hasLivePk) {
+                mutableStateOf(
+                    if (hasLivePk) ExperienceTimelineMode.DUAL else ExperienceTimelineMode.SUBJECTIVE_ONLY
+                )
+            }
             ElevatedCard(modifier = Modifier.padding(vertical = verticalCardPadding)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -734,32 +773,78 @@ private fun MyTimelineSection(
                     modifier = Modifier
                         .padding(horizontal = horizontalPadding)
                         .padding(bottom = 10.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    AllTimelines(
-                        model = timelineModel,
-                        timeDisplayOption = timeDisplayOption,
-                        isShowingCurrentTime = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
-                    )
-                    val hasOralIngestion =
-                        oneExperienceScreenModel.ingestionElements.any { it.ingestionWithCompanionAndCustomUnit.ingestion.administrationRoute == AdministrationRoute.ORAL }
-                    if (hasOralIngestion && !isOralDisclaimerHidden) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = stringResource(R.string.journal_oral_stomach_disclaimer),
-                                style = MaterialTheme.typography.bodySmall,
-                                modifier = Modifier.weight(1f)
+                    if (hasLivePk) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = timelineMode == ExperienceTimelineMode.DUAL,
+                                onClick = { timelineMode = ExperienceTimelineMode.DUAL },
+                                label = {
+                                    Text(if (isZh) "主观+血药双视图" else "Dual View")
+                                }
                             )
-                            IconButton(onClick = { onChangeIsOralDisclaimerHidden(true) }) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = stringResource(R.string.journal_action_close_disclaimer)
+                            FilterChip(
+                                selected = timelineMode == ExperienceTimelineMode.PK_ONLY,
+                                onClick = { timelineMode = ExperienceTimelineMode.PK_ONLY },
+                                label = {
+                                    Text(if (isZh) "仅跨日血药实况" else "Live PK Only")
+                                }
+                            )
+                            FilterChip(
+                                selected = timelineMode == ExperienceTimelineMode.SUBJECTIVE_ONLY,
+                                onClick = { timelineMode = ExperienceTimelineMode.SUBJECTIVE_ONLY },
+                                label = {
+                                    Text(if (isZh) "仅主观药效" else "Subjective Only")
+                                }
+                            )
+                        }
+                    }
+
+                    if (!hasLivePk || timelineMode != ExperienceTimelineMode.PK_ONLY) {
+                        AllTimelines(
+                            model = timelineModel,
+                            timeDisplayOption = timeDisplayOption,
+                            isShowingCurrentTime = true,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        )
+                        val hasOralIngestion =
+                            oneExperienceScreenModel.ingestionElements.any { it.ingestionWithCompanionAndCustomUnit.ingestion.administrationRoute == AdministrationRoute.ORAL }
+                        if (hasOralIngestion && !isOralDisclaimerHidden) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(R.string.journal_oral_stomach_disclaimer),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.weight(1f)
                                 )
+                                IconButton(onClick = { onChangeIsOralDisclaimerHidden(true) }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = stringResource(R.string.journal_action_close_disclaimer)
+                                    )
+                                }
                             }
                         }
+                    }
+
+                    if (hasLivePk && timelineMode == ExperienceTimelineMode.DUAL) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+                    }
+
+                    if (hasLivePk && timelineMode != ExperienceTimelineMode.SUBJECTIVE_ONLY) {
+                        ExperiencePkTimelineContent(
+                            simulation = livePkSim!!,
+                            firstIngestionTime = oneExperienceScreenModel.firstIngestionTime,
+                            timeDisplayOption = timeDisplayOption,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }

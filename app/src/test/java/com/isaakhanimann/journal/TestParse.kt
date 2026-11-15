@@ -20,6 +20,7 @@ package com.isaakhanimann.journal
 
 import com.isaakhanimann.journal.data.substances.AdministrationRoute
 import com.isaakhanimann.journal.data.substances.parse.SubstanceParser
+import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -283,5 +284,38 @@ class TestParse {
 
         val upgradedWithRoles = result.substances.count { it.pharmacokinetics?.pkRole != null }
         assertTrue("Expected at least 55 upgraded PK profiles, got $upgradedWithRoles", upgradedWithRoles >= 55)
+    }
+
+    @Test
+    fun chineseSubstanceNamesAndFallbackRoaDurationResolveCorrectly() {
+        assumeTrue(
+            "Requires real org.json implementation",
+            isRealOrgJsonAvailable()
+        )
+        val candidates = listOf(
+            java.io.File("src/main/assets/Substances.json"),
+            java.io.File("app/src/main/assets/Substances.json")
+        )
+        val assetFile = candidates.firstOrNull { it.isFile }
+            ?: throw AssertionError("Substances.json not found")
+        val result = SubstanceParser().parseSubstanceFile(assetFile.readText(Charsets.UTF_8))
+
+        val chineseSamples = listOf(
+            "卡利哌嗪" to "Cariprazine",
+            "奥卡西平" to "Oxcarbazepine",
+            "帕利哌酮" to "Paliperidone",
+            "丙戊酸钠" to "Sodium valproate"
+        )
+        for ((zhName, expectedEn) in chineseSamples) {
+            val canonical = SubstanceLocalizationHelper.getCanonicalEnglishName(zhName)
+            assertEquals("Canonical English mismatch for $zhName", expectedEn, canonical)
+            val matched = result.substances.firstOrNull { s ->
+                s.name.equals(canonical, ignoreCase = true) ||
+                    s.commonNames.any { it.equals(zhName, ignoreCase = true) }
+            }
+            assertTrue("Expected bundled substance for $zhName", matched != null)
+            val fallbackDuration = matched!!.pharmacokinetics?.toFallbackRoaDuration()
+            assertTrue("Expected non-null fallback RoaDuration for $zhName", fallbackDuration?.total?.maxInSec != null)
+        }
     }
 }

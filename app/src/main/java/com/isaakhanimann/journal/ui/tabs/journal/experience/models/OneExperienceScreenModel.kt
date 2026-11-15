@@ -22,6 +22,7 @@ import com.isaakhanimann.journal.data.room.experiences.entities.ShulginRating
 import com.isaakhanimann.journal.data.room.experiences.entities.TimedNote
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.interactions.Interaction
 import com.isaakhanimann.journal.ui.tabs.journal.experience.components.DataForOneEffectLine
+import com.isaakhanimann.journal.ui.tabs.search.substance.ExperienceLivePkSimulation
 import java.time.Instant
 
 data class OneExperienceScreenModel(
@@ -39,4 +40,5 @@ data class OneExperienceScreenModel(
     val timedNotesSorted: List<TimedNote>,
     val consumersWithIngestions: List<ConsumerWithIngestions>,
     val dataForEffectLines: List<DataForOneEffectLine>,
+    val livePkSimulation: ExperienceLivePkSimulation? = null,
 )

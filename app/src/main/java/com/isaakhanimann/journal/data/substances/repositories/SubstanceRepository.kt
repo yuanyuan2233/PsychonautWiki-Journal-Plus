@@ -25,6 +25,7 @@ import com.isaakhanimann.journal.data.substances.classes.Substance
 import com.isaakhanimann.journal.data.substances.classes.SubstanceFile
 import com.isaakhanimann.journal.data.substances.classes.SubstanceWithCategories
 import com.isaakhanimann.journal.data.substances.parse.SubstanceParserInterface
+import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -135,7 +136,20 @@ class SubstanceRepository @Inject constructor(
         val trimmed = rawName.trim()
         if (trimmed.isEmpty()) return null
         file.substancesMap[trimmed]?.let { return it }
-        return file.substances.firstOrNull { it.name.equals(trimmed, ignoreCase = true) }
+        file.substances.firstOrNull { it.name.equals(trimmed, ignoreCase = true) }?.let { return it }
+
+        val canonicalEn = SubstanceLocalizationHelper.getCanonicalEnglishName(trimmed)
+        if (!canonicalEn.isNullOrBlank()) {
+            file.substancesMap[canonicalEn]?.let { return it }
+            file.substances.firstOrNull { it.name.equals(canonicalEn, ignoreCase = true) }?.let { return it }
+            file.substances.firstOrNull { s ->
+                s.commonNames.any { alias -> alias.equals(canonicalEn, ignoreCase = true) }
+            }?.let { return it }
+        }
+
+        return file.substances.firstOrNull { s ->
+            s.commonNames.any { alias -> alias.equals(trimmed, ignoreCase = true) }
+        }
     }
 
     private fun normalizeCategoryKey(name: String): String {

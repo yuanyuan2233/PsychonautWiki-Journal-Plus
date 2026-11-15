@@ -815,10 +815,10 @@ private fun DualTrackPkChartSection(
                     )
                 }
 
-                // 稳态预计达成标线
+                // 稳态预计达成标线（保留内边距避免贴死右边框）
                 sim.steadyStateHoursEstimate?.let { ssHours ->
-                    val xFrac = (ssHours / horizon).toFloat().coerceIn(0f, 1f)
-                    if (xFrac in 0.05f..0.98f) {
+                    if (ssHours > 0.0) {
+                        val xFrac = (ssHours / horizon).toFloat().coerceIn(0.03f, 0.985f)
                         val sx = padLeft + plotW * xFrac
                         drawLine(
                             color = steadyLineColor,
@@ -1251,8 +1251,20 @@ private fun ReceptorTargetRow(target: ReceptorTarget, isZh: Boolean) {
                     trackColor = MaterialTheme.colorScheme.outlineVariant
                 )
                 if (!target.affinityTier.isNullOrBlank()) {
+                    val localizedTier = if (isZh) {
+                        when (target.affinityTier.trim().lowercase(Locale.ROOT)) {
+                            "very high" -> "极高"
+                            "high" -> "高"
+                            "moderate", "medium" -> "中"
+                            "low" -> "低"
+                            "weak" -> "弱"
+                            else -> target.affinityTier
+                        }
+                    } else {
+                        target.affinityTier
+                    }
                     Text(
-                        text = target.affinityTier,
+                        text = localizedTier,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

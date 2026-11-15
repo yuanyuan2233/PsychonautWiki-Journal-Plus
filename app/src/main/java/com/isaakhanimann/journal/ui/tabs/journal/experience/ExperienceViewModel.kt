@@ -50,15 +50,24 @@ import com.isaakhanimann.journal.ui.tabs.journal.experience.timeline.DataForOneR
 import com.isaakhanimann.journal.ui.tabs.journal.experience.timeline.DataForOneTimedNote
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.CombinationSettingsStorage
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
+import com.isaakhanimann.journal.ui.tabs.search.SubstanceLocalizationHelper
+import com.isaakhanimann.journal.ui.tabs.search.substance.ExperienceLivePkSimulation
+import com.isaakhanimann.journal.ui.tabs.search.substance.LivePkSubstanceInput
+import com.isaakhanimann.journal.ui.tabs.search.substance.PkCurveCalculator
+import com.isaakhanimann.journal.ui.tabs.search.substance.RealDoseEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -240,9 +249,9 @@ class ExperienceViewModel @Inject constructor(
         sortedIngestionsWithCompanionsFlow.map { ingestionsWithComps ->
             ingestionsWithComps.map { oneIngestionWithComp ->
                 val ingestion = oneIngestionWithComp.ingestion
-                val roa = substanceRepo.getSubstance(oneIngestionWithComp.ingestion.substanceName)
-                    ?.getRoa(ingestion.administrationRoute)
-                val roaDuration = roa?.roaDuration
+                val substance = substanceRepo.getSubstance(oneIngestionWithComp.ingestion.substanceName)
+                val roa = substance?.getRoa(ingestion.administrationRoute)
+                val roaDuration = roa?.roaDuration ?: substance?.pharmacokinetics?.toFallbackRoaDuration()
                 IngestionWithAssociatedData(
                     ingestionWithCompanionAndCustomUnit = oneIngestionWithComp,
                     roaDuration = roaDuration,
@@ -330,6 +339,141 @@ class ExperienceViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)
     )
+
+    private val allSubstanceCompanionsFlow = experienceRepo.getAllSubstanceCompanionsFlow()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val livePkSimulationFlow = combine(
+        sortedIngestionsWithCompanionsFlow,
+        experienceFlow
+    ) { ingestions, exp ->
+        val myIngestions = ingestions.filter { it.ingestion.consumerName == null }
+        if (myIngestions.isEmpty()) {
+            if (ingestions.isNotEmpty()) return@combine null
+            val fallbackAnchor = exp?.sortDate ?: return@combine null
+            val winStart = fallbackAnchor.minus(1, ChronoUnit.HOURS)
+            val winEnd = fallbackAnchor.plus(24, ChronoUnit.HOURS)
+            return@combine winStart to winEnd
+        }
+        val firstTime = myIngestions.minOf { it.ingestion.time }
+        val lastTime = myIngestions.maxOf { it.ingestion.time }
+        val winStart = firstTime.minus(1, ChronoUnit.HOURS)
+        val plusFirst = firstTime.plus(24, ChronoUnit.HOURS)
+        val plusLast = lastTime.plus(18, ChronoUnit.HOURS)
+        val winEnd = if (plusLast.isAfter(plusFirst)) plusLast else plusFirst
+        winStart to winEnd
+    }
+        .distinctUntilChanged()
+        .flatMapLatest { window ->
+            if (window == null) {
+                flowOf(null)
+            } else {
+                val (winStart, winEnd) = window
+                val lookbackStart = winStart.minus(
+                    SmartExperienceSelector.MAX_INTERACTION_LOOKBACK_HOURS,
+                    ChronoUnit.HOURS
+                )
+                val minuteNowFlow = currentTimeFlow
+                    .map { now -> (now.epochSecond / 60L) * 60L }
+                    .distinctUntilChanged()
+                combine(
+                    experienceRepo.getIngestionsWithExperiencesFlow(
+                        fromInstant = lookbackStart,
+                        toInstant = winEnd.plusSeconds(1)
+                    ),
+                    allSubstanceCompanionsFlow,
+                    minuteNowFlow
+                ) { windowIngestions, companions, nowMinuteEpoch ->
+                    val companionByName = companions.associateBy { it.substanceName }
+                    val groupedEvents = linkedMapOf<String, MutableList<Pair<Substance, RealDoseEvent>>>()
+
+                    for (item in windowIngestions) {
+                        val ing = item.ingestion
+                        if (ing.consumerName != null) continue
+                        val isFromCurrent = ing.experienceId == experienceId
+                        if (!isFromCurrent && !ing.isConfirmed) continue
+
+                        val substance = substanceRepo.getSubstance(ing.substanceName) ?: continue
+                        val pk = substance.pharmacokinetics ?: continue
+                        if (!isFromCurrent) {
+                            val washoutHours = SmartExperienceSelector.resolveInteractionWashoutHours(
+                                customHalfLifeHours = null,
+                                substance = substance,
+                                route = ing.administrationRoute
+                            )
+                            if (washoutHours <= 0.0 ||
+                                (ing.time.epochSecond + washoutHours * 3600.0) <= winStart.epochSecond
+                            ) {
+                                continue
+                            }
+                        }
+
+                        val pureDose = item.customUnit?.dose?.let { perUnit ->
+                            ing.dose?.times(perUnit)
+                        } ?: ing.dose
+                        val units = item.customUnit?.originalUnit ?: ing.units
+
+                        val event = RealDoseEvent(
+                            substanceName = ing.substanceName,
+                            timeEpochSecond = ing.time.epochSecond,
+                            dose = pureDose,
+                            units = units,
+                            isFromCurrentExperience = isFromCurrent,
+                            isConfirmed = ing.isConfirmed
+                        )
+                        groupedEvents.getOrPut(substance.name) { mutableListOf() }.add(substance to event)
+                    }
+
+                    if (groupedEvents.isEmpty()) return@combine null
+
+                    val fallbackPalette = listOf(
+                        AppColor.BLUE,
+                        AppColor.TEAL,
+                        AppColor.PURPLE,
+                        AppColor.ORANGE,
+                        AppColor.GREEN,
+                        AppColor.PINK,
+                        AppColor.INDIGO
+                    )
+                    var colorIdx = 0
+
+                    val inputs = groupedEvents.values.mapNotNull { entries ->
+                        val substance = entries.firstOrNull()?.first ?: return@mapNotNull null
+                        val pk = substance.pharmacokinetics ?: return@mapNotNull null
+                        val events = entries.map { it.second }
+                        val resolvedColor = events.firstNotNullOfOrNull { ev ->
+                            companionByName[ev.substanceName]?.color
+                        } ?: companionByName[substance.name]?.color
+                        ?: fallbackPalette[(colorIdx++) % fallbackPalette.size]
+                        val displayName = SubstanceLocalizationHelper.getSubstanceDisplayName(
+                            name = substance.name,
+                            commonNames = substance.commonNames
+                        )
+                        LivePkSubstanceInput(
+                            canonicalName = substance.name,
+                            displayName = displayName,
+                            color = resolvedColor,
+                            pk = pk,
+                            doseEvents = events
+                        )
+                    }
+
+                    val sim = PkCurveCalculator.simulateExperienceLivePk(
+                        substances = inputs,
+                        windowStartEpochSecond = winStart.epochSecond,
+                        windowEndEpochSecond = winEnd.epochSecond,
+                        currentTimeEpochSecond = nowMinuteEpoch
+                    )
+                    sim.takeIf { it.profiles.isNotEmpty() }
+                }
+            }
+        }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            initialValue = null,
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000)
+        )
 
     private fun getIngestionElements(sortedIngestionsWith: List<IngestionWithAssociatedData>): List<IngestionElement> {
         return sortedIngestionsWith.map { ingestionWith ->
@@ -496,6 +640,12 @@ class ExperienceViewModel @Inject constructor(
                     oneElement.numDots.toFloat() / 4f
                 }
                 val ingestion = oneElement.ingestionWithCompanionAndCustomUnit.ingestion
+                val canonical = SubstanceLocalizationHelper.getCanonicalEnglishName(ingestion.substanceName)
+                val matchedSubstance = substances.firstOrNull { s ->
+                    s.name.equals(ingestion.substanceName, ignoreCase = true) ||
+                        (canonical != null && s.name.equals(canonical, ignoreCase = true)) ||
+                        s.commonNames.any { alias -> alias.equals(ingestion.substanceName, ignoreCase = true) }
+                }
                 DataForOneEffectLine(
                     substanceName = ingestion.substanceName,
                     route = ingestion.administrationRoute,
@@ -503,8 +653,7 @@ class ExperienceViewModel @Inject constructor(
                     height = getStrengthRelativeToCommonDose(
                         ingestion = oneElement.ingestionWithCompanionAndCustomUnit,
                         allIngestions = ingestionElements.map { it.ingestionWithCompanionAndCustomUnit },
-                        roaDose = substances.firstOrNull { it.name == ingestion.substanceName }
-                            ?.getRoa(ingestion.administrationRoute)?.roaDose
+                        roaDose = matchedSubstance?.getRoa(ingestion.administrationRoute)?.roaDose
                     ).toFloat(),
                     horizontalWeight = horizontalWeight,
                     color = oneElement.ingestionWithCompanionAndCustomUnit.substanceCompanion?.color

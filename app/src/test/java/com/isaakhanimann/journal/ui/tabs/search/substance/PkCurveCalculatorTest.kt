@@ -4,6 +4,7 @@
 
 package com.isaakhanimann.journal.ui.tabs.search.substance
 
+import com.isaakhanimann.journal.data.room.experiences.entities.AppColor
 import com.isaakhanimann.journal.data.substances.classes.ActiveMetabolite
 import com.isaakhanimann.journal.data.substances.classes.Pharmacokinetics
 import org.junit.Assert.assertEquals
@@ -151,5 +152,114 @@ class PkCurveCalculatorTest {
                 mode = PkChartMode.SINGLE_DOSE
             )
         )
+    }
+
+    @Test
+    fun simulateExperienceLivePk_accumulates14DaysCariprazineAndFiltersNegligibleCarryover() {
+        val anchorEpoch = 1_760_000_000L
+        val winStart = anchorEpoch - 3600L
+        val winEnd = anchorEpoch + 24L * 3600L
+        val nowEpoch = anchorEpoch + 6L * 3600L
+
+        val cariEvents = (14 downTo 1).map { daysAgo ->
+            RealDoseEvent(
+                substanceName = "卡利哌嗪",
+                timeEpochSecond = anchorEpoch - daysAgo * 86400L,
+                dose = if (daysAgo % 2 == 0) 1500.0 else 1.5,
+                units = if (daysAgo % 2 == 0) "ug" else "mg",
+                isFromCurrentExperience = false
+            )
+        } + RealDoseEvent(
+            substanceName = "卡利哌嗪",
+            timeEpochSecond = anchorEpoch,
+            dose = 1.5,
+            units = "mg",
+            isFromCurrentExperience = true
+        )
+
+        val shortHalfLifePk = Pharmacokinetics(
+            halfLifeHours = 4.0,
+            tMaxHours = 1.0,
+            pkRole = "PARENT_DOMINANT"
+        )
+        val tinyResidualEvents = listOf(
+            RealDoseEvent(
+                substanceName = "Alprazolam",
+                timeEpochSecond = anchorEpoch - 5L * 86400L, // 30x half-life ago -> 0% left
+                dose = 0.5,
+                units = "mg",
+                isFromCurrentExperience = false
+            )
+        )
+
+        val valproatePk = Pharmacokinetics(
+            halfLifeHours = 15.0,
+            tMaxHours = 2.0,
+            pkRole = "PARENT_DOMINANT"
+        )
+        val recentCarryoverEvents = listOf(
+            RealDoseEvent(
+                substanceName = "丙戊酸钠",
+                timeEpochSecond = anchorEpoch - 12L * 3600L,
+                dose = 500.0,
+                units = "mg",
+                isFromCurrentExperience = false
+            )
+        )
+
+        val sim = PkCurveCalculator.simulateExperienceLivePk(
+            substances = listOf(
+                LivePkSubstanceInput(
+                    canonicalName = "Cariprazine",
+                    displayName = "卡利哌嗪",
+                    color = AppColor.BLUE,
+                    pk = cariprazinePk(),
+                    doseEvents = cariEvents
+                ),
+                LivePkSubstanceInput(
+                    canonicalName = "Alprazolam",
+                    displayName = "阿普唑仑",
+                    color = AppColor.ORANGE,
+                    pk = shortHalfLifePk,
+                    doseEvents = tinyResidualEvents
+                ),
+                LivePkSubstanceInput(
+                    canonicalName = "Sodium valproate",
+                    displayName = "丙戊酸钠",
+                    color = AppColor.GREEN,
+                    pk = valproatePk,
+                    doseEvents = recentCarryoverEvents
+                )
+            ),
+            windowStartEpochSecond = winStart,
+            windowEndEpochSecond = winEnd,
+            currentTimeEpochSecond = nowEpoch
+        )
+
+        // Alprazolam from 5 days ago (<2% peak) is excluded; Cariprazine + Valproate remain
+        assertEquals(2, sim.profiles.size)
+        val cari = sim.profiles.first { it.canonicalName == "Cariprazine" }
+        assertEquals(1, cari.currentIngestionCount)
+        assertEquals(14, cari.carryoverIngestionCount)
+        assertTrue(cari.lookbackDaysMax >= 14)
+        assertTrue(
+            "Carryover baseline at window start should be substantial after 14d dosing, got ${cari.carryoverBaselineFractionAtStart}",
+            cari.carryoverBaselineFractionAtStart > 0.5f
+        )
+        assertTrue(
+            "Accumulation factor vs single dose should exceed 3x after 14d DDCAR buildup, got ${cari.windowPeakRelativeToSingleDose}",
+            cari.windowPeakRelativeToSingleDose > 3.0f
+        )
+        assertNotNull(cari.currentRelativeActiveLevel)
+        assertTrue(cari.currentRelativeActiveLevel!! > 0.5f)
+        val ddcar = cari.metaboliteSeries.first { it.name == "DDCAR" }
+        assertTrue(
+            "DDCAR level at start (${ddcar.points.first().normalizedValue}) must exceed Parent level (${cari.parentPoints.first().normalizedValue})",
+            ddcar.points.first().normalizedValue > cari.parentPoints.first().normalizedValue
+        )
+
+        val valproate = sim.profiles.first { it.canonicalName == "Sodium valproate" }
+        assertEquals(0, valproate.currentIngestionCount)
+        assertEquals(1, valproate.carryoverIngestionCount)
     }
 }
