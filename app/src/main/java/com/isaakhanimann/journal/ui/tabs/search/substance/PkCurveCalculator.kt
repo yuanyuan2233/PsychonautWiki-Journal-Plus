@@ -141,8 +141,32 @@ object PkCurveCalculator {
         val weight: Double,
         val tMaxRoute: Double,
         val kaRoute: Double,
+        val kaFast: Double,
+        val kaSlow: Double,
         val route: AdministrationRoute?,
     )
+
+    private fun createMicroDoseEvent(
+        offsetHours: Double,
+        weight: Double,
+        tMaxRoute: Double,
+        kaRoute: Double,
+        model: ResolvedPkModel,
+        route: AdministrationRoute?,
+    ): MicroDoseEvent {
+        val isErOral = model.isExtendedRelease && (route == null || route == AdministrationRoute.ORAL)
+        val kaFast = if (isErOral) solveAbsorptionRate(ke = model.keParent, tMax = minOf(tMaxRoute, 1.5)) else kaRoute
+        val kaSlow = if (isErOral) solveAbsorptionRateAllowingFlipFlop(ke = model.keParent, tMax = maxOf(tMaxRoute * 1.6, 3.0)) else kaRoute
+        return MicroDoseEvent(
+            offsetHours = offsetHours,
+            weight = weight,
+            tMaxRoute = tMaxRoute,
+            kaRoute = kaRoute,
+            kaFast = kaFast,
+            kaSlow = kaSlow,
+            route = route,
+        )
+    }
 
     private fun resolveModel(
         pk: Pharmacokinetics,
@@ -227,16 +251,16 @@ object PkCurveCalculator {
             isExtendedRelease = model.isExtendedRelease,
         )
 
+        val templateEvent = createMicroDoseEvent(
+            offsetHours = 0.0,
+            weight = 1.0,
+            tMaxRoute = model.tMaxParent,
+            kaRoute = model.kaParent,
+            model = model,
+            route = null,
+        )
         val rawParent = if (model.isZeroOrder) {
-            val micro = doseTimes.map { dTime ->
-                MicroDoseEvent(
-                    offsetHours = dTime,
-                    weight = 1.0,
-                    tMaxRoute = model.tMaxParent,
-                    kaRoute = model.kaParent,
-                    route = null,
-                )
-            }
+            val micro = doseTimes.map { dTime -> templateEvent.copy(offsetHours = dTime) }
             evaluateZeroOrderOnGrid(
                 sampleHours = sampleTimes,
                 microEvents = micro,
@@ -251,10 +275,8 @@ object PkCurveCalculator {
                     if (t < dTime) break
                     pVal += unitParentResponse(
                         dt = t - dTime,
-                        tMaxRoute = model.tMaxParent,
-                        kaRoute = model.kaParent,
+                        item = templateEvent,
                         model = model,
-                        route = null,
                     )
                 }
                 pVal
@@ -695,11 +717,15 @@ object PkCurveCalculator {
             } else {
                 pk.resolveTMaxHoursForRoute(ev.route)
             }
-            val kaRoute = if (ev.route == null || ev.route == AdministrationRoute.ORAL) {
-                solveAbsorptionRate(ke = model.keParent, tMax = tMaxRoute)
-            } else {
-                solveAbsorptionRate(ke = model.keParent, tMax = tMaxRoute)
-            }
+            val kaRoute = solveAbsorptionRate(ke = model.keParent, tMax = tMaxRoute)
+            val templateEvent = createMicroDoseEvent(
+                offsetHours = item.offsetHours,
+                weight = item.weight,
+                tMaxRoute = tMaxRoute,
+                kaRoute = kaRoute,
+                model = model,
+                route = ev.route,
+            )
             val endEpoch = ev.endTimeEpochSecond
             if (endEpoch != null && endEpoch > ev.timeEpochSecond) {
                 val durationHours = (endEpoch - ev.timeEpochSecond) / 3600.0
@@ -708,27 +734,11 @@ object PkCurveCalculator {
                 for (k in 0 until steps) {
                     val microOffset = item.offsetHours + durationHours * ((k + 0.5) / steps.toDouble())
                     if (microOffset <= horizonHours) {
-                        result.add(
-                            MicroDoseEvent(
-                                offsetHours = microOffset,
-                                weight = stepWeight,
-                                tMaxRoute = tMaxRoute,
-                                kaRoute = kaRoute,
-                                route = ev.route,
-                            )
-                        )
+                        result.add(templateEvent.copy(offsetHours = microOffset, weight = stepWeight))
                     }
                 }
             } else if (item.offsetHours <= horizonHours) {
-                result.add(
-                    MicroDoseEvent(
-                        offsetHours = item.offsetHours,
-                        weight = item.weight,
-                        tMaxRoute = tMaxRoute,
-                        kaRoute = kaRoute,
-                        route = ev.route,
-                    )
-                )
+                result.add(templateEvent)
             }
         }
         return result.sortedBy { it.offsetHours }
@@ -976,10 +986,8 @@ object PkCurveCalculator {
             if (dt <= 0.0) continue
             pVal += item.weight * parentDdiScale * unitParentResponse(
                 dt = dt,
-                tMaxRoute = item.tMaxRoute,
-                kaRoute = item.kaRoute,
+                item = item,
                 model = model,
-                route = item.route,
             )
         }
         return pVal
@@ -987,21 +995,15 @@ object PkCurveCalculator {
 
     private fun unitParentResponse(
         dt: Double,
-        tMaxRoute: Double,
-        kaRoute: Double,
+        item: MicroDoseEvent,
         model: ResolvedPkModel,
-        route: AdministrationRoute?,
     ): Double {
         if (dt <= 0.0) return 0.0
-        return if (model.isExtendedRelease && (route == null || route == AdministrationRoute.ORAL)) {
-            val tFast = minOf(tMaxRoute, 1.5)
-            val tSlow = maxOf(tMaxRoute * 1.6, 3.0)
-            val kaFast = solveAbsorptionRate(ke = model.keParent, tMax = tFast)
-            val kaSlow = solveAbsorptionRateAllowingFlipFlop(ke = model.keParent, tMax = tSlow)
-            0.3 * unitBateman(dt, kaFast, model.keParent) +
-                0.7 * unitBateman(dt, kaSlow, model.keParent)
+        return if (model.isExtendedRelease && (item.route == null || item.route == AdministrationRoute.ORAL)) {
+            0.3 * unitBateman(dt, item.kaFast, model.keParent) +
+                0.7 * unitBateman(dt, item.kaSlow, model.keParent)
         } else {
-            unitBateman(dt, kaRoute, model.keParent)
+            unitBateman(dt, item.kaRoute, model.keParent)
         }
     }
 
@@ -1044,11 +1046,12 @@ object PkCurveCalculator {
 
         val probeList = probePoints.toList()
         val singleMicro = listOf(
-            MicroDoseEvent(
+            createMicroDoseEvent(
                 offsetHours = 0.0,
                 weight = 1.0,
                 tMaxRoute = tMaxRoute,
                 kaRoute = kaRoute,
+                model = model,
                 route = dominantRoute,
             )
         )

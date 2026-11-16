@@ -33,11 +33,13 @@ import com.isaakhanimann.journal.ui.tabs.journal.addingestion.search.suggestion.
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.search.suggestion.models.DoseAndUnit
 import com.isaakhanimann.journal.ui.tabs.journal.addingestion.search.suggestion.models.Suggestion
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -68,7 +70,8 @@ class AddIngestionSearchViewModel @Inject constructor(
             filterCategories = emptyList(),
             recentlyUsedSubstanceNamesSorted = recents
         ).map { it.toSubstanceModel() }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
         initialValue = emptyList(),
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)
@@ -81,8 +84,9 @@ class AddIngestionSearchViewModel @Inject constructor(
         filteredSubstancesFlow,
         searchTextFlow
     ) { customUnit, filteredSubstances, searchText ->
+        val filteredNameSet = filteredSubstances.mapTo(HashSet(filteredSubstances.size * 2)) { it.name }
         customUnit.filter { custom ->
-            filteredSubstances.any { it.name == custom.substanceName } || custom.name.contains(
+            custom.substanceName in filteredNameSet || custom.name.contains(
                 other = searchText,
                 ignoreCase = true
             ) || custom.substanceName.contains(
@@ -93,7 +97,8 @@ class AddIngestionSearchViewModel @Inject constructor(
                 ignoreCase = true
             ) || custom.note.contains(other = searchText, ignoreCase = true)
         }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
         initialValue = emptyList(),
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)
@@ -106,7 +111,8 @@ class AddIngestionSearchViewModel @Inject constructor(
             customSubstances.filter { custom ->
                 custom.name.contains(other = searchText, ignoreCase = true)
             }
-        }.stateIn(
+        }.flowOn(Dispatchers.Default)
+            .stateIn(
             initialValue = emptyList(),
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000)
@@ -119,12 +125,15 @@ class AddIngestionSearchViewModel @Inject constructor(
         searchTextFlow
     ) { ingestions, customSubstances, filteredSubstances, searchText ->
         val suggestions = getSuggestions(ingestions, customSubstances)
+        val filteredSubstanceNames = filteredSubstances.map { it.name }
         return@combine suggestions.filter { sug ->
             sug.isInSearch(
                 searchText = searchText,
-                substanceNames = filteredSubstances.map { it.name })
+                substanceNames = filteredSubstanceNames
+            )
         }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
         initialValue = emptyList(),
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)

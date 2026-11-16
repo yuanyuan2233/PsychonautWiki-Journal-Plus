@@ -44,6 +44,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.isaakhanimann.journal.data.routine.RoutineNotificationHelper
 import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
+import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepository
 import com.isaakhanimann.journal.ui.main.MainScreen
 import com.isaakhanimann.journal.ui.tabs.settings.AppLanguage
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
@@ -76,6 +77,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var routineSchedulerManager: RoutineSchedulerManager
 
+    @Inject
+    lateinit var substanceRepository: SubstanceRepository
+
     private var routineDeepLinkState by mutableStateOf<RoutineDeepLinkRequest?>(null)
     private var isLanguageLoaded = false
     private var currentAppLanguage by mutableStateOf(AppLanguage.FOLLOW_SYSTEM)
@@ -85,6 +89,9 @@ class MainActivity : ComponentActivity() {
         splashScreen.setKeepOnScreenCondition { !isLanguageLoaded }
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        lifecycleScope.launch(Dispatchers.IO) {
+            substanceRepository.awaitLoaded()
+        }
         lifecycleScope.launch {
             userPreferences.appLanguageFlow.collect { lang ->
                 currentAppLanguage = lang

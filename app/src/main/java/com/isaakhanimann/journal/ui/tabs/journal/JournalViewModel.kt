@@ -31,9 +31,11 @@ import com.isaakhanimann.journal.data.routine.RoutineSchedulerManager
 import com.isaakhanimann.journal.data.substances.repositories.SearchRepository
 import com.isaakhanimann.journal.ui.tabs.settings.combinations.UserPreferences
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -150,8 +152,11 @@ class JournalViewModel @Inject constructor(
                         searchText = searchText,
                         filterCategories = emptyList(),
                         recentlyUsedSubstanceNamesSorted = emptyList()
-                    ).map { it.substance.name } + customSubstances.map { it.name }.filter {
-                        it.contains(other = searchText, ignoreCase = true)
+                    ).mapTo(HashSet()) { it.substance.name }
+                    for (custom in customSubstances) {
+                        if (custom.name.contains(other = searchText, ignoreCase = true)) {
+                            matchingSubstances.add(custom.name)
+                        }
                     }
 
                     // experience title, text or some consumed substance must contain search string or the consumer needs to match
@@ -160,10 +165,9 @@ class JournalViewModel @Inject constructor(
                             other = searchText,
                             ignoreCase = true
                         ) || it.ingestionsWithCompanions.any { ingestionWithCompanion ->
-                            val isSubstanceAMatch = matchingSubstances.any { name ->
-                                name == ingestionWithCompanion.ingestion.substanceName ||
-                                    name == ingestionWithCompanion.substanceCompanion?.substanceName
-                            }
+                            val isSubstanceAMatch =
+                                ingestionWithCompanion.ingestion.substanceName in matchingSubstances ||
+                                    (ingestionWithCompanion.substanceCompanion?.substanceName in matchingSubstances)
                             val isConsumerAMatch =
                                 ingestionWithCompanion.ingestion.consumerName?.contains(
                                     searchText,
@@ -179,6 +183,7 @@ class JournalViewModel @Inject constructor(
                 }
                 return@combine experiencesWithIngestions
             }
+            .flowOn(Dispatchers.Default)
             .stateIn(
                 initialValue = emptyList(),
                 scope = viewModelScope,

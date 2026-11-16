@@ -743,6 +743,30 @@ object SubstanceLocalizationHelper {
         "选择性5-羟色胺再摄取抑制剂 (SSRI) (Fluoxetine/Paroxetine 抑制 CYP2D6 致毒性蓄积)" to "选择性5-羟色胺再摄取抑制剂 (SSRI) (氟西汀/帕罗西汀抑制 CYP2D6 致毒性蓄积)",
     )
 
+    private val PAREN_REGEX = Regex("[\\(（][^\\)）]*[\\)）]")
+    private val SPLIT_REGEX = Regex("[/、|]")
+
+    private val LOWER_KEY_TO_CANONICAL_MAP: Map<String, String> =
+        LinkedHashMap<String, String>(ZH_NAME_MAP.size).apply {
+            for (key in ZH_NAME_MAP.keys) {
+                putIfAbsent(key.lowercase(Locale.ROOT), key)
+            }
+        }
+
+    private val LOWER_KEY_TO_ZH_MAP: Map<String, String> =
+        LinkedHashMap<String, String>(ZH_NAME_MAP.size).apply {
+            for ((key, value) in ZH_NAME_MAP) {
+                putIfAbsent(key.lowercase(Locale.ROOT), value)
+            }
+        }
+
+    private val LOWER_ZH_TO_EN_MAP: Map<String, String> =
+        LinkedHashMap<String, String>(ZH_NAME_MAP.size).apply {
+            for ((key, value) in ZH_NAME_MAP) {
+                putIfAbsent(value.lowercase(Locale.ROOT), key)
+            }
+        }
+
     /**
      * 快捷获取中文名称
      */
@@ -757,21 +781,22 @@ object SubstanceLocalizationHelper {
 
         // 1. 如果本身就是标准英文键
         if (ZH_NAME_MAP.containsKey(trimmed)) return trimmed
-        ZH_NAME_MAP.keys.firstOrNull { it.equals(trimmed, ignoreCase = true) }?.let { return it }
+        LOWER_KEY_TO_CANONICAL_MAP[trimmed.lowercase(Locale.ROOT)]?.let { return it }
 
         // 2. 去除括号中的临床说明或化学注释
-        val clean = trimmed.replace(Regex("[\\(（][^\\)）]*[\\)）]"), "").trim()
+        val clean = trimmed.replace(PAREN_REGEX, "").trim()
         if (clean.isNotEmpty()) {
             if (ZH_NAME_MAP.containsKey(clean)) return clean
-            ZH_NAME_MAP.keys.firstOrNull { it.equals(clean, ignoreCase = true) }?.let { return it }
+            val cleanLower = clean.lowercase(Locale.ROOT)
+            LOWER_KEY_TO_CANONICAL_MAP[cleanLower]?.let { return it }
 
             // 反查字典
-            ZH_NAME_MAP.entries.firstOrNull { it.value.equals(clean, ignoreCase = true) }?.key?.let { return it }
+            LOWER_ZH_TO_EN_MAP[cleanLower]?.let { return it }
 
             // 针对 "/"、"、" 拆分部分进行反查
-            val parts = clean.split(Regex("[/、|]")).map { it.trim() }.filter { it.isNotEmpty() }
+            val parts = clean.split(SPLIT_REGEX).map { it.trim() }.filter { it.isNotEmpty() }
             for (part in parts) {
-                ZH_NAME_MAP.entries.firstOrNull { it.value.equals(part, ignoreCase = true) }?.key?.let { return it }
+                LOWER_ZH_TO_EN_MAP[part.lowercase(Locale.ROOT)]?.let { return it }
             }
 
             // 常见大类词条归一化
@@ -792,7 +817,7 @@ object SubstanceLocalizationHelper {
         }
 
         // 3. 全词反查
-        ZH_NAME_MAP.entries.firstOrNull { it.value.equals(trimmed, ignoreCase = true) }?.key?.let { return it }
+        LOWER_ZH_TO_EN_MAP[trimmed.lowercase(Locale.ROOT)]?.let { return it }
 
         return null
     }
@@ -819,7 +844,7 @@ object SubstanceLocalizationHelper {
                     return prefix
                 }
             }
-            val enName = ZH_NAME_MAP.entries.firstOrNull { it.value.equals(trimmed, ignoreCase = true) }?.key
+            val enName = LOWER_ZH_TO_EN_MAP[trimmed.lowercase(Locale.ROOT)]
             if (enName != null) return enName
             val enInCommon = commonNames.firstOrNull { !containsChinese(it) && !isPinyinToken(it) }
             if (enInCommon != null) return enInCommon.trim()
@@ -828,21 +853,20 @@ object SubstanceLocalizationHelper {
         
         // 1. 查静态字典
         ZH_NAME_MAP[trimmed]?.let { return it }
-        val foundIgnoreCase = ZH_NAME_MAP.entries.firstOrNull { it.key.equals(trimmed, ignoreCase = true) }?.value
-        if (foundIgnoreCase != null) return foundIgnoreCase
+        val trimmedLower = trimmed.lowercase(Locale.ROOT)
+        LOWER_KEY_TO_ZH_MAP[trimmedLower]?.let { return it }
 
         // 1.1 尝试去除末尾复数 's' 再次匹配
         if (trimmed.endsWith("s", ignoreCase = true) && trimmed.length > 2) {
-            val singular = trimmed.substring(0, trimmed.length - 1)
-            val foundSingular = ZH_NAME_MAP.entries.firstOrNull { it.key.equals(singular, ignoreCase = true) }?.value
-            if (foundSingular != null) return foundSingular
+            val singularLower = trimmedLower.substring(0, trimmedLower.length - 1)
+            LOWER_KEY_TO_ZH_MAP[singularLower]?.let { return it }
         }
 
         // 1.2 如果包含 '|'，尝试拆分翻译后用 '/' 拼接
         if (trimmed.contains('|')) {
             val parts = trimmed.split('|').map { it.trim() }
             val translatedParts = parts.map { part ->
-                ZH_NAME_MAP.entries.firstOrNull { it.key.equals(part, ignoreCase = true) }?.value ?: part
+                LOWER_KEY_TO_ZH_MAP[part.lowercase(Locale.ROOT)] ?: part
             }
             if (translatedParts.any { containsChinese(it) }) {
                 return translatedParts.distinct().joinToString("/")
@@ -853,12 +877,12 @@ object SubstanceLocalizationHelper {
         val parenIndex = trimmed.indexOfAny(charArrayOf('(', '（'))
         if (parenIndex > 0) {
             val prefix = trimmed.substring(0, parenIndex).trim()
+            val prefixLower = prefix.lowercase(Locale.ROOT)
             val suffix = trimmed.substring(parenIndex).trim()
             val translatedPrefix = ZH_NAME_MAP[prefix]
-                ?: ZH_NAME_MAP.entries.firstOrNull { it.key.equals(prefix, ignoreCase = true) }?.value
+                ?: LOWER_KEY_TO_ZH_MAP[prefixLower]
                 ?: if (prefix.endsWith("s", ignoreCase = true) && prefix.length > 2) {
-                    val sing = prefix.substring(0, prefix.length - 1)
-                    ZH_NAME_MAP.entries.firstOrNull { it.key.equals(sing, ignoreCase = true) }?.value
+                    LOWER_KEY_TO_ZH_MAP[prefixLower.substring(0, prefixLower.length - 1)]
                 } else null
             if (translatedPrefix != null) {
                 return "$translatedPrefix $suffix"

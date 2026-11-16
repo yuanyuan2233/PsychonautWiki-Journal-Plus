@@ -18,9 +18,59 @@
 
 package com.isaakhanimann.journal.data.substances.classes
 
+import java.util.Locale
+
 class SubstanceFile(
     val categories: List<Category>,
     val substances: List<Substance>
 ) {
     val substancesMap: Map<String, Substance> = substances.associateBy { it.name }
+
+    val substancesLowerMap: Map<String, Substance> =
+        LinkedHashMap<String, Substance>(substances.size).apply {
+            for (substance in substances) {
+                putIfAbsent(substance.name.lowercase(Locale.ROOT), substance)
+            }
+        }
+
+    val substanceByLowerAlias: Map<String, Substance> =
+        LinkedHashMap<String, Substance>(substances.size * 4).apply {
+            for (substance in substances) {
+                putIfAbsent(substance.name.lowercase(Locale.ROOT), substance)
+            }
+            for (substance in substances) {
+                for (alias in substance.commonNames) {
+                    val key = alias.trim().lowercase(Locale.ROOT)
+                    if (key.isNotEmpty()) {
+                        putIfAbsent(key, substance)
+                    }
+                }
+            }
+        }
+
+    val categoriesByKey: Map<String, Category> =
+        LinkedHashMap<String, Category>(categories.size).apply {
+            for (category in categories) {
+                putIfAbsent(normalizeCategoryKey(category.name), category)
+            }
+        }
+
+    val substancesWithCategories: List<SubstanceWithCategories> = substances.map { substance ->
+        val matchedCategories = substance.categories.mapNotNull { catName ->
+            categoriesByKey[normalizeCategoryKey(catName)]
+        }.distinctBy { it.name }
+        SubstanceWithCategories(
+            substance = substance,
+            categories = matchedCategories
+        )
+    }
+
+    val substancesWithCategoriesMap: Map<String, SubstanceWithCategories> =
+        substancesWithCategories.associateBy { it.substance.name }
+
+    companion object {
+        internal fun normalizeCategoryKey(name: String): String {
+            return name.trim().lowercase(Locale.ROOT).replace('-', ' ')
+        }
+    }
 }

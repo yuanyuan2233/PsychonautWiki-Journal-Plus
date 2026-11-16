@@ -25,6 +25,7 @@ import com.isaakhanimann.journal.data.room.experiences.ExperienceRepository
 import com.isaakhanimann.journal.data.substances.repositories.SearchRepository
 import com.isaakhanimann.journal.data.substances.repositories.SubstanceRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -75,7 +76,8 @@ class SearchViewModel @Inject constructor(
             )
         )
         return@combine newChips
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
         initialValue = emptyList(),
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)
@@ -83,7 +85,8 @@ class SearchViewModel @Inject constructor(
 
     val filteredSubstancesFlow = combine(searchTextFlow, filtersFlow, experienceRepo.getSortedLastUsedSubstanceNamesFlow(limit = 200)) { searchText, filters, recents ->
         return@combine searchRepository.getMatchingSubstances(searchText = searchText, filterCategories = filters, recentlyUsedSubstanceNamesSorted = recents).map { it.toSubstanceModel() }
-    }.stateIn(
+    }.flowOn(Dispatchers.Default)
+        .stateIn(
         initialValue = emptyList(),
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000)
@@ -104,7 +107,8 @@ class SearchViewModel @Inject constructor(
                     other = searchText, ignoreCase = true
                 )
             }
-        }.stateIn(
+        }.flowOn(Dispatchers.Default)
+            .stateIn(
             initialValue = emptyList(),
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000)

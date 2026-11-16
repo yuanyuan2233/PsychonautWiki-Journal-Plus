@@ -75,6 +75,11 @@ class SubstanceRepository @Inject constructor(
         return appContext.assets.open("Substances.json").bufferedReader().use { it.readText() }
     }
 
+    suspend fun awaitLoaded() {
+        if (cachedSubstanceFile != null) return
+        cachedSubstanceFile = substanceFileDeferred.await()
+    }
+
     private fun getSubstanceFile(): SubstanceFile {
         cachedSubstanceFile?.let { return it }
         return runBlocking {
@@ -89,17 +94,7 @@ class SubstanceRepository @Inject constructor(
     }
 
     override fun getAllSubstancesWithCategories(): List<SubstanceWithCategories> {
-        val file = getSubstanceFile()
-        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
-        return file.substances.map { substance ->
-            val matchedCategories = substance.categories.mapNotNull { catName ->
-                categoriesByKey[normalizeCategoryKey(catName)]
-            }.distinctBy { it.name }
-            SubstanceWithCategories(
-                substance = substance,
-                categories = matchedCategories
-            )
-        }
+        return getSubstanceFile().substancesWithCategories
     }
 
     override fun getAllCategories(): List<Category> {
@@ -112,23 +107,14 @@ class SubstanceRepository @Inject constructor(
     }
 
     override fun getCategory(categoryName: String): Category? {
-        val normalized = normalizeCategoryKey(categoryName)
-        return getSubstanceFile().categories.firstOrNull {
-            normalizeCategoryKey(it.name) == normalized
-        }
+        val normalized = SubstanceFile.normalizeCategoryKey(categoryName)
+        return getSubstanceFile().categoriesByKey[normalized]
     }
 
     override fun getSubstanceWithCategories(substanceName: String): SubstanceWithCategories? {
         val file = getSubstanceFile()
         val substance = findSubstance(file, substanceName) ?: return null
-        val categoriesByKey = file.categories.associateBy { normalizeCategoryKey(it.name) }
-        val matchedCategories = substance.categories.mapNotNull { catName ->
-            categoriesByKey[normalizeCategoryKey(catName)]
-        }.distinctBy { it.name }
-        return SubstanceWithCategories(
-            substance = substance,
-            categories = matchedCategories
-        )
+        return file.substancesWithCategoriesMap[substance.name]
     }
 
     private fun findSubstance(file: SubstanceFile, rawName: String): Substance? {
@@ -136,24 +122,18 @@ class SubstanceRepository @Inject constructor(
         val trimmed = rawName.trim()
         if (trimmed.isEmpty()) return null
         file.substancesMap[trimmed]?.let { return it }
-        file.substances.firstOrNull { it.name.equals(trimmed, ignoreCase = true) }?.let { return it }
+        val trimmedLower = trimmed.lowercase(Locale.ROOT)
+        file.substancesLowerMap[trimmedLower]?.let { return it }
 
         val canonicalEn = SubstanceLocalizationHelper.getCanonicalEnglishName(trimmed)
         if (!canonicalEn.isNullOrBlank()) {
             file.substancesMap[canonicalEn]?.let { return it }
-            file.substances.firstOrNull { it.name.equals(canonicalEn, ignoreCase = true) }?.let { return it }
-            file.substances.firstOrNull { s ->
-                s.commonNames.any { alias -> alias.equals(canonicalEn, ignoreCase = true) }
-            }?.let { return it }
+            val canonicalLower = canonicalEn.lowercase(Locale.ROOT)
+            file.substancesLowerMap[canonicalLower]?.let { return it }
+            file.substanceByLowerAlias[canonicalLower]?.let { return it }
         }
 
-        return file.substances.firstOrNull { s ->
-            s.commonNames.any { alias -> alias.equals(trimmed, ignoreCase = true) }
-        }
-    }
-
-    private fun normalizeCategoryKey(name: String): String {
-        return name.trim().lowercase(Locale.ROOT).replace('-', ' ')
+        return file.substanceByLowerAlias[trimmedLower]
     }
 
     private fun logError(message: String, throwable: Throwable) {

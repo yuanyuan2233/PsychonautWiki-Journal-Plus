@@ -29,10 +29,83 @@ class SearchRepository @Inject constructor(
     val substanceRepo: SubstanceRepository
 ) : SearchRepositoryInterface {
 
+    private class IndexedSubstance(
+        val item: SubstanceWithCategories,
+        val categoryKeys: Set<String>,
+        val strippedMainLower: String,
+        val strippedLocalizedLower: String,
+        val strippedAllNamesLower: List<String>,
+        val isCommon: Boolean,
+    )
+
+    private class SearchIndexCache(
+        val sourceList: List<SubstanceWithCategories>,
+        val isChinese: Boolean,
+        val entries: List<IndexedSubstance>,
+        val entriesByName: Map<String, IndexedSubstance>,
+    )
+
+    @Volatile
+    private var cachedIndex: SearchIndexCache? = null
+
     companion object {
         private val SEARCH_STRIP_REGEX = Regex("[-\\s_]")
         private fun normalizeCategoryKey(category: String): String =
             category.trim().lowercase(Locale.ROOT).replace(' ', '-')
+
+        private fun stripAndLower(raw: String): String =
+            SEARCH_STRIP_REGEX.replace(raw, "").lowercase(Locale.ROOT)
+    }
+
+    private fun getOrBuildIndex(): SearchIndexCache {
+        val allItems = substanceRepo.getAllSubstancesWithCategories()
+        val isZh = SubstanceLocalizationHelper.isChinese()
+        val current = cachedIndex
+        if (current != null && current.sourceList === allItems && current.isChinese == isZh) {
+            return current
+        }
+
+        val entries = ArrayList<IndexedSubstance>(allItems.size)
+        val byName = HashMap<String, IndexedSubstance>(allItems.size * 2)
+        for (item in allItems) {
+            val sub = item.substance
+            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(sub.name, sub.commonNames)
+            val strippedMain = stripAndLower(sub.name)
+            val strippedLocalized = stripAndLower(localized)
+
+            val seenNames = LinkedHashSet<String>(sub.commonNames.size + 2)
+            for (alias in sub.commonNames) {
+                val stripped = stripAndLower(alias)
+                if (stripped.isNotEmpty()) seenNames.add(stripped)
+            }
+            if (strippedMain.isNotEmpty()) seenNames.add(strippedMain)
+            if (strippedLocalized.isNotEmpty()) seenNames.add(strippedLocalized)
+
+            val catKeys = HashSet<String>(sub.categories.size * 2)
+            for (cat in sub.categories) {
+                catKeys.add(normalizeCategoryKey(cat))
+            }
+
+            val indexed = IndexedSubstance(
+                item = item,
+                categoryKeys = catKeys,
+                strippedMainLower = strippedMain,
+                strippedLocalizedLower = strippedLocalized,
+                strippedAllNamesLower = seenNames.toList(),
+                isCommon = item.categories.any { cat -> cat.name == "common" }
+            )
+            entries.add(indexed)
+            byName[sub.name] = indexed
+        }
+
+        return SearchIndexCache(
+            sourceList = allItems,
+            isChinese = isZh,
+            entries = entries,
+            entriesByName = byName,
+        ).also {
+            cachedIndex = it
+        }
     }
 
     override fun getMatchingSubstances(
@@ -40,68 +113,92 @@ class SearchRepository @Inject constructor(
         filterCategories: List<String>,
         recentlyUsedSubstanceNamesSorted: List<String>,
     ): List<SubstanceWithCategories> {
-        val substancesMatchingCategories = getSubstancesMatchingCategories(filterCategories)
-        val substancesFilteredWithText = getSubstancesMatchingSearchText(searchText, prefilteredSubstances = substancesMatchingCategories)
-        return getSubstancesSorted(prefilteredSubstances = substancesFilteredWithText, recentlyUsedSubstanceNamesSorted = recentlyUsedSubstanceNamesSorted)
+        val index = getOrBuildIndex()
+        val categoryFiltered = getSubstancesMatchingCategories(index.entries, filterCategories)
+        val textFiltered = getSubstancesMatchingSearchText(searchText, categoryFiltered)
+        return getSubstancesSorted(
+            prefilteredSubstances = textFiltered,
+            recentlyUsedSubstanceNamesSorted = recentlyUsedSubstanceNamesSorted,
+            entriesByName = index.entriesByName
+        )
     }
 
-    private fun getSubstancesMatchingCategories(filterCategories: List<String>): List<SubstanceWithCategories> {
-        if (filterCategories.isEmpty()) return substanceRepo.getAllSubstancesWithCategories()
+    private fun getSubstancesMatchingCategories(
+        entries: List<IndexedSubstance>,
+        filterCategories: List<String>
+    ): List<IndexedSubstance> {
+        if (filterCategories.isEmpty()) return entries
         val normalizedFilters = filterCategories.map(::normalizeCategoryKey)
-        return substanceRepo.getAllSubstancesWithCategories().filter { substanceWithCategories ->
-            val substanceCategories = substanceWithCategories.substance.categories.map(::normalizeCategoryKey).toSet()
-            normalizedFilters.all { it in substanceCategories }
+        return entries.filter { indexed ->
+            normalizedFilters.all { it in indexed.categoryKeys }
         }
     }
 
-    private fun getSubstancesMatchingSearchText(searchText: String, prefilteredSubstances: List<SubstanceWithCategories>): List<SubstanceWithCategories> {
+    private fun getSubstancesMatchingSearchText(
+        searchText: String,
+        prefilteredSubstances: List<IndexedSubstance>
+    ): List<IndexedSubstance> {
         if (searchText.isBlank()) return prefilteredSubstances
-        val searchString = SEARCH_STRIP_REGEX.replace(searchText.trim(), "")
-        if (searchString.isEmpty()) return prefilteredSubstances
+        val searchLower = stripAndLower(searchText.trim())
+        if (searchLower.isEmpty()) return prefilteredSubstances
 
-        val mainPrefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
-            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
-            SEARCH_STRIP_REGEX.replace(substanceWithCategories.substance.name, "").startsWith(
-                prefix = searchString, ignoreCase = true
-            ) || SEARCH_STRIP_REGEX.replace(localized, "").startsWith(
-                prefix = searchString, ignoreCase = true
-            )
-        }
-        val prefixMatches = prefilteredSubstances.filter { substanceWithCategories ->
-            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
-            val allNames = substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name + localized
-            allNames.any { name ->
-                SEARCH_STRIP_REGEX.replace(name, "").startsWith(
-                    prefix = searchString, ignoreCase = true
-                )
+        val mainPrefixMatches = ArrayList<IndexedSubstance>()
+        val prefixMatches = ArrayList<IndexedSubstance>()
+        val substringMatches = ArrayList<IndexedSubstance>()
+
+        for (indexed in prefilteredSubstances) {
+            if (indexed.strippedMainLower.startsWith(searchLower) ||
+                indexed.strippedLocalizedLower.startsWith(searchLower)
+            ) {
+                mainPrefixMatches.add(indexed)
+            } else if (indexed.strippedAllNamesLower.any { it.startsWith(searchLower) }) {
+                prefixMatches.add(indexed)
+            } else if (indexed.strippedAllNamesLower.any { it.contains(searchLower) }) {
+                substringMatches.add(indexed)
             }
         }
-        val matches = prefilteredSubstances.filter { substanceWithCategories ->
-            val localized = SubstanceLocalizationHelper.getSubstanceDisplayName(substanceWithCategories.substance.name)
-            val allNames = substanceWithCategories.substance.commonNames + substanceWithCategories.substance.name + localized
-            allNames.any { name ->
-                SEARCH_STRIP_REGEX.replace(name, "").contains(
-                    other = searchString, ignoreCase = true
-                )
-            }
+
+        if (prefixMatches.isEmpty() && substringMatches.isEmpty()) {
+            return mainPrefixMatches
         }
-        return (mainPrefixMatches + prefixMatches + matches).distinctBy { it.substance.name }
+        val combined = ArrayList<IndexedSubstance>(
+            mainPrefixMatches.size + prefixMatches.size + substringMatches.size
+        )
+        combined.addAll(mainPrefixMatches)
+        combined.addAll(prefixMatches)
+        combined.addAll(substringMatches)
+        return combined
     }
 
     private fun getSubstancesSorted(
-        prefilteredSubstances: List<SubstanceWithCategories>,
-        recentlyUsedSubstanceNamesSorted: List<String>
+        prefilteredSubstances: List<IndexedSubstance>,
+        recentlyUsedSubstanceNamesSorted: List<String>,
+        entriesByName: Map<String, IndexedSubstance>,
     ): List<SubstanceWithCategories> {
-        val recentNames = recentlyUsedSubstanceNamesSorted.distinct()
-        val recentlyUsedMatches =
-            recentNames.filter { recent -> prefilteredSubstances.any { it.substance.name == recent } }
-                .mapNotNull {
-                    substanceRepo.getSubstanceWithCategories(
-                        substanceName = it
-                    )
-                }
-        val commonSubstanceMatches =
-            prefilteredSubstances.filter { sub -> sub.categories.any { cat -> cat.name == "common" } }
-        return (recentlyUsedMatches + commonSubstanceMatches + prefilteredSubstances).distinctBy { it.substance.name }
+        if (prefilteredSubstances.isEmpty()) return emptyList()
+        val prefilteredNames = HashSet<String>(prefilteredSubstances.size * 2)
+        for (indexed in prefilteredSubstances) {
+            prefilteredNames.add(indexed.item.substance.name)
+        }
+
+        val result = ArrayList<SubstanceWithCategories>(prefilteredSubstances.size)
+        val emitted = HashSet<String>(prefilteredSubstances.size * 2)
+
+        for (recent in recentlyUsedSubstanceNamesSorted) {
+            if (recent in prefilteredNames && emitted.add(recent)) {
+                entriesByName[recent]?.let { result.add(it.item) }
+            }
+        }
+        for (indexed in prefilteredSubstances) {
+            if (indexed.isCommon && emitted.add(indexed.item.substance.name)) {
+                result.add(indexed.item)
+            }
+        }
+        for (indexed in prefilteredSubstances) {
+            if (emitted.add(indexed.item.substance.name)) {
+                result.add(indexed.item)
+            }
+        }
+        return result
     }
 }
