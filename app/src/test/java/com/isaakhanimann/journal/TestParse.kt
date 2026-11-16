@@ -334,13 +334,13 @@ class TestParse {
         val result = SubstanceParser().parseSubstanceFile(assetFile.readText(Charsets.UTF_8))
 
         assertTrue(
-            "Expected at least 464 parsed substances, got ${result.substances.size}",
-            result.substances.size >= 464
+            "Expected at least 474 parsed substances, got ${result.substances.size}",
+            result.substances.size >= 474
         )
         val withPkCount = result.substances.count { it.pharmacokinetics != null }
         assertTrue(
-            "Expected at least 219 substances with pharmacokinetics, got $withPkCount",
-            withPkCount >= 219
+            "Expected at least 229 substances with pharmacokinetics, got $withPkCount",
+            withPkCount >= 229
         )
 
         fun findSub(name: String) = result.substances.firstOrNull { it.name.equals(name, ignoreCase = true) }
@@ -375,7 +375,10 @@ class TestParse {
             "Ramelteon" to "M-II",
             "Naltrexone" to "Naltrexol",
             "Levodopa" to "Dopamine",
-            "Propranolol" to "4-Hydroxypropranolol"
+            "Propranolol" to "4-Hydroxypropranolol",
+            "Esketamine" to "S-Norketamine",
+            "Lidocaine" to "MEGX",
+            "Thiopental" to "Pentobarbital"
         )
         for ((parentName, metaboliteKeyword) in metaboliteChecks) {
             val pk = findSub(parentName)?.pharmacokinetics
@@ -396,7 +399,17 @@ class TestParse {
             "Cetirizine" to "西替利嗪",
             "Naltrexone" to "纳曲酮",
             "Pramipexole" to "普拉克索",
-            "Levodopa" to "左旋多巴"
+            "Levodopa" to "左旋多巴",
+            "Dexmedetomidine" to "右美托咪定",
+            "Propofol" to "丙泊酚",
+            "Esketamine" to "艾司氯胺酮",
+            "Remifentanil" to "瑞芬太尼",
+            "Alfentanil" to "阿芬太尼",
+            "Sevoflurane" to "七氟烷",
+            "Isoflurane" to "异氟烷",
+            "Lidocaine" to "利多卡因",
+            "Ropivacaine" to "罗哌卡因",
+            "Thiopental" to "硫喷妥钠"
         )
         for ((enName, zhName) in newClinicalDrugs) {
             assertEquals(

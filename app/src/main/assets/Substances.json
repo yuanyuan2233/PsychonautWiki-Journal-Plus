@@ -52752,6 +52752,1727 @@
           "狭角型青光眼、可疑恶性黑色素瘤病史（左旋多巴是黑色素合成前体）"
         ]
       }
+    },
+    {
+      "name": "Dexmedetomidine",
+      "commonNames": [
+        "右美托咪定",
+        "盐酸右美托咪定",
+        "艾贝宁",
+        "Precedex",
+        "Igalmi",
+        "Dexdor",
+        "ymtmd",
+        "ysymtmd",
+        "abn",
+        "you'mei'tuo'mi'ding",
+        "youmeituomiding",
+        "yan'suan'you'mei'tuo'mi'ding",
+        "yansuanyoumeituomiding",
+        "ai'bei'ning",
+        "aibeining"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00633",
+      "isApproved": true,
+      "summary": "高选择性 α2-肾上腺素能受体激动剂（α2:α1 选择比约 1620:1），临床广泛用于 ICU 镇静、围术期辅助镇痛及舌下膜剂（Igalmi）急性激越控制；独特诱导接近自然非快速眼动睡眠的“可唤醒镇静”，呼吸抑制极轻，但可致显著心动过缓与双相血压变化（静推过快先一过性升压，继而交感抑制性低血压）。",
+      "effectsSummary": "剂量依赖性镇静催眠、抗焦虑、交感神经张力抑制与阿片类节约型镇痛效应，患者在刺激下易被唤醒且保持自主呼吸。",
+      "dosageRemark": "静脉给药通常需以 1 µg/kg 负荷（10 分钟以上缓慢输注，严禁快速推注）继以 0.2 - 0.7 µg/kg/h 维持；舌下膜剂（Igalmi）成人单次 120 - 180 µg（不得吞咽或咀嚼）。",
+      "generalRisks": "心动过缓、窦性停搏（高迷走张力者）、低血压或初期一过性高血压、口干与恶心。",
+      "longtermRisks": "ICU 连续输注超过 24 小时后骤停可偶发反跳性心动过速、高血压及激越，建议渐进减量。",
+      "saferUse": [
+        "静脉泵注严禁直接快速静脉推注，避免触发外周 α2B 受体介导的严重反射性心动过缓与高血压危象",
+        "舌下给药（Igalmi）后至少 15 分钟内勿进食饮水，并在给药后监测卧位与立位血压至少 2 小时"
+      ],
+      "tolerance": {
+        "full": "连续静脉输注超过 48 - 72 小时可出现部分镇静耐受与停药后交感反跳",
+        "half": "24 hours",
+        "zero": "48 hours"
+      },
+      "crossTolerances": [
+        "clonidine",
+        "tizanidine"
+      ],
+      "addictionPotential": "无经典阿片/GABA 类欣快成瘾潜力，但超长输注骤停可诱发短暂撤药性交感亢进",
+      "toxicities": [
+        "过量可导致严重窦性心动过缓、房室传导阻滞甚至窦性停搏（必要时阿托品拮抗）",
+        "明显低血压或外周血管收缩引发的高血压危象"
+      ],
+      "categories": [
+        "sedative",
+        "anxiolytic",
+        "analgesic",
+        "antihypertensive"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Propofol / Midazolam / Opioids (在无气道监护环境下叠加深度中枢镇静与严重低血压、心动过缓)",
+          "β-受体阻滞剂 / Digoxin / 非二氢吡啶类钙拮抗剂 (剧烈叠加迷走神经兴奋，显著升高高度房室阻滞及窦性停搏风险)"
+        ],
+        "unsafe": [
+          "Alcohol (酒精叠加中枢抑制与体位性低血压)",
+          "Clonidine / Tizanidine (同靶点 α2 激动剂严重叠加低血压与心动过缓)"
+        ],
+        "uncertain": [
+          "Ketamine / Esketamine (临床常精准联用：右美托咪定可显著减轻氯胺酮拟交感升压与苏醒期精神症状)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "µg",
+            "lightMin": 20.0,
+            "commonMin": 40.0,
+            "strongMin": 80.0,
+            "heavyMin": 150.0
+          },
+          "duration": {
+            "onset": {
+              "min": 5.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 20.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "hours"
+            },
+            "total": {
+              "min": 2.0,
+              "max": 4.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        },
+        {
+          "name": "sublingual",
+          "dose": {
+            "units": "µg",
+            "lightMin": 60.0,
+            "commonMin": 120.0,
+            "strongMin": 180.0,
+            "heavyMin": 240.0
+          },
+          "duration": {
+            "onset": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 2.0,
+              "max": 4.0,
+              "units": "hours"
+            },
+            "total": {
+              "min": 3.0,
+              "max": 6.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 72.0,
+            "max": 82.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "静脉分布半衰期约 6 分钟；终末消除半衰期约 2.0 小时（舌下膜剂 Igalmi 表观终末半衰期约 2.8 小时）",
+        "halfLifeHours": 2.0,
+        "tMax": "静脉输注结束即达峰 (~0.25h)；舌下含服达峰约 1.5 - 2.0 小时",
+        "tMaxHours": 0.25,
+        "bioavailability": "静脉 100%；舌下 72%，颊黏膜 82%；口服因极高首过效应仅约 16%",
+        "cypEnzymes": [
+          "CYP2A6 (主要脂肪族羟化氧化代谢底物 / Substrate；辅以直接 N-葡萄糖醛酸化)",
+          "CYP1A2 (极微弱次要参与 / Minor Substrate)"
+        ],
+        "clearance": "几乎完全经肝脏 UGT 直接 N-葡萄糖醛酸化（约占 41%）及 CYP2A6 介导羟化（生成无活性代谢物），95% 经尿排泄（原形 < 1%）；重度肝损清除显著减慢",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 2.1,
+        "washoutHours": 12.0,
+        "washoutNote": "静脉停药后约 10 - 12 小时完成血浆清除，临床镇静效应随快速重分布于 2 - 4 小时内明显消退；舌下制剂清除略延长至约 14 小时。",
+        "mechanismSummary": "高选择性中枢蓝斑核 α2A-肾上腺素受体完全激动剂，抑制去甲肾上腺素释放并激活内源性睡眠通路，实现“可唤醒镇静”与交感抑制。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "α2A 肾上腺素受体",
+            "action": "超高选择性完全激动剂 (Ki ≈ 1.08 nM；抑制蓝斑核释放 NE 产生可唤醒镇静与镇痛)",
+            "affinityTier": "high",
+            "affinityWeight": 0.98,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "α2B / α2C 肾上腺素受体",
+            "action": "高亲和力激动剂 (Ki ≈ 1.6 nM；外周 α2B 激活解释快速静推一过性高血压)",
+            "affinityTier": "high",
+            "affinityWeight": 0.9,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "咪唑啉 I1 / I2 受体",
+            "action": "中等亲和力结合（辅助中枢降压与交感张力调制）",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.58,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "艾贝宁 / Precedex / Igalmi",
+        "indications": [
+          "ICU 机械通气患者及非插管围术期/操作镇静",
+          "精神分裂症或双相情感障碍相关急性激越（舌下膜剂 Igalmi）"
+        ],
+        "contraindications": [
+          "未安装起搏器的重度窦房结功能障碍、II/III 度房室传导阻滞",
+          "未纠正的严重低血容量或低血压休克"
+        ]
+      }
+    },
+    {
+      "name": "Propofol",
+      "commonNames": [
+        "丙泊酚",
+        "异丙酚",
+        "得普利麻",
+        "Diprivan",
+        "Propofol emulsion",
+        "2,6-Diisopropylphenol",
+        "bpf",
+        "ybf",
+        "dplm",
+        "bing'po'fen",
+        "bingpofen",
+        "yi'bing'fen",
+        "yibingfen",
+        "de'pu'li'ma",
+        "depulima"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00818",
+      "isApproved": true,
+      "summary": "超短效脂溶性静脉全麻与镇静诱导药（GABAA 受体正向变构调节剂与高浓度直接激动剂），静脉推注后 30 - 40 秒内迅速诱导意识丧失并因极快组织重分布而迅速苏醒；严禁非专业监护下使用，具有极窄呼吸抑制安全窗，大剂量长时输注有致命性丙泊酚输注综合征（PRIS）风险。",
+      "effectsSummary": "极速入睡、遗忘、全麻或深镇静状态，伴轻度肌肉松弛与显著外周血管扩张降压；苏醒迅速且较少恶心呕吐。",
+      "dosageRemark": "仅供具备气道管理与生命支持条件的医疗环境静脉推注/靶控输注（常规成人全麻诱导 1.5 - 2.5 mg/kg，即约 100 - 180 mg；内镜镇静常 0.5 - 1.5 mg/kg）。",
+      "generalRisks": "呼吸暂停（Apnea）、气道梗阻、低血压、注射部位静脉烧灼痛与肌阵挛。",
+      "longtermRisks": "大剂量（> 4 mg/kg/h）连续输注 > 48 小时可引发致命性丙泊酚输注综合征（PRIS：横纹肌溶解、高钾、难治性代谢性酸中毒与心衰）。",
+      "saferUse": [
+        "绝对禁止无呼吸机/急救气道设备下非医疗自我给药，单次轻微超量即可在数分钟内因呼吸暂停致死",
+        "配伍阿片类或苯二氮䓬类时必须大幅削减丙泊酚诱导剂量（通常下调 30% - 50%）"
+      ],
+      "tolerance": {
+        "full": "连续长时输注（> 24 - 72 小时）可出现麻醉镇静需求递增",
+        "half": "12 hours",
+        "zero": "48 hours"
+      },
+      "crossTolerances": [
+        "depressant",
+        "benzodiazepine"
+      ],
+      "addictionPotential": "由于极快速起效与极短时程（且非医疗场景呼吸抑制死亡率极高），存在极危险的强迫性高频复吸风险",
+      "toxicities": [
+        "急性呼吸停止、缺氧性脑损伤与致命性低血压虚脱",
+        "丙泊酚输注综合征（PRIS：高脂血症、横纹肌溶解、高乳酸酸中毒、Brugada 样心电改变与心跳骤停）"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic",
+        "habit-forming"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Opioids / Fentanyl / Remifentanil / Alfentanil (极强协同抑制呼吸驱动与动脉血压，引发呼吸骤停与严重低血压)",
+          "Benzodiazepines / Midazolam / Alcohol (GABAA 受体协同显著加深麻醉深度并延长呼吸暂停期)",
+          "Dexmedetomidine (剧烈叠加心动过缓与低血压)"
+        ],
+        "unsafe": [
+          "Volatile Anesthetics / Sevoflurane (叠加心肌抑制与血管扩张)"
+        ],
+        "uncertain": [
+          "Valproate / CYP2B6 Substrates (高脂乳剂长时输注期间竞争 UGT1A9/CYP2B6 代谢并改变游离分数)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 30.0,
+            "commonMin": 80.0,
+            "strongMin": 150.0,
+            "heavyMin": 250.0
+          },
+          "duration": {
+            "onset": {
+              "min": 20.0,
+              "max": 45.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "seconds"
+            },
+            "peak": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 5.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "快速初始分布半衰期 2 - 4 分钟；终末消除半衰期 1.5 - 3.0 小时（连续输注时量相关半衰期 < 40 分钟）",
+        "halfLifeHours": 2.2,
+        "tMax": "静脉给药单臂-脑循环即达峰 (~0.03 - 0.05 小时 / 2 分钟内)",
+        "tMaxHours": 0.05,
+        "bioavailability": "静脉 100%；高脂溶性极易透过血脑屏障，几乎不作口服",
+        "cypEnzymes": [
+          "CYP2B6 (主要肝氧化羟化底物 / Substrate；转化后结合排出)",
+          "CYP2C9 (次要羟化底物 / Minor Substrate)",
+          "CYP3A4 (体外弱至中效抑制剂 / Weak Inhibitor)"
+        ],
+        "clearance": "高肝血流抽取率结合肺脏首过摄取，主要经 UGT1A9/UGT1A1 直接葡萄糖醛酸化（~50%）及 CYP2B6 羟化为无活性水溶性结合物，约 88% 经尿排泄",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 1.5,
+        "washoutHours": 12.0,
+        "washoutNote": "单次推注后靠极速脂肪/肌肉重分布于 5 - 15 分钟内迅速苏醒，血浆终末消除半衰期约 1.5 - 3 小时（约 11 - 15 小时基本排空）；脂肪蓄积在超长输注后才会显著拖尾。",
+        "mechanismSummary": "高脂溶性烷基酚类全麻药，增强 GABAA 受体 Cl- 通道开放频率并在高浓度直接激动该受体，辅以抑制 NMDA 与慢钙通道。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "GABAA 受体 (β2/β3 亚基)",
+            "action": "强效正向变构调节剂并在麻醉浓度直接开放 Cl- 通道 (EC50 ≈ 2 - 5 μM)",
+            "affinityTier": "high",
+            "affinityWeight": 0.97,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "NMDA 谷氨酸受体",
+            "action": "轻至中等非竞争性通道抑制（辅助全麻期痛觉与记忆阻断）",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.56,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "内源性大麻素 FAAH 酶",
+            "action": "抑制内源性花生四烯酸乙醇胺降解（部分解释苏醒后愉悦与止吐效应）",
+            "affinityTier": "low",
+            "affinityWeight": 0.42,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "得普利麻 (Diprivan)",
+        "indications": [
+          "全身麻醉诱导与维持",
+          "ICU 机械通气镇静与无痛胃肠镜/诊断操作镇静"
+        ],
+        "contraindications": [
+          "对鸡蛋、大豆卵磷脂或丙泊酚制剂过敏",
+          "缺乏人工气道与呼吸监测保障的非医疗环境"
+        ]
+      }
+    },
+    {
+      "name": "Esketamine",
+      "commonNames": [
+        "艾司氯胺酮",
+        "盐酸艾司氯胺酮",
+        "右氯胺酮",
+        "凯得宁",
+        "Spravato",
+        "S-Ketamine",
+        "S(+)-Ketamine",
+        "Ketanest-S",
+        "aslat",
+        "ysaslat",
+        "ylat",
+        "kdn",
+        "ai'si'lv'an'tong",
+        "aisilvantong",
+        "yan'suan'ai'si'lv'an'tong",
+        "yansuanaisilvantong",
+        "you'lv'an'tong",
+        "youlvantong",
+        "kai'de'ning",
+        "kaidening"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB11823",
+      "isApproved": true,
+      "summary": "外消旋氯胺酮的高效 S(+)-对映异构体：对 NMDA 受体的阻滞亲和力约为 R(-)-异构体的 3 - 4 倍。已获 FDA 批准鼻喷雾剂（Spravato）用于难治性抑郁症与伴急性自杀意念的重度抑郁，同时临床用于静脉麻醉与围术期镇痛；具有显著解离、拟交感升压与剂量依赖性膀胱/认知毒性。",
+      "effectsSummary": "急性期产生解离、时间/空间扭曲、镇痛及全麻作用；抗抑郁疗效可于给药后数小时内起效并持续数天。",
+      "dosageRemark": "Spravato 鼻喷抑郁治疗标准单次 56 mg 或 84 mg（仅限认证医疗机构观察 ≥ 2 小时）；静脉镇痛/麻醉诱导剂量显著低于消旋氯胺酮（约消旋体的 50% - 65%）。",
+      "generalRisks": "急性血压急剧升高（警惕主动脉瘤或未控高血压）、解离与感知障碍、镇静、眩晕、恶心呕吐。",
+      "longtermRisks": "高频滥用可致严重氯胺酮相关性溃疡性膀胱炎（血尿、尿频、膀胱挛缩）、胆道扩张及工作记忆受损。",
+      "saferUse": [
+        "给药前需评估静息血压（若基础血压 > 140/90 mmHg 须先控压）；鼻喷后至少静卧观察 2 小时勿驾车",
+        "严格限制使用频率，切忌高频娱乐化连续使用以防不可逆泌尿道损伤"
+      ],
+      "tolerance": {
+        "full": "连续密集使用可迅速产生急性解离与镇痛耐受",
+        "half": "4 - 7 天",
+        "zero": "1 - 2 周"
+      },
+      "crossTolerances": [
+        "dissociative",
+        "ketamine"
+      ],
+      "addictionPotential": "具中等心理依赖及强迫性复吸风险（解离逃避与快速奖赏强化效应）",
+      "toxicities": [
+        "血压危象、颅内压升高与心动过速",
+        "高剂量致深度意识丧失、气道保护反射减弱或苏醒期幻觉谵妄",
+        "慢性大剂量引发氯胺酮性膀胱炎与肝胆转氨酶异常"
+      ],
+      "categories": [
+        "dissociative",
+        "antidepressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Alcohol / Opioids / Benzodiazepines / GHB (重度叠加中枢神经抑制、呕吐误吸与呼吸抑制风险)",
+          "Sympathomimetics / Amphetamines / Cocaine / MAOI (剧烈叠加交感神经兴奋，诱发高血压危象与心律失常)"
+        ],
+        "unsafe": [
+          "Theophylline / Aminophylline (降低惊厥阈值，合用诱发癫痫样发作)",
+          "CYP2B6 / CYP3A4 强效抑制剂 (轻中度升高血浆暴露并延长急性解离期)"
+        ],
+        "uncertain": [
+          "Lamotrigine (可能削弱部分谷氨酸爆发相关的急性抗抑郁与解离感知)",
+          "SSRIs / SNRIs (临床常联合用于难治性抑郁，通常耐受良好但需监测血压波动)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "insufflated",
+          "dose": {
+            "units": "mg",
+            "lightMin": 14.0,
+            "commonMin": 28.0,
+            "strongMin": 56.0,
+            "heavyMin": 84.0
+          },
+          "duration": {
+            "onset": {
+              "min": 5.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 45.0,
+              "max": 90.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 1.5,
+              "max": 3.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 45.0,
+            "max": 50.0
+          }
+        },
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 10.0,
+            "commonMin": 20.0,
+            "strongMin": 40.0,
+            "heavyMin": 80.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 1.0,
+              "max": 3.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        },
+        {
+          "name": "intramuscular",
+          "dose": {
+            "units": "mg",
+            "lightMin": 15.0,
+            "commonMin": 30.0,
+            "strongMin": 60.0,
+            "heavyMin": 100.0
+          },
+          "duration": {
+            "onset": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 5.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 20.0,
+              "max": 45.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 45.0,
+              "max": 90.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 1.5,
+              "max": 2.5,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 90.0,
+            "max": 95.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "鼻喷呈现双相下降（前 2 - 4 小时快速分布清除，均终末半衰期 7 - 12 小时）；静脉初始分布半衰期 10 - 15 分钟；主要活性代谢物 S-去甲氯胺酮终末半衰期约 8 小时",
+        "halfLifeHours": 9.0,
+        "tMax": "鼻喷末次喷雾后 20 - 40 分钟 (~0.5h) 达峰；静脉注射即刻达峰",
+        "tMaxHours": 0.5,
+        "bioavailability": "鼻喷生物利用度约 48%；静脉 100%；肌注约 93%",
+        "cypEnzymes": [
+          "CYP2B6 (主要 N-去甲基化代谢底物 / Substrate；生成 S-去甲氯胺酮)",
+          "CYP3A4 (主要 N-去甲基化代谢底物 / Substrate)",
+          "CYP2C9 (次要代谢底物 / Minor Substrate)",
+          "CYP2C19 (次要代谢底物 / Minor Substrate)"
+        ],
+        "clearance": "广泛经肝微粒体 CYP2B6 与 CYP3A4 N-脱甲基生成 S-去甲氯胺酮（随后羟基化与葡萄糖醛酸化），< 2% 原形、> 78% 代谢物经尿排出",
+        "pkRole": "ACTIVE_METABOLITE",
+        "effectiveHalfLifeHours": 9.0,
+        "washoutHours": 45.0,
+        "washoutNote": "急性解离效应因前 2 - 4 小时快速脑血浆下降而消退；但母体及 S-去甲氯胺酮终末半衰期达 7 - 12 小时，完全血浆洗脱约需 36 - 48 小时。",
+        "mechanismSummary": "高亲和力谷氨酸 NMDA 受体通道非竞争性开放阻滞剂（效价显著高于 R-氯胺酮），通过瞬时谷氨酸爆发、AMPA 激活及 mTOR/BDNF 通路发挥快速抗抑郁与镇痛作用。",
+        "activeMetabolites": [
+          {
+            "name": "S-Norketamine (S-去甲氯胺酮)",
+            "pathway": "母体经肝脏 CYP2B6 与 CYP3A4 N-去甲基化生成",
+            "halfLife": "双相消除，均终末半衰期约 8.0 小时",
+            "halfLifeHours": 8.0,
+            "exposureRatio": 1.2,
+            "relativeExposure": "鼻喷给药后血浆 AUC 高于母体，但脑/血浆渗透比约为母体的 1/4 ~ 1/6",
+            "pharmacologicalRole": "弱于母体 3 - 5 倍的 NMDA 拮抗活性，贡献部分持续镇痛与长时程代谢产物协同",
+            "tMaxHours": 1.5
+          }
+        ],
+        "receptorTargets": [
+          {
+            "target": "NMDA 谷氨酸受体 (PCP 通道位点)",
+            "action": "强效非竞争性电压依赖性通道开放阻滞剂 (Ki ≈ 0.3 μM，效价约为 R-异构体的 3 - 4 倍)",
+            "affinityTier": "high",
+            "affinityWeight": 0.97,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "μ-阿片受体 (MOR)",
+            "action": "弱部分激动/正向调制 (Ki ≈ 11 - 28 μM，辅助急性镇痛效果)",
+            "affinityTier": "low",
+            "affinityWeight": 0.45,
+            "dominantActor": "共同贡献"
+          },
+          {
+            "target": "HCN1 超极化激活环核苷酸门控通道",
+            "action": "抑制电流（参与全麻催眠及快速抗抑郁网络重塑）",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.62,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "Spravato / 凯得宁 (Ketanest-S)",
+        "indications": [
+          "联合口服抗抑郁药治疗成人难治性抑郁症 (TRD) 及伴急性自杀意念重度抑郁",
+          "全身麻醉诱导与维持、区域阻滞辅助镇静及围术期强效镇痛"
+        ],
+        "contraindications": [
+          "主动脉瘤、颅内压显著升高、脑血管畸形或动脉瘤性血管病史",
+          "近期心肌梗死（6 周内）或急性未控高血压"
+        ]
+      }
+    },
+    {
+      "name": "Remifentanil",
+      "commonNames": [
+        "瑞芬太尼",
+        "盐酸瑞芬太尼",
+        "Ultiva",
+        "Remifentanil hydrochloride",
+        "rftn",
+        "ysrftn",
+        "rui'fen'tai'ni",
+        "ruifentaini",
+        "yan'suan'rui'fen'tai'ni",
+        "yansuanruifentaini"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00899",
+      "isApproved": true,
+      "summary": "超短效强效选择性 μ-阿片受体激动剂，镇痛效价与芬太尼相当（约吗啡 100 - 200 倍）；其分子含独特甲酯键，被血液和组织非特异性酯酶极速水解，与肝肾功能无关且时量相关半衰期恒定为 3 - 4 分钟。停药后数分钟即丧失镇痛，易诱发严重痛觉过敏与即时呼吸停止。",
+      "effectsSummary": "极速强效镇痛、麻醉深度抑制与即刻呼吸停止倾向，停药后 5 - 10 分钟内意识和自主呼吸迅速恢复。",
+      "dosageRemark": "临床仅限持续微量静脉泵注（0.05 - 2.0 µg/kg/min）或极严密监护下气管插管单次辅助；严禁未经稀释或无通气保障下单次静推（胸壁肌肉强直可即刻锁死通气）。",
+      "generalRisks": "瞬间呼吸骤停、剧烈胸壁/声门肌强直（木胸综合征）、严重心动过缓与低血压。",
+      "longtermRisks": "大剂量术中输注停药后极易诱发急性阿片耐受（OIH）与剧烈术后反跳性疼痛。",
+      "saferUse": [
+        "仅限具备有创呼吸机、阿片拮抗剂纳洛酮及肌松药的手术室/ICU 团队控制给药",
+        "停药前务必提前衔接长效非甾体或吗啡/羟考酮等桥接镇痛，严防停泵后暴发痛与痛觉过敏"
+      ],
+      "tolerance": {
+        "full": "输注数小时即可出现急性受体脱敏与痛觉过敏 (OIH)",
+        "half": "24 hours",
+        "zero": "3 days"
+      },
+      "crossTolerances": [
+        "opioid"
+      ],
+      "addictionPotential": "极高潜在强迫复吸与即刻致死风险（起效消退如闪现，无医疗监护极易呼吸骤停死亡）",
+      "toxicities": [
+        "极低剂量差即可引起呼吸暂停、木胸综合征与窒息",
+        "严重窦性心动过缓及低血压休克"
+      ],
+      "categories": [
+        "opioid",
+        "depressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Propofol / Midazolam / Volatile Anesthetics / Alcohol (极强协同引起呼吸暂停、低血压及心动过缓)",
+          "β-受体阻滞剂 / Dexmedetomidine (协同抑制窦房结致重度心动过缓与心跳骤停)",
+          "MAOI (禁与单胺氧化酶抑制剂联用或停药不足 14 天使用)"
+        ],
+        "unsafe": [
+          "CNS Depressants / Gabapentinoids (剧烈加重中枢与呼吸抑制)"
+        ],
+        "uncertain": [
+          "Esmolol / Anticholinergics (影响心率反射平衡；不改变瑞芬太尼酯酶水解清除)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "µg",
+            "lightMin": 25.0,
+            "commonMin": 50.0,
+            "strongMin": 100.0,
+            "heavyMin": 200.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 30.0,
+              "max": 90.0,
+              "units": "seconds"
+            },
+            "peak": {
+              "min": 1.0,
+              "max": 3.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 3.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 5.0,
+              "max": 15.0,
+              "units": "minutes"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "快速分布半衰期 ~1 分钟；终末消除半衰期 10 - 20 分钟；时量相关半衰期（无论输注多久）仅 3 - 4 分钟",
+        "halfLifeHours": 0.25,
+        "tMax": "静脉给药后约 1 - 1.5 分钟达效应室峰 (~0.025h)",
+        "tMaxHours": 0.025,
+        "bioavailability": "静脉 100%（不通过胃肠道或肌注常规给药）",
+        "cypEnzymes": [
+          "非细胞色素酶代谢途径 (经血液与骨骼肌等组织非特异性酯酶极速水解脱酯，完全不依赖 CYP450 肝药酶及胆碱酯酶)"
+        ],
+        "clearance": "极其迅速的血浆/组织非特异性酯酶脱甲酯代谢（清除率约 40 mL/kg/min），生成几乎无活性的羧酸代谢物 GI90291（效价仅为母体 1/4600），完全不蓄积于肝肾功能不全者体内",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 0.25,
+        "washoutHours": 2.0,
+        "washoutNote": "全药典清除最快的阿片类药物之一：停泵后 3 - 10 分钟临床镇痛与呼吸抑制迅速解除，约 1.5 - 2 小时完成母体完全清除，但注意羧酸代谢物在无尿者体内可滞留。",
+        "mechanismSummary": "高选择性 μ-阿片受体（MOR）完全激动剂，通过酯酶可水解丙酸酯支链实现毫秒~分钟级精准药效滴定与零蓄积清除。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "μ-阿片受体 (MOR)",
+            "action": "高选择性完全激动剂 (Ki ≈ 1.2 nM，镇痛效价与芬太尼相当)",
+            "affinityTier": "high",
+            "affinityWeight": 0.99,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "δ / κ 阿片受体 (DOR / KOR)",
+            "action": "极低亲和力（对 μ 受体选择性比超过数百至千倍）",
+            "affinityTier": "low",
+            "affinityWeight": 0.25,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "瑞捷 / Ultiva",
+        "indications": [
+          "全麻诱导与术中连续泵注强效镇痛",
+          "ICU 机械通气短时剧痛操作及镇静协同"
+        ],
+        "contraindications": [
+          "绝对禁止用于硬膜外或鞘内注射（制剂含甘氨酸赋形剂具脊髓神经毒性）",
+          "缺乏呼吸辅助及急救条件的环境"
+        ]
+      }
+    },
+    {
+      "name": "Alfentanil",
+      "commonNames": [
+        "阿芬太尼",
+        "盐酸阿芬太尼",
+        "Rapifen",
+        "Alfenta",
+        "aftn",
+        "ysaftn",
+        "a'fen'tai'ni",
+        "afentaini",
+        "yan'suan'a'fen'tai'ni",
+        "yansuanafentaini"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00802",
+      "isApproved": true,
+      "summary": "短效、极快起效的四唑啉基苯基哌啶类合成阿片镇痛药（pKa ≈ 6.5 使血浆中约 89% 为非解离型脂溶性分子，故 1 分钟内即极速入脑达峰，效价约为芬太尼的 1/4 ~ 1/5、吗啡的 15 - 25 倍）。强依赖肝脏 CYP3A4 清除，是临床公认的 CYP3A4 敏感探针底物。",
+      "effectsSummary": "极速镇痛、短暂强效麻醉辅助镇静、明显止咳反射抑制与强效呼吸抑制。",
+      "dosageRemark": "临床多用于短小日间手术或气管插管前负荷给药（常规成人静注 250 - 1500 µg，即 5 - 30 µg/kg）；联用红霉素或伏立康唑等 CYP3A4 抑制剂时清除可锐减 50% 以上。",
+      "generalRisks": "突发呼吸停止、骨骼肌僵直（木胸）、心动过缓、低血压与恶心呕吐。",
+      "longtermRisks": "反复大剂量输注可因肝消除饱和或 CYP3A4 抑制产生意外持久呼吸抑制及躯体依赖。",
+      "saferUse": [
+        "给药前核查是否正在服用大环内酯类（红霉素/克拉霉素）、唑类抗真菌药等 CYP3A4 抑制剂",
+        "备妥纳洛酮急救与正压通气设备"
+      ],
+      "tolerance": {
+        "full": "连续使用可形成经典阿片类交叉耐受",
+        "half": "3 - 5 天",
+        "zero": "1 - 2 周"
+      },
+      "crossTolerances": [
+        "opioid"
+      ],
+      "addictionPotential": "高成瘾性与极窄安全治疗窗（静脉快速入脑强化且高危呼吸骤停）",
+      "toxicities": [
+        "急性呼吸停止、紫绀与肺水肿",
+        "胸壁肌肉强直阻碍机械通气"
+      ],
+      "categories": [
+        "opioid",
+        "depressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Propofol / Benzodiazepines / Alcohol (剧烈叠加呼吸中枢抑制与低血压风险)",
+          "CYP3A4 强效抑制剂 (酮康唑、伊曲康唑、利托那韦、克拉霉素，清除骤降引发严重呼吸暂停)",
+          "MAOI (合用可引发致命 5-羟色胺或血压危象)"
+        ],
+        "unsafe": [
+          "Erythromycin / Fluconazole / Diltiazem (中效 CYP3A4 抑制剂显著延长苏醒与呼吸恢复时间)"
+        ],
+        "uncertain": [
+          "Carbamazepine / Rifampin (强诱导 CYP3A4 可加快代谢缩短效期)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "µg",
+            "lightMin": 250.0,
+            "commonMin": 500.0,
+            "strongMin": 1000.0,
+            "heavyMin": 2000.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 30.0,
+              "max": 90.0,
+              "units": "seconds"
+            },
+            "peak": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "双/三室分布半衰期 1 分钟与 14 分钟；终末消除半衰期 90 - 111 分钟 (~1.65 小时)",
+        "halfLifeHours": 1.65,
+        "tMax": "静脉注射后 1 - 1.5 分钟达脑内效应峰 (~0.025h)",
+        "tMaxHours": 0.025,
+        "bioavailability": "静脉 100%；分布容积显著小于芬太尼 (0.4 - 1.0 L/kg)",
+        "cypEnzymes": [
+          "CYP3A4 (强敏感性核心代谢底物 / Substrate；临床标准 CYP3A4 体内活性探针药，受大环内酯及唑类显著抑制)"
+        ],
+        "clearance": "几乎完全经肝脏 CYP3A4 氧化 N-脱烷基与 O-脱甲基化生成无活性诺阿芬太尼等代谢物，经尿排出（原形 < 1%）；肝硬化及合用红霉素/酮康唑者清除率锐减 > 50%",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 1.65,
+        "washoutHours": 8.5,
+        "washoutNote": "终末消除半衰期约 1.5 - 1.8 小时（比芬太尼更短且分布容积更小），正常肝功下约 8 - 9 小时完成血浆洗脱；但联用强效 CYP3A4 抑制剂时半衰期可延长至 4 小时以上。",
+        "mechanismSummary": "超低脂溶分布容积结合低 pKa（~6.5）实现约 90% 血浆非解离态极速跨血脑屏障，高选择性激动 μ-阿片受体。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "μ-阿片受体 (MOR)",
+            "action": "强效完全激动剂 (效价约为芬太尼 1/4、吗啡 15 - 25 倍)",
+            "affinityTier": "high",
+            "affinityWeight": 0.96,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "Rapifen / Alfenta",
+        "indications": [
+          "短小外科操作镇痛与全身麻醉诱导期应激抑制",
+          "监测下麻醉管理 (MAC) 镇痛"
+        ],
+        "contraindications": [
+          "对阿片类过敏或严重呼吸抑制无人工气道支持"
+        ]
+      }
+    },
+    {
+      "name": "Sevoflurane",
+      "commonNames": [
+        "七氟烷",
+        "喜保福宁",
+        "Sevorane",
+        "Ultane",
+        "Sojourn",
+        "qfw",
+        "xbfn",
+        "qi'fu'wan",
+        "qifuwan",
+        "xi'bao'fu'ning",
+        "xibaofuning"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB01236",
+      "isApproved": true,
+      "summary": "低血/气分配系数（0.63 - 0.69）挥发性氟化吸入全麻药：气道无刺激性，可经面罩快速平稳诱导与迅速苏醒，是成人与儿童最主流的吸入麻醉维持药。95% 以上经肺泡原形呼出，仅 2% - 5% 经 CYP2E1 代谢为六氟异丙醇（HFIP）与无机氟；高危遗传易感者可诱发恶性高热。",
+      "effectsSummary": "剂量依赖性吸入麻醉、镇静、健忘、轻度支气管扩张与骨骼肌松弛；停吸后数分钟内快速清醒。",
+      "dosageRemark": "临床需配合专用精确挥发罐按肺泡吸入浓度（Vol %）给药：成人 MAC（最小肺泡有效浓度）约为 2.0%，常于 1.5% - 3.0% 维持。严禁液态误服或非精密挥发器直接吸入（窒息与肺损伤极高）。",
+      "generalRisks": "低血压、呼吸抑制、苏醒期躁动（尤其儿童）、术后恶心呕吐及支气管分泌轻微改变。",
+      "longtermRisks": "反复非医疗暴露（或含衰竭碱石灰 CO2 吸收剂接触产生复合物 A）有理论肾小管损伤与缺氧风险。",
+      "saferUse": [
+        "严禁任何非医用无氧供条件下自行吸入，缺氧窒息可在 1 分钟内发生且缺乏清醒反馈",
+        "恶性高热家族史或已知 RYR1/CACNA1S 突变者绝对禁用（须备丹曲林）"
+      ],
+      "tolerance": {
+        "full": null,
+        "half": null,
+        "zero": null
+      },
+      "crossTolerances": [
+        "depressant"
+      ],
+      "addictionPotential": "无经典日常口服药物依赖模式，但存在高致死率缺氧与误吸风险的挥发剂吸入滥用危害",
+      "toxicities": [
+        "致命性恶性高热（高热、高碳酸血症、肌肉强直、横纹肌溶解与酸中毒）",
+        "缺氧、循环衰竭与深麻醉呼吸停止"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Succinylcholine (合并使用显著提高恶性高热与急性高钾心脏骤停风险)",
+          "Opioids / Propofol / Benzodiazepines (显著降低所需 MAC 值并深度叠加呼吸抑制与低血压)"
+        ],
+        "unsafe": [
+          "Non-depolarizing Neuromuscular Blockers (如罗库溴铵、维库溴铵：七氟烷强烈增强并延长肌松作用)",
+          "Epinephrine (可轻度增加心肌对儿茶酚胺的致心律失常敏感性，虽显著低于氟烷)"
+        ],
+        "uncertain": [
+          "Alcohol / Isoniazid (慢性饮酒诱导 CYP2E1 可使代谢产物无机氟与 HFIP 生成略升)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "inhaled",
+          "dose": {
+            "units": "%",
+            "lightMin": 0.5,
+            "commonMin": 1.5,
+            "strongMin": 2.5,
+            "heavyMin": 4.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 90.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 1.0,
+              "max": 3.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 3.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 5.0,
+              "max": 15.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 10.0,
+              "max": 25.0,
+              "units": "minutes"
+            }
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "血/气分配系数仅 0.63 - 0.69：停吸后肺泡与血液快速洗脱半时仅数分钟；脂肪组织深层终末洗脱与代谢氟化物消除半衰期约 20 - 23 小时（功能性中枢洗脱 < 0.5h）",
+        "halfLifeHours": 2.5,
+        "tMax": "吸入后 2 - 5 分钟 (~0.08h) 达高灌注脑组织平衡",
+        "tMaxHours": 0.08,
+        "bioavailability": "经肺泡扩散进入动脉血，低血/气分配系数决定极快平衡速度",
+        "cypEnzymes": [
+          "CYP2E1 (少量代谢底物 / Minor Substrate；仅约 2% - 5% 吸入量经肝 CYP2E1 氧化脱氟生成六氟异丙醇与无机氟)"
+        ],
+        "clearance": "> 95% 经肺泡原形呼出；约 2% - 5% 经肝 CYP2E1 氧化成六氟异丙醇（HFIP）后迅速葡萄糖醛酸化经尿排出",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 0.5,
+        "washoutHours": 12.0,
+        "washoutNote": "呼吸换气洗脱极快：停吸后 5 - 15 分钟内脑内分压骤降苏醒；脂肪蓄积洗脱约在停药 2 - 12 小时内基本完成，微量尿氟代谢物完全排空需约 1 - 2 天。",
+        "mechanismSummary": "多靶点挥发性全麻剂：正向变构调节脑内 GABAA 与甘氨酸抑制性氯通道、抑制 NMDA 受体并激活双孔钾通道 (TREK-1) 引起神经元超极化。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "GABAA 受体与甘氨酸受体",
+            "action": "正向变构调节增强抑制性突触氯离子内流",
+            "affinityTier": "high",
+            "affinityWeight": 0.9,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "TREK-1 双孔钾通道",
+            "action": "激活背景漏钾电流致使中枢神经元超极化与意识丧失",
+            "affinityTier": "high",
+            "affinityWeight": 0.85,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "NMDA 谷氨酸受体",
+            "action": "中等非竞争性通道抑制",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.6,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "喜保福宁 (Sevorane / Ultane)",
+        "indications": [
+          "成人及儿童全身麻醉诱导与维持"
+        ],
+        "contraindications": [
+          "恶性高热既往史或明确遗传易感史（绝对禁忌）",
+          "对卤化吸入全麻药过敏或既往卤素麻醉不明原因肝损"
+        ]
+      }
+    },
+    {
+      "name": "Isoflurane",
+      "commonNames": [
+        "异氟烷",
+        "异氟醚",
+        "Forane",
+        "Isoflurane",
+        "Aerrane",
+        "yfw",
+        "yfm",
+        "yi'fu'wan",
+        "yifuwan",
+        "yi'fu'mi",
+        "yifumi"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00753",
+      "isApproved": true,
+      "summary": "经典挥发性卤化醚类全身吸入麻醉药（血/气分配系数 1.40 - 1.45，MAC 约 1.15%），气道刺激性较七氟烷高（通常不用于吸入诱导而用于静注诱导后的麻醉维持）；代谢率极低（< 0.2%），99% 以上经肺原形呼出，肝肾毒性极小，但大剂量易致显著体循环血管扩张与低血压。",
+      "effectsSummary": "强效吸入麻醉维持、深刻肌肉松弛（大幅增效非去极化肌松药）及可逆意识与痛觉消失；气味较刺鼻易引起咳嗽或屏气。",
+      "dosageRemark": "经专用异氟烷挥发罐吸入给药（成人 1 MAC 约 1.15%，常用维持浓度 1.0% - 2.5%）。",
+      "generalRisks": "强烈外周血管扩张性低血压、呼吸道刺激引起屏气/喉痉挛（诱导期）、呼吸抑制与术后寒战恶心。",
+      "longtermRisks": "极罕见诱发恶性高热；长期暴露或慢性低浓度职业吸入需规范废气排空。",
+      "saferUse": [
+        "绝对禁止脱离麻醉呼吸监测与氧源的自我吸入行为",
+        "恶性高热易感体质禁用"
+      ],
+      "tolerance": {
+        "full": null,
+        "half": null,
+        "zero": null
+      },
+      "crossTolerances": [
+        "depressant"
+      ],
+      "addictionPotential": "极少数文献报告过职业接触者误吸，风险在于瞬间呼吸抑制窒息而非愉悦成瘾",
+      "toxicities": [
+        "恶性高热（高热、全身强直、代谢危象）",
+        "严重体循环血管扩张致顽固性低血压及缺氧窒息"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Succinylcholine (合并触发恶性高热高风险)",
+          "Opioids / Propofol / Nitrous Oxide (协同降低 MAC 需求并强烈加深血压与呼吸抑制)"
+        ],
+        "unsafe": [
+          "Non-depolarizing Muscle Relaxants (显著增强阿曲库铵、维库溴铵等肌松深度与时长)",
+          "Calcium Channel Blockers (叠加体循环血管扩张引发严重低血压)"
+        ],
+        "uncertain": [
+          "MAOI (围术期血压调节不稳风险)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "inhaled",
+          "dose": {
+            "units": "%",
+            "lightMin": 0.4,
+            "commonMin": 1.15,
+            "strongMin": 1.8,
+            "heavyMin": 3.0
+          },
+          "duration": {
+            "onset": {
+              "min": 1.0,
+              "max": 3.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 5.0,
+              "max": 15.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 10.0,
+              "max": 25.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 15.0,
+              "max": 40.0,
+              "units": "minutes"
+            }
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "血/气分配系数 1.40 - 1.45（较七氟烷溶血性高约一倍）：肺泡初段洗脱数分钟，外周与脂肪组织平衡洗脱较七氟烷慢（等效组织终末洗脱 2 - 3 小时）",
+        "halfLifeHours": 2.0,
+        "tMax": "吸入后约 5 - 10 分钟 (~0.1h) 达脑内平衡",
+        "tMaxHours": 0.1,
+        "bioavailability": "经肺泡扩散吸收，极少经肝氧化失活",
+        "cypEnzymes": [
+          "CYP2E1 (极微弱代谢底物 / Minimal Substrate；< 0.2% 吸入量经 CYP2E1 氧化为三氟乙酸，基本不受肝酶互动影响)"
+        ],
+        "clearance": "> 99% 经肺泡呼气原形排出，仅 < 0.2% 经肝 CYP2E1 代谢为极微量三氟乙酸盐随尿排出",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 0.75,
+        "washoutHours": 12.0,
+        "washoutNote": "停吸后约 10 - 25 分钟恢复意识，血浆分布洗脱略慢于七氟烷，约 12 小时内完成全身残留气体洗脱。",
+        "mechanismSummary": "脂溶性氟化醚全麻药，增强 GABAA 与甘氨酸抑制受体功能，抑制 NMDA 及烟碱型乙酰胆碱受体并激活双孔钾通道。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "GABAA 受体与甘氨酸受体",
+            "action": "正向变构调节氯通道开放实现全麻与中枢性肌松",
+            "affinityTier": "high",
+            "affinityWeight": 0.9,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "TREK-1 双孔钾通道",
+            "action": "激活钾外流使神经元超极化",
+            "affinityTier": "high",
+            "affinityWeight": 0.82,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "NMDA / nAChR 受体",
+            "action": "抑制兴奋性谷氨酸与烟碱通道传导",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.62,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "Forane / Aerrane",
+        "indications": [
+          "成人及儿童全身麻醉维持"
+        ],
+        "contraindications": [
+          "恶性高热已知或疑似易感者",
+          "卤代烷类吸入麻醉药物过敏史"
+        ]
+      }
+    },
+    {
+      "name": "Lidocaine",
+      "commonNames": [
+        "利多卡因",
+        "盐酸利多卡因",
+        "昔洛卡因",
+        "Xylocaine",
+        "Lignocaine",
+        "Lidoderm",
+        "ldky",
+        "ysldky",
+        "xlky",
+        "li'duo'ka'yin",
+        "liduokayin",
+        "yan'suan'li'duo'ka'yin",
+        "yansuanliduokayin",
+        "xi'luo'ka'yin",
+        "xiluokayin"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00281",
+      "isApproved": true,
+      "summary": "经典酰胺类局部麻醉药与 Ib 类抗心律失常药，通过可逆阻滞电压门控钠通道（NaV）阻断痛觉神经动作电位传导并缩短心肌浦肯野纤维动作电位时程。主要经肝脏 CYP1A2 与 CYP3A4 脱乙基生成保留活性和惊厥毒性的代谢物 MEGX（亦是临床肝储备功能试验标准底物）；血药浓度超标可致特征性口周麻木、耳鸣、全面性癫痫与心脏停搏。",
+      "effectsSummary": "局部注射或贴敷迅速阻滞局域痛觉与触觉传导；静脉给药兼具室性心律失常抑制、气道反射钝化及轻度中枢镇静镇痛。",
+      "dosageRemark": "成人单次局部浸润安全极量一般不超过 4.5 mg/kg（通常 ≤ 300 mg，配伍肾上腺素减慢吸收可增至 7 mg/kg / 500 mg）；严禁把含肾上腺素制剂推入末梢血管（手指/阴茎）或静注。",
+      "generalRisks": "早发神经系统毒性信号（口周舌麻、金属味、耳鸣、视物模糊、肌颤），局部误入血管骤升可即刻抽搐。",
+      "longtermRisks": "长期或大面积破损皮肤贴敷可引发高铁血红蛋白血症与蓄积中毒（尤其肝衰或合用 CYP 抑制剂）。",
+      "saferUse": [
+        "神经阻滞与局部浸润务必反复回抽确认无回血后再推药，严防直接注入动脉/静脉引发急性局麻药全身毒性 (LAST)",
+        "一旦出现口唇麻木、耳鸣或烦躁立即停药，重度 LAST 救治首选 20% 脂肪乳静脉推注"
+      ],
+      "tolerance": {
+        "full": null,
+        "half": null,
+        "zero": null
+      },
+      "crossTolerances": [],
+      "addictionPotential": "无精神成瘾潜力；常见非医学误用风险为局部黏膜过量吸收导致的心律失常与癫痫中毒",
+      "toxicities": [
+        "局麻药全身毒性 (LAST)：全面性强直阵挛癫痫发作、窦性停搏、QRS 增宽与难治性室颤",
+        "高铁血红蛋白血症（高浓度外用或复方制剂时警惕发绀）"
+      ],
+      "categories": [
+        "analgesic",
+        "depressant"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Class I / III Antiarrhythmics (与胺碘酮、普罗帕酮、美西律合用严重叠加心肌传导抑制与低血压)",
+          "Bupivacaine / Ropivacaine (多种酰胺类局麻药毒性完全累加计算总毫克限额)"
+        ],
+        "unsafe": [
+          "Fluvoxamine / Ciprofloxacin (强效 CYP1A2 抑制剂显著降低利多卡因肝清除并诱发中毒)",
+          "Propranolol / Metoprolol (降压 β 阻滞剂减少肝血流量，使利多卡因清除率下降约 30%)",
+          "CYP3A4 强效抑制剂 (红霉素、伊曲康唑、克拉霉素等阻断 N-脱乙基)"
+        ],
+        "uncertain": [
+          "Cimetidine (抑制肝血流量与细胞色素酶轻中度升高稳态血浓度)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "subcutaneous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 50.0,
+            "commonMin": 100.0,
+            "strongMin": 200.0,
+            "heavyMin": 300.0
+          },
+          "duration": {
+            "onset": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 3.0,
+              "max": 10.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 15.0,
+              "max": 45.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 90.0,
+            "max": 100.0
+          }
+        },
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 50.0,
+            "commonMin": 75.0,
+            "strongMin": 100.0,
+            "heavyMin": 150.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 90.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 1.0,
+              "max": 2.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 2.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 20.0,
+              "max": 45.0,
+              "units": "minutes"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        },
+        {
+          "name": "transdermal",
+          "dose": {
+            "units": "mg",
+            "lightMin": 175.0,
+            "commonMin": 350.0,
+            "strongMin": 700.0,
+            "heavyMin": 1050.0
+          },
+          "duration": {
+            "onset": {
+              "min": 30.0,
+              "max": 60.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 1.0,
+              "max": 4.0,
+              "units": "hours"
+            },
+            "peak": {
+              "min": 6.0,
+              "max": 11.0,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 4.0,
+              "max": 8.0,
+              "units": "hours"
+            },
+            "total": {
+              "min": 12.0,
+              "max": 18.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 3.0,
+            "max": 5.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "静注初始分布半衰期约 8 分钟；终末消除半衰期 1.5 - 2.0 小时 (连续输注 > 24h 或肝损心衰时可延长至 4 - 6h)；活性代谢物 MEGX 半衰期约 2 小时，GX 约 10 小时",
+        "halfLifeHours": 1.8,
+        "tMax": "静注即刻 (~0.05h)；局部浸润/神经阻滞血浆达峰约 15 - 30 分钟 (~0.35h)；透皮贴剂达峰 9 - 11 小时",
+        "tMaxHours": 0.25,
+        "bioavailability": "静注 100%；口服因极强肝脏首过提取率仅约 35%；完整皮肤 5% 贴剂吸收仅约 3%（破损或黏膜吸收飙升）",
+        "cypEnzymes": [
+          "CYP1A2 (主要 N-脱乙基代谢底物 / Substrate；临床浓度生成活性产物 MEGX，受氟伏沙明显著抑制)",
+          "CYP3A4 (主要 N-脱乙基代谢底物 / Substrate；高浓度下亦参与转化 MEGX 与 GX)"
+        ],
+        "clearance": "约 90% 经肝高抽取率血流依赖性代谢（CYP1A2/CYP3A4 生成活性 MEGX 及 GX），< 10% 原形经肾排泄",
+        "pkRole": "ACTIVE_METABOLITE",
+        "effectiveHalfLifeHours": 2.2,
+        "washoutHours": 12.0,
+        "washoutNote": "单次注射或短程静注的母体与 MEGX 在 10 - 12 小时内清除；若为连续输注 > 24 小时或肝肾功能严重受损，脱乙基次级产物 GX（半衰期 ~10h）与母体可明显蓄积。",
+        "mechanismSummary": "可逆结合电压门控钠通道 (NaV) 胞内失活态孔道，阻断 Na+ 内流进而阻遏感觉神经动作电位传播，并缩短心肌动作电位不应期。",
+        "activeMetabolites": [
+          {
+            "name": "MEGX (单乙基甘氨酰二甲苯胺)",
+            "pathway": "母体经肝脏 CYP1A2 与 CYP3A4 氧化 N-脱乙基生成",
+            "halfLife": "1.5 - 2.5 小时",
+            "halfLifeHours": 2.0,
+            "exposureRatio": 0.5,
+            "relativeExposure": "常作为肝血流/肝细胞功能的经典定量指标；连续输注时暴露显著提升",
+            "pharmacologicalRole": "保留约 80% 抗心律失常效价及显著中枢惊厥神经毒性，协同母体致中毒效应",
+            "tMaxHours": 0.5
+          }
+        ],
+        "receptorTargets": [
+          {
+            "target": "电压门控钠通道 (NaV1.7 / NaV1.8 / NaV1.5)",
+            "action": "电压及频率依赖性孔道内阻滞剂（阻断痛觉及心肌去极化 Na+ 内流）",
+            "affinityTier": "high",
+            "affinityWeight": 0.94,
+            "dominantActor": "共同贡献"
+          },
+          {
+            "target": "电压门控钾通道 / NMDA",
+            "action": "高浓度下微弱调节（参与中枢全身镇痛与惊厥毒性）",
+            "affinityTier": "low",
+            "affinityWeight": 0.35,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "Xylocaine / Lidoderm",
+        "indications": [
+          "局部浸润、周围神经阻滞、硬膜外麻醉及黏膜表面镇痛",
+          "带状疱疹后神经痛（5% 透皮贴剂）与室性心律失常急性控制"
+        ],
+        "contraindications": [
+          "对酰胺类局部麻醉药过敏或阿-斯综合征（重度窦房/房室传导阻滞）",
+          "严重肝衰竭患者禁止连续大剂量静脉输注"
+        ]
+      }
+    },
+    {
+      "name": "Ropivacaine",
+      "commonNames": [
+        "罗哌卡因",
+        "盐酸罗哌卡因",
+        "耐乐品",
+        "Naropin",
+        "Ropivacaine hydrochloride",
+        "lpky",
+        "yslpky",
+        "nlp",
+        "luo'pai'ka'yin",
+        "luopaikayin",
+        "yan'suan'luo'pai'ka'yin",
+        "yansuanluopaikayin",
+        "nai'le'pin",
+        "nailepin"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00296",
+      "isApproved": true,
+      "summary": "纯 S-对映体长效酰胺类局部麻醉药：相比布比卡因具备更低的中枢神经与心肌钠通道滞留毒性，且低浓度（0.2%）即可呈现显著的“感觉与运动神经阻滞分离”，广泛用于硬膜外镇痛、分娩镇痛及周围神经阻滞。高度依赖肝脏 CYP1A2 代谢，与氟伏沙明合用清除率大降约 70%。",
+      "effectsSummary": "长效区域感觉神经痛觉阻滞（维持 3 - 8 小时），低浓度下保留大部分运动肌力且系统心血管抑制较轻。",
+      "dosageRemark": "仅供局部浸润、周围神经阻滞与硬膜外腔注射（成人单次区域阻滞一般 ≤ 200 - 250 mg）；绝对禁止静脉注射或静脉区域麻醉（Bier block）。",
+      "generalRisks": "低血压、心动过缓、恶心、排尿困难（硬膜外）及误入血管导致口周麻木、耳鸣。",
+      "longtermRisks": "大剂量硬膜外连续输注若合并肝功能受损或 CYP1A2 强抑制剂可致血浆游离蓄积。",
+      "saferUse": [
+        "严禁静脉注射，给药时必须分次小量回抽测试防血管内注射",
+        "与氟伏沙明、环丙沙星等 CYP1A2 强抑制剂合用长程泵注时需大幅下调输注速率"
+      ],
+      "tolerance": {
+        "full": null,
+        "half": null,
+        "zero": null
+      },
+      "crossTolerances": [],
+      "addictionPotential": "无成瘾滥用潜力；全部临床风险集中于操作失误入血或过量导致的全身毒性 (LAST)",
+      "toxicities": [
+        "局麻药全身毒性 (LAST)：全面癫痫抽搐、传导阻滞、心室颤动与难治性心脏骤停"
+      ],
+      "categories": [
+        "analgesic",
+        "depressant"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Lidocaine / Bupivacaine (同类酰胺局麻药毒素完全叠加计算安全上限)",
+          "Class III / Ib Antiarrhythmics (乙胺碘呋酮/美西律叠加抑制心脏钠钾传导)"
+        ],
+        "unsafe": [
+          "Fluvoxamine (强效 CYP1A2 抑制剂使罗哌卡因系统清除率暴跌 68% - 77%，极易引发持续输注毒性蓄积)",
+          "Ciprofloxacin / Enoxacin (中强效 CYP1A2 抑制剂延长半衰期并升高血浆总暴露)"
+        ],
+        "uncertain": [
+          "Ketoconazole / CYP3A4 Inhibitors (CYP3A4 为次要途径，单独阻断通常仅致轻微清除下降)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "subcutaneous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 25.0,
+            "commonMin": 75.0,
+            "strongMin": 150.0,
+            "heavyMin": 225.0
+          },
+          "duration": {
+            "onset": {
+              "min": 10.0,
+              "max": 20.0,
+              "units": "minutes"
+            },
+            "comeup": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "minutes"
+            },
+            "peak": {
+              "min": 1.0,
+              "max": 3.0,
+              "units": "hours"
+            },
+            "offset": {
+              "min": 2.0,
+              "max": 4.0,
+              "units": "hours"
+            },
+            "total": {
+              "min": 4.0,
+              "max": 8.0,
+              "units": "hours"
+            }
+          },
+          "bioavailability": {
+            "min": 87.0,
+            "max": 100.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "静脉测定真消除半衰期约 1.8 小时 (1.5 - 2.0h)；硬膜外与神经阻滞因局部组织缓慢吸收限制，表观终末半衰期延长至约 4.2 小时",
+        "halfLifeHours": 1.8,
+        "tMax": "硬膜外注射后约 0.5 小时 (15 - 45 分钟) 达血浆峰",
+        "tMaxHours": 0.5,
+        "bioavailability": "硬膜外腔绝对生物利用度约 87% - 100%（呈快慢双相吸收入血）",
+        "cypEnzymes": [
+          "CYP1A2 (主要芳香羟化代谢底物 / Substrate；生成主要尿产物 3-羟罗哌卡因，对氟伏沙明高度敏感)",
+          "CYP3A4 (次要 N-脱烷基代谢底物 / Minor Substrate；生成 PPX)"
+        ],
+        "clearance": "肝脏广泛代谢（86% 以上经尿排出代谢物，仅约 1% 原形排出），其中 CYP1A2 主导生成 3-羟罗哌卡因，CYP3A4 生成微量活性更弱的 PPX",
+        "pkRole": "PARENT_DOMINANT",
+        "effectiveHalfLifeHours": 3.5,
+        "washoutHours": 20.0,
+        "washoutNote": "静脉本身消除仅 ~1.8h，但硬膜外与周围神经丛局部组织缓释吸收使实际全身终末消除拖延至 ~4.2h，完整清零需约 18 - 22 小时。",
+        "mechanismSummary": "纯 S(-)-光学异构体酰胺局麻药，选择性阻断外周神经纤维电压门控钠通道（对细无髓鞘 Aδ/C 痛觉纤维阻断优先于粗大 Aβ 运动纤维），并降低心肌毒性。",
+        "activeMetabolites": [],
+        "receptorTargets": [
+          {
+            "target": "电压门控钠通道 (NaV1.7 / NaV1.8)",
+            "action": "长效立体选择性孔道阻滞剂（兼具高痛觉-运动分离度与较低心脏 NaV1.5 滞留率）",
+            "affinityTier": "high",
+            "affinityWeight": 0.94,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "耐乐品 (Naropin)",
+        "indications": [
+          "硬膜外外科麻醉、剖宫产及分娩镇痛",
+          "周围神经丛阻滞、术后持续镇痛及局部伤口浸润"
+        ],
+        "contraindications": [
+          "静脉区域阻滞（Bier 阻滞）及产科宫颈旁阻滞",
+          "对酰胺类局部麻醉药过敏"
+        ]
+      }
+    },
+    {
+      "name": "Thiopental",
+      "commonNames": [
+        "硫喷妥钠",
+        "戊硫代巴比妥",
+        "Pentothal",
+        "Sodium thiopental",
+        "Thiopentone",
+        "lptn",
+        "wldbbt",
+        "liu'pen'tuo'na",
+        "liupentuona",
+        "wu'liu'dai'ba'bi'tuo",
+        "wuliudaibabituo"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00599",
+      "isApproved": true,
+      "summary": "经典超短效硫代巴比妥类静脉全麻药与难治性癫痫持续状态急救药：超高脂溶性使单剂静注后 15 - 30 秒内迅速过脑诱导麻醉，仅靠 5 - 15 分钟内向骨骼肌与脂肪剧烈重分布而苏醒，但真实肝消除半衰期长达 9 - 12 小时（饱和输注后可飙升至 26 小时以上且经脱硫代谢产生超长效活性巴比妥——戊巴比妥 Pentobarbital）。",
+      "effectsSummary": "20 秒内极速诱导深度意识丧失并显著降低脑代谢氧耗与颅内压；高剂量可严重抑制呼吸与心肌收缩。",
+      "dosageRemark": "成人全麻诱导常为 3 - 5 mg/kg（约 200 - 400 mg）慢推；药液呈强碱性（pH ~10.5），绝不可漏出血管或误入动脉（可致剧痛性动脉痉挛及肢体坏死）。",
+      "generalRisks": "即刻呼吸停止、严重低血压、喉痉挛（缺乏镇痛作用对浅刺激易呛咳喉痉挛）及血管外渗组织坏死。",
+      "longtermRisks": "反复大剂量或连续泵注后脂肪库彻底饱和，转为非线性零级蓄积动力学，苏醒延迟数天且产生长效戊巴比妥蓄积。",
+      "saferUse": [
+        "给药前确认大静脉通路通畅避免强碱外渗或动脉注射；严禁在无人工通气设备上单独非医疗使用",
+        "避免用于急性间歇性卟啉病患者（诱发致命性卟啉危象）"
+      ],
+      "tolerance": {
+        "full": "反复给药可出现中枢 GABA 受体下调及药代肝酶自诱导交叉耐受",
+        "half": "4 - 7 天",
+        "zero": "2 - 3 周"
+      },
+      "crossTolerances": [
+        "barbiturate",
+        "depressant",
+        "benzodiazepine"
+      ],
+      "addictionPotential": "高急性致命过量风险与中重度巴比妥类交叉依赖潜力（安全治疗指数极窄）",
+      "toxicities": [
+        "急性呼吸衰竭、深昏迷、心肌抑制性休克与低体温",
+        "动脉误注引发血管血栓坏死；诱发急性卟啉症危象"
+      ],
+      "categories": [
+        "barbiturate",
+        "depressant",
+        "sedative",
+        "hypnotic",
+        "anticonvulsant",
+        "habit-forming"
+      ],
+      "interactions": {
+        "dangerous": [
+          "Opioids / Benzodiazepines / Alcohol / Propofol (极高致命协同：呼吸中枢麻痹、循环衰竭与深昏迷)"
+        ],
+        "unsafe": [
+          "Anticoagulants / Oral Contraceptives / Corticosteroids (巴比妥类强诱导 CYP 肝酶加速其清除失灵)",
+          "Probenecid / Sulfonamides (竞争血浆白蛋白结合，显著升高游离硫喷妥钠致毒浓度)"
+        ],
+        "uncertain": [
+          "Antihypertensives (剧烈放大静脉扩张性低血压)"
+        ]
+      },
+      "roas": [
+        {
+          "name": "intravenous",
+          "dose": {
+            "units": "mg",
+            "lightMin": 100.0,
+            "commonMin": 250.0,
+            "strongMin": 400.0,
+            "heavyMin": 600.0
+          },
+          "duration": {
+            "onset": {
+              "min": 15.0,
+              "max": 30.0,
+              "units": "seconds"
+            },
+            "comeup": {
+              "min": 15.0,
+              "max": 45.0,
+              "units": "seconds"
+            },
+            "peak": {
+              "min": 1.0,
+              "max": 5.0,
+              "units": "minutes"
+            },
+            "offset": {
+              "min": 5.0,
+              "max": 15.0,
+              "units": "minutes"
+            },
+            "total": {
+              "min": 10.0,
+              "max": 25.0,
+              "units": "minutes"
+            }
+          },
+          "bioavailability": {
+            "min": 100.0,
+            "max": 100.0
+          }
+        }
+      ],
+      "pharmacokinetics": {
+        "halfLife": "单剂靠快速重分布 5 - 15 分钟苏醒，但真实肝消除半衰期 9 - 12 小时 (高剂量/连续输注脂肪饱和后达 18 - 26h)；活性代谢物戊巴比妥约 15 - 50 小时",
+        "halfLifeHours": 11.5,
+        "tMax": "静脉推注后 15 - 45 秒 (~0.02h) 达脑内峰浓度",
+        "tMaxHours": 0.02,
+        "bioavailability": "静脉 100%（强碱性水溶液，不供常规口服）",
+        "cypEnzymes": [
+          "CYP2C19 (肝氧化侧链代谢参与 / Substrate)",
+          "CYP3A4 (肝微粒体氧化及脱硫参与 / Substrate)",
+          "CYP3A4 (反复使用后强效肝酶诱导剂 / Strong Inducer)"
+        ],
+        "clearance": "肝微粒体氧化生成非活性羧酸衍生物，并有小部分（约 3% - 10%）经肝脏脱硫转化为同属活性巴比妥的戊巴比妥（Pentobarbital）；高负载输注呈现米氏零级饱和消除，代谢物主要经尿排泄",
+        "pkRole": "ACTIVE_METABOLITE",
+        "effectiveHalfLifeHours": 13.0,
+        "washoutHours": 72.0,
+        "washoutNote": "单次麻醉苏醒仅需 10 - 20 分钟（全靠重分布），但母体真实半衰期约 11.5 小时且少量脱硫产生的长效活性产物戊巴比妥（半衰期 ~30h）可留存 2 - 5 天。",
+        "mechanismSummary": "高脂溶性硫代巴比妥类 GABAA 受体正向变构调节剂与高浓度直接通道开放剂，兼抑制 AMPA/NMDA 谷氨酸兴奋传导并显着降低脑氧耗。",
+        "activeMetabolites": [
+          {
+            "name": "Pentobarbital (戊巴比妥)",
+            "pathway": "母体硫喷妥钠在肝脏经微粒体氧化脱硫（S→O 替换）生成",
+            "halfLife": "15 - 50 小时 (典型 30.0h)",
+            "halfLifeHours": 30.0,
+            "exposureRatio": 0.12,
+            "relativeExposure": "单剂生成极少，但在高剂量多次叠加或连续抗惊厥泵注时蓄积贡献显著持续镇静",
+            "pharmacologicalRole": "与母体相同机制的 GABAA 受体巴比妥位点激活剂，解释反复给药后持久“宿醉”与苏醒延长",
+            "tMaxHours": 6.0
+          }
+        ],
+        "receptorTargets": [
+          {
+            "target": "GABAA 受体 (巴比妥结合位点)",
+            "action": "强效延长氯离子通道平均开放时间并在麻醉浓度直接开放通道",
+            "affinityTier": "high",
+            "affinityWeight": 0.96,
+            "dominantActor": "母体主导"
+          },
+          {
+            "target": "AMPA / KA 谷氨酸受体",
+            "action": "中等非竞争性抑制兴奋性突触后电流",
+            "affinityTier": "moderate",
+            "affinityWeight": 0.65,
+            "dominantActor": "母体主导"
+          }
+        ],
+        "brandName": "Pentothal",
+        "indications": [
+          "全身麻醉快速诱导",
+          "难治性癫痫持续状态二/三线控制及严重颅高压降脑代谢保护"
+        ],
+        "contraindications": [
+          "急性间歇性卟啉病或杂色卟啉病（绝对禁忌）",
+          "严重哮喘持续状态、休克及无呼吸支持环境"
+        ]
+      }
     }
   ]
 }

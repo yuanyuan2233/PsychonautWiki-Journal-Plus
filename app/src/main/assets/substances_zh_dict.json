@@ -16162,6 +16162,353 @@
         "常见物质"
       ],
       "url": "https://go.drugbank.com/drugs/DB01235"
+    },
+    "Dexmedetomidine": {
+      "name_en": "Dexmedetomidine",
+      "name_zh": "右美托咪定",
+      "zh_aliases": [
+        "右美托咪定",
+        "盐酸右美托咪定",
+        "艾贝宁",
+        "Precedex",
+        "Igalmi"
+      ],
+      "pinyin": [
+        "you'mei'tuo'mi'ding",
+        "youmeituomiding",
+        "yan'suan'you'mei'tuo'mi'ding",
+        "yansuanyoumeituomiding",
+        "ai'bei'ning",
+        "aibeining"
+      ],
+      "pinyin_abbr": [
+        "ymtmd",
+        "ysymtmd",
+        "abn"
+      ],
+      "categories": [
+        "sedative",
+        "anxiolytic",
+        "analgesic",
+        "antihypertensive"
+      ],
+      "categories_zh": [
+        "镇静剂",
+        "抗焦虑药",
+        "镇痛药",
+        "降压药"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00633"
+    },
+    "Propofol": {
+      "name_en": "Propofol",
+      "name_zh": "丙泊酚",
+      "zh_aliases": [
+        "丙泊酚",
+        "异丙酚",
+        "得普利麻",
+        "Diprivan"
+      ],
+      "pinyin": [
+        "bing'po'fen",
+        "bingpofen",
+        "yi'bing'fen",
+        "yibingfen",
+        "de'pu'li'ma",
+        "depulima"
+      ],
+      "pinyin_abbr": [
+        "bpf",
+        "ybf",
+        "dplm"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic",
+        "habit-forming"
+      ],
+      "categories_zh": [
+        "中枢抑制剂",
+        "镇静剂",
+        "催眠药",
+        "易成瘾"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00818"
+    },
+    "Esketamine": {
+      "name_en": "Esketamine",
+      "name_zh": "艾司氯胺酮",
+      "zh_aliases": [
+        "艾司氯胺酮",
+        "盐酸艾司氯胺酮",
+        "右氯胺酮",
+        "凯得宁",
+        "Spravato",
+        "S-Ketamine"
+      ],
+      "pinyin": [
+        "ai'si'lv'an'tong",
+        "aisilvantong",
+        "yan'suan'ai'si'lv'an'tong",
+        "yansuanaisilvantong",
+        "you'lv'an'tong",
+        "youlvantong",
+        "kai'de'ning",
+        "kaidening"
+      ],
+      "pinyin_abbr": [
+        "aslat",
+        "ysaslat",
+        "ylat",
+        "kdn"
+      ],
+      "categories": [
+        "dissociative",
+        "antidepressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "categories_zh": [
+        "解离剂",
+        "抗抑郁药",
+        "镇痛药",
+        "镇静剂",
+        "易成瘾"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB11823"
+    },
+    "Remifentanil": {
+      "name_en": "Remifentanil",
+      "name_zh": "瑞芬太尼",
+      "zh_aliases": [
+        "瑞芬太尼",
+        "盐酸瑞芬太尼",
+        "Ultiva"
+      ],
+      "pinyin": [
+        "rui'fen'tai'ni",
+        "ruifentaini",
+        "yan'suan'rui'fen'tai'ni",
+        "yansuanruifentaini"
+      ],
+      "pinyin_abbr": [
+        "rftn",
+        "ysrftn"
+      ],
+      "categories": [
+        "opioid",
+        "depressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "categories_zh": [
+        "阿片类",
+        "中枢抑制剂",
+        "镇痛药",
+        "镇静剂",
+        "易成瘾"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00899"
+    },
+    "Alfentanil": {
+      "name_en": "Alfentanil",
+      "name_zh": "阿芬太尼",
+      "zh_aliases": [
+        "阿芬太尼",
+        "盐酸阿芬太尼",
+        "Rapifen",
+        "Alfenta"
+      ],
+      "pinyin": [
+        "a'fen'tai'ni",
+        "afentaini",
+        "yan'suan'a'fen'tai'ni",
+        "yansuanafentaini"
+      ],
+      "pinyin_abbr": [
+        "aftn",
+        "ysaftn"
+      ],
+      "categories": [
+        "opioid",
+        "depressant",
+        "analgesic",
+        "sedative",
+        "habit-forming"
+      ],
+      "categories_zh": [
+        "阿片类",
+        "中枢抑制剂",
+        "镇痛药",
+        "镇静剂",
+        "易成瘾"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00802"
+    },
+    "Sevoflurane": {
+      "name_en": "Sevoflurane",
+      "name_zh": "七氟烷",
+      "zh_aliases": [
+        "七氟烷",
+        "喜保福宁",
+        "Sevorane",
+        "Ultane"
+      ],
+      "pinyin": [
+        "qi'fu'wan",
+        "qifuwan",
+        "xi'bao'fu'ning",
+        "xibaofuning"
+      ],
+      "pinyin_abbr": [
+        "qfw",
+        "xbfn"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic"
+      ],
+      "categories_zh": [
+        "中枢抑制剂",
+        "镇静剂",
+        "催眠药"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB01236"
+    },
+    "Isoflurane": {
+      "name_en": "Isoflurane",
+      "name_zh": "异氟烷",
+      "zh_aliases": [
+        "异氟烷",
+        "异氟醚",
+        "Forane"
+      ],
+      "pinyin": [
+        "yi'fu'wan",
+        "yifuwan",
+        "yi'fu'mi",
+        "yifumi"
+      ],
+      "pinyin_abbr": [
+        "yfw",
+        "yfm"
+      ],
+      "categories": [
+        "depressant",
+        "sedative",
+        "hypnotic"
+      ],
+      "categories_zh": [
+        "中枢抑制剂",
+        "镇静剂",
+        "催眠药"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00753"
+    },
+    "Lidocaine": {
+      "name_en": "Lidocaine",
+      "name_zh": "利多卡因",
+      "zh_aliases": [
+        "利多卡因",
+        "盐酸利多卡因",
+        "昔洛卡因",
+        "Xylocaine"
+      ],
+      "pinyin": [
+        "li'duo'ka'yin",
+        "liduokayin",
+        "yan'suan'li'duo'ka'yin",
+        "yansuanliduokayin",
+        "xi'luo'ka'yin",
+        "xiluokayin"
+      ],
+      "pinyin_abbr": [
+        "ldky",
+        "ysldky",
+        "xlky"
+      ],
+      "categories": [
+        "analgesic",
+        "depressant"
+      ],
+      "categories_zh": [
+        "镇痛药",
+        "中枢抑制剂"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00281"
+    },
+    "Ropivacaine": {
+      "name_en": "Ropivacaine",
+      "name_zh": "罗哌卡因",
+      "zh_aliases": [
+        "罗哌卡因",
+        "盐酸罗哌卡因",
+        "耐乐品",
+        "Naropin"
+      ],
+      "pinyin": [
+        "luo'pai'ka'yin",
+        "luopaikayin",
+        "yan'suan'luo'pai'ka'yin",
+        "yansuanluopaikayin",
+        "nai'le'pin",
+        "nailepin"
+      ],
+      "pinyin_abbr": [
+        "lpky",
+        "yslpky",
+        "nlp"
+      ],
+      "categories": [
+        "analgesic",
+        "depressant"
+      ],
+      "categories_zh": [
+        "镇痛药",
+        "中枢抑制剂"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00296"
+    },
+    "Thiopental": {
+      "name_en": "Thiopental",
+      "name_zh": "硫喷妥钠",
+      "zh_aliases": [
+        "硫喷妥钠",
+        "戊硫代巴比妥",
+        "Pentothal",
+        "Sodium thiopental"
+      ],
+      "pinyin": [
+        "liu'pen'tuo'na",
+        "liupentuona",
+        "wu'liu'dai'ba'bi'tuo",
+        "wuliudaibabituo"
+      ],
+      "pinyin_abbr": [
+        "lptn",
+        "wldbbt"
+      ],
+      "categories": [
+        "barbiturate",
+        "depressant",
+        "sedative",
+        "hypnotic",
+        "anticonvulsant",
+        "habit-forming"
+      ],
+      "categories_zh": [
+        "巴比妥类",
+        "中枢抑制剂",
+        "镇静剂",
+        "催眠药",
+        "抗惊厥药",
+        "易成瘾"
+      ],
+      "url": "https://go.drugbank.com/drugs/DB00599"
     }
   }
 }
