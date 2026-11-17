@@ -31,6 +31,8 @@ import kotlin.math.sqrt
 
 sealed class Suggestion(open val sortInstant: Instant) {
 
+    abstract val stableKey: String
+
     abstract fun isInSearch(searchText: String, substanceNames: List<String>): Boolean
 
     data class PureSubstanceSuggestion(
@@ -40,6 +42,8 @@ sealed class Suggestion(open val sortInstant: Instant) {
         val dosesAndUnit: List<DoseAndUnit>,
         override val sortInstant: Instant
     ) : Suggestion(sortInstant = sortInstant) {
+        override val stableKey: String
+            get() = "sug_pure_${substanceName}_${administrationRoute.name}"
         constructor(
             administrationRoute: AdministrationRoute,
             substanceName: String,
@@ -65,6 +69,8 @@ sealed class Suggestion(open val sortInstant: Instant) {
         val dosesAndUnit: List<CustomUnitDoseSuggestion>,
         override val sortInstant: Instant
     ) : Suggestion(sortInstant = sortInstant) {
+        override val stableKey: String
+            get() = "sug_cu_${customUnit.id}"
         constructor(
             customUnit: CustomUnit,
             adaptiveColor: AdaptiveColor,
@@ -101,6 +107,8 @@ sealed class Suggestion(open val sortInstant: Instant) {
         val dosesAndUnit: List<DoseAndUnit>,
         override val sortInstant: Instant
     ) : Suggestion(sortInstant = sortInstant) {
+        override val stableKey: String
+            get() = "sug_cs_${customSubstance.id}_${administrationRoute.name}"
         constructor(
             administrationRoute: AdministrationRoute,
             customSubstance: CustomSubstance,

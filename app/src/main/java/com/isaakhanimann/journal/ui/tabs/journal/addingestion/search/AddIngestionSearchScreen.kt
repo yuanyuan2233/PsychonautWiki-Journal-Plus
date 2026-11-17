@@ -207,13 +207,7 @@ fun AddIngestionSearchScreen(
                 }
                 itemsIndexed(
                     items = suggestions,
-                    key = { _, suggestion ->
-                        when (suggestion) {
-                            is Suggestion.PureSubstanceSuggestion -> "sug_pure_${suggestion.substanceName}_${suggestion.administrationRoute.name}"
-                            is Suggestion.CustomUnitSuggestion -> "sug_cu_${suggestion.customUnit.id}"
-                            is Suggestion.CustomSubstanceSuggestion -> "sug_cs_${suggestion.customSubstance.id}_${suggestion.administrationRoute.name}"
-                        }
-                    }
+                    key = { _, suggestion -> suggestion.stableKey }
                 ) { index, suggestion ->
                     SuggestionRow(
                         suggestion = suggestion,
